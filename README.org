@@ -23,7 +23,7 @@ animint: a grammar for animated and interactive data visualization
   - e.g. WorldBank data facet(year).
   - e.g. change-point data viz + facet(segments ~ profile).
   - e.g. montreal bike data?
-  - e.g. support vector machines on ESL example.
+  - e.g. ESL data examples (knn, lasso).
 - Ch 3, the showSelected keyword
   - animation package examples?
   - time option
