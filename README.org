@@ -1,0 +1,48 @@
+** 4 Mar 2016
+
+animint: a grammar for animated and interactive data visualization
+
+- Ch 1, why animint?
+  - big, complex data sets. 
+    - big => interactive (too many subsets to show at once)
+    - complex => multi-layer (data, labels, model, and errors)
+  - Sketching: plot idea => sketch => code
+  - understanding, communicating, teaching.
+  - limitation of ggplot2: link between plots unclear, too many
+    details to show at once.
+  - limitation of d3: no high-level grammar for describing plots and
+    interactions.
+- Ch 2, static data visualization with ggplot2
+  - why grammar of graphics? multi-layer, multi-panel graphics easy.
+  - why multi-layer? anything more complicated than basic plots.
+  - why multi-panel? aligned axes or data subsets. motivation for
+    animint: what if there are too many subsets than you would like to
+    display at once?
+  - limitation: summarizing data rather than showing details.
+  - e.g. one frame of WorldBank-facets data viz.
+  - e.g. WorldBank data facet(year).
+  - e.g. change-point data viz + facet(segments ~ profile).
+  - e.g. montreal bike data?
+  - e.g. support vector machines on ESL example.
+- Ch 3, the showSelected keyword
+  - animation package examples?
+  - time option
+  - duration option
+  - WorldBank scatterplot example (point + year text), how to
+    emphasize different countries?
+  - change-point data viz, how to show different samples? facets?
+    model selection curves?
+- Ch 4, the clickSelects keyword
+  - WorldBank scatterplot with time series.
+- Ch X, other features
+  - aes(href)
+  - aes(tooltip)
+  - .variable and .value aesthetics
+- Ch X, sharing animints
+  - any web server
+  - gist
+  - rmarkdown
+  - github pages
+- Ch X, limitations of animint
+  - shiny. WorldBank-facets, changing aesthetic mappings.
+  - dc+crossfilter. axes, facets, data updated after clickSelects.
