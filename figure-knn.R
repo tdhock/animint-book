@@ -241,6 +241,9 @@ right.df <- subset(error, neighbors==max(neighbors))
 show.data$status <- ifelse(show.data$is.error, "error", "correct")
 show.grid$set <- NULL
 min.test.error$n.folds <- NULL
+fac <- function(x){
+  factor(x, c("CV folds", "validation fold", "percent error"))
+}
 viz <- list(
   title=paste0("training k-nearest-neighbors via ",
     n.folds, "-fold cross-validation"),
@@ -249,40 +252,51 @@ viz <- list(
                size=1,
                linetype="dashed",
                data=min.test.error)+
-    geom_point(aes(neighbors, n.folds, color=set),
-               data=data.frame(validation.stats.best, facet="n.folds"))+
-    geom_point(aes(neighbors.combined, n.folds, color=set,
-                   key=n.folds,
-                   showSelected=rule),
-               data=data.frame(best, facet="n.folds"))+
+    geom_rect(aes(xmin=neighbors-0.5, xmax=neighbors+0.5,
+                  ymin=n.folds-0.5, ymax=n.folds+0.5,
+                  color=set, size=fold, linetype=fold),
+              fill="transparent",
+              data=data.frame(
+                validation.stats.best, fold="mean", facet=fac("CV folds")))+
+    geom_rect(aes(xmin=neighbors-0.5, xmax=neighbors+0.5,
+                  ymin=n.folds-0.5, ymax=n.folds+0.5,
+                  color=set, size=fold, 
+                  linetype=fold,
+                  key=n.folds,
+                  showSelected=rule),
+              fill="transparent",
+              data=data.frame(best, fold="selected", facet=fac("CV folds")))+
+    scale_size_manual(values=c(mean=2, selected=1))+
     theme_bw()+
     geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd, fill=set,
+                    showSelected3=fold,
                     showSelected2=set,
                     showSelected=n.folds),
                 alpha=0.5,
-                data=data.frame(validation.stats, facet="details"))+
+                data=data.frame(
+                  validation.stats, fold="mean", facet=fac("percent error")))+
     geom_line(aes(neighbors, mean, color=set,
                   linetype=fold,
                   showSelected=n.folds),
-              data=data.frame(validation.stats, fold="mean", facet="details"))+
+              data=data.frame(
+                validation.stats, fold="mean", facet=fac("percent error")))+
     geom_point(aes(neighbors, mean, color=set,
+                   showSelected2=fold,
                    showSelected=n.folds),
-               data=data.frame(validation.stats.best, facet="details"))+
+               data=data.frame(
+                 validation.stats.best,
+                 fold="mean", facet=fac("percent error")))+
     theme(panel.margin=grid::unit(0, "cm"))+
-    geom_point(aes(neighbors, validation.fold, color=set,
-                   showSelected2=rule,
-                   showSelected=n.folds),
-               data=data.frame(selected, facet="validation.fold"))+
-    geom_vline(aes(xintercept=neighbors.combined, color=set,
-                   showSelected2=rule,
-                   showSelected=n.folds),
-               data=data.frame(best, facet="validation.fold"))+
     facet_grid(facet ~ ., scales="free")+
     scale_fill_manual(values=set.colors)+
     scale_color_manual(values=set.colors,
                        breaks=c("test", "validation", "train"))+
-    guides(fill="none")+
     scale_linetype_manual(values=c(mean="dashed", selected="solid"))+
+    guides(
+      fill="none",
+      linetype=guide_legend(
+        override.aes=list(colour=set.colors[["validation"]]))
+      )+
     geom_line(aes(neighbors, error.percent,
                   linetype=fold,
                   showSelected=validation.fold,
@@ -290,39 +304,53 @@ viz <- list(
                   group=set,
                   key=set,
                   color=set),
-              data=data.frame(error, fold="selected", facet="details"))+
+              data=data.frame(
+                error, fold="selected", facet=fac("percent error")))+
     make_tallrect(error, "neighbors")+
     geom_widerect(aes(ymin=validation.fold-0.5, ymax=validation.fold+0.5,
                       showSelected=n.folds,
                       clickSelects=validation.fold),
                   alpha=0.5,
                   data=data.frame(
-                    selected[rule==rule[1],], facet="validation.fold"))+
+                    selected[rule==rule[1],], facet=fac("validation fold")))+
     geom_widerect(aes(ymin=n.folds-0.5, ymax=n.folds+0.5,
                       clickSelects=n.folds),
                   alpha=0.5,
-                  data=data.frame(validation.stats.best, facet="n.folds"))+
+                  data=data.frame(
+                    validation.stats.best, facet=fac("CV folds")))+
+    geom_point(aes(neighbors, validation.fold, color=set,
+                   clickSelects=rule,
+                   showSelected=n.folds),
+               size=4,
+               data=data.frame(selected, facet=fac("validation fold")))+
+    geom_vline(aes(xintercept=neighbors.combined, color=set,
+                   clickSelects=rule,
+                   showSelected=n.folds),
+               size=4,
+               data=data.frame(best, facet=fac("validation fold")))+
     ylab("")+
     geom_point(aes(neighbors, error.percent, color=set,
                    key=rule,
                    clickSelects=rule,
                    showSelected=validation.fold,
-                   showSelected2=n.folds),
+                   showSelected2=n.folds,
+                   showSelected3=fold),
                size=4,
-               data=data.frame(selected, facet="details"))+
+               data=data.frame(
+                 selected, fold="selected", facet=fac("percent error")))+
     geom_segment(aes(0, error.percent,
                      xend=30, yend=error.percent,
                      color=set),
                  size=1,
-                 data=data.frame(bayes.error, facet="details"))+
+                 data=data.frame(bayes.error, facet=fac("percent error")))+
     geom_text(aes(0, error.percent, color=set, label="Bayes"),
               hjust=1,
-              data=data.frame(bayes.error, facet="details"))+
+              data=data.frame(bayes.error, facet=fac("percent error")))+
     geom_text(aes(neighbors, 33, color=set,
                   clickSelects=validation.fold,
                   label=" best test error"),
               hjust=0,
-              data=data.frame(min.test.error, facet="details")),
+              data=data.frame(min.test.error, facet=fac("percent error"))),
   ## error=ggplot()+
   ##   theme_bw()+
   ##   geom_vline(aes(xintercept=neighbors.before, color=set),
@@ -393,7 +421,7 @@ viz <- list(
     n.folds=1000,
     validation.fold=1000,
     neighbors=1000,
-    rule=1000,
+    rule=1000
     )
 )  
 viz$error + facet_grid(facet ~ n.folds, scales="free")
