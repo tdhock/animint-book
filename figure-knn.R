@@ -41,7 +41,7 @@ grid.df <- rbind(
 grid.df$fold <- NA
 neighbors.vec <- seq(1, by=2, l=40)
 neighbors.vec <- 1:30
-neighbors.vec <- seq(1, 30, by=4)
+neighbors.vec <- seq(1, 30, by=2)
 
 pred.data.list <- list()
 error.list <- list()
@@ -60,7 +60,7 @@ getBoundaryDF <- function(prob.vec){
   }
   do.call(rbind, contour.list)
 }
-for(n.folds in c(3, 5)){
+for(n.folds in c(3, 5, 10, 15)){
   ## My 10-fold cross-validation split.
   set.seed(1)
   mixture$fold <- sample(rep(1:n.folds, l=nrow(mixture)))
@@ -436,6 +436,7 @@ viz <- list(
     validation.fold="0",
     neighbors=min.test.error$neighbors
     ),
+  time=list(variable="neighbors", ms=2000),
   duration=list(
     n.folds=1000,
     validation.fold=1000,
