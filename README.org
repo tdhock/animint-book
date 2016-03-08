@@ -1,3 +1,9 @@
+** TODOs
+
+- setup travis
+- convert to Rmd
+- use http://rstudio.github.io/tufte/ ?
+
 ** 4 Mar 2016
 
 animint: a grammar for animated and interactive data visualization
