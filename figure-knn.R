@@ -244,6 +244,8 @@ min.test.error$n.folds <- NULL
 fac <- function(x){
   factor(x, c("CV folds", "validation fold", "percent error"))
 }
+show.neighbors <- show.grid[, list(
+  X1=mean(range(X1)), X2=3.05), by=neighbors]
 viz <- list(
   title=paste0("training k-nearest-neighbors via ",
     n.folds, "-fold cross-validation"),
@@ -258,13 +260,20 @@ viz <- list(
               fill="transparent",
               data=data.frame(
                 validation.stats.best, fold="mean", facet=fac("CV folds")))+
-    geom_rect(aes(xmin=neighbors-0.5, xmax=neighbors+0.5,
+    geom_rect(aes(xmin=neighbors.combined-0.5, xmax=neighbors.combined+0.5,
                   ymin=n.folds-0.5, ymax=n.folds+0.5,
                   color=set, size=fold, 
                   linetype=fold,
                   key=n.folds,
                   showSelected=rule),
               fill="transparent",
+              data=data.frame(best, fold="selected", facet=fac("CV folds")))+
+    geom_text(aes(neighbors.combined+1, n.folds,
+                  color=set, 
+                  label=rule,
+                  showSelected2=fold,
+                  showSelected=rule),
+              hjust=0,
               data=data.frame(best, fold="selected", facet=fac("CV folds")))+
     scale_size_manual(values=c(mean=2, selected=1))+
     theme_bw()+
@@ -329,6 +338,8 @@ viz <- list(
                size=4,
                data=data.frame(best, facet=fac("validation fold")))+
     ylab("")+
+    scale_x_continuous(
+      "nearest neighbors", breaks=c(range(error$neighbors), 10, 20))+
     geom_point(aes(neighbors, error.percent, color=set,
                    key=rule,
                    clickSelects=rule,
@@ -404,6 +415,14 @@ viz <- list(
                    showSelected2=validation.fold,
                    showSelected4=n.folds),
                data=show.data)+
+    geom_text(aes(X1, X2,
+                  showSelected=neighbors,
+                  label=paste0(
+                    neighbors,
+                    " nearest neighbor",
+                    ifelse(neighbors==1, "", "s"),
+                    " classifier")),
+              data=show.neighbors)+
     geom_path(aes(X1, X2, group=path.i, linetype=boundary),
               data=data.frame(Bayes.boundary, boundary="Bayes"))+
     geom_path(aes(X1, X2, group=path.i, linetype=boundary,
