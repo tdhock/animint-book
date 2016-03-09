@@ -1,0 +1,6 @@
+name: Animint
+markdown: redcarpet
+#highlighter: pygments
+highlighter: rouge
+
+exclude: ["pandoc", "reviews", "CONTRIBUTING.md", "README.org", "book", "extras"]

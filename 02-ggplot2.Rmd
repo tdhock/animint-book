@@ -1,9 +1,15 @@
+---
+title: ggplot2 basics
+layout: default
+output: bookdown::html_chapter
+---
+
 Chapter 2
 
 Basics of data visualization using ggplot2, the multi-layer,
 multi-panel grammer of graphics.
 
-** Brief history of the grammar of graphics
+# Brief history of the grammar of graphics
 
 Wilkinson proposed a general grammar of graphics to describe and
 create a large class of static data visualizations [Wilkinson
@@ -21,18 +27,19 @@ ggplot2. In this chapter we will introduce the main features of
 ggplot2 which will also be useful for interactive plot design in later
 chapters.
 
-** A basic static ggplot
+# A basic static ggplot
 
 The R code below produces a scatterplot of life expectancy and
 fertility rate for each country in the WorldBank data set.
 
-#+BEGIN_SRC R
-  data(WorldBank, package="animint")
-  p <- ggplot()+
-    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
-               data=subset(WorldBank, year==1975))
-  print(p)
-#+END_SRC
+```{r, cache=FALSE}
+data(WorldBank, package="animint")
+library(ggplot2)
+p <- ggplot()+
+geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+	   data=subset(WorldBank, year==1975))
+print(p)
+```
 
 Each ggplot contain exactly one \vocab{layer}, a =geom_point= which
 displays a circle for every row the in =data= set specified. The =aes=
@@ -42,10 +49,11 @@ and the =color= property specifies the color each point.
 
 This ggplot can be rendered by animint via
 
-#+BEGIN_SRC R
-  viz <- list(scatter=p)
-  structure(viz, class="animint")
-#+END_SRC
+```{r, cache=FALSE}
+library(animint)
+viz <- list(scatter=p)
+structure(viz, class="animint")
+```
 
 The first line assigns the ggplot to a named element of the =viz=
 list, and the second line gives the list the class =animint=. When
