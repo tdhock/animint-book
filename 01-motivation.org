@@ -1,0 +1,61 @@
+Chapter 1
+
+What is data visualization? How can animint help do that?
+
+** What is data visualization?
+
+Data visualization is the art of turning data into pictures. 
+
+*** What is data?
+
+Data are any pieces of information that are systematically recorded,
+usually in a table. Anybody can create data, just by systematically
+writing things down. For example, if you are trying a new diet, you
+may want to record what you eat and how you feel after each meal. In
+that case you could make a table with a row for each meal and four
+columns: date, time, what you ate, and how you felt after. 
+
+Data analysis is the process of converting data into knowledge. For
+example, there are a number of questions you could attempt to answer
+using the diet data described above:
+- Do meals occur at regular times each day?
+- Is there any difference in mood after adopting the new diet?
+Perhaps these questions could be answered by simply looking at the
+data table, if it is small enough. 
+
+In this book we are not concerned with such small data sets. Instead,
+we will focus on data sets that are too big to be analyzed by manual
+visual inspection of the data table. For example, imagine that your
+data table of meals includes information for the last five years. How
+to use all that data to provide meaningful answers to your questions?
+
+*** Data analysis on computers
+
+TODO discuss relationship of data analysis and visualization.
+
+First, we assume that the data can be stored as plain text on a
+computer. For example you could type a data table into a spreadsheet
+which could be converted into a text file. Once the data is in a text
+file, several computer programs could be used to read and analyze the
+data.
+
+In this book, we will exclusively discuss R, a free/open-source
+program that provides an ideal environment for data analysis. 
+
+#+BEGIN_SRC R
+  year.int <- as.integer(floor(time(co2)))
+  month.int <- as.integer(time(co2) %% 1 * 12 + 1)
+  year.month.str <- sprintf("%d-%02d-15", year.int, month.int)
+  year.month.POSIXct <- strptime(year.month.str, "%Y-%m-%d")
+  co2.df <- data.frame(
+    year.int,
+    month.int,
+    year.month.str,
+    year.month.POSIXct,
+    ppm=as.numeric(co2))
+  ggplot()+
+    geom_line(aes(year.month.POSIXct, ppm),
+              data=co2.df)
+#+END_SRC
+
+*** Why are pictures useful?
