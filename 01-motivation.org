@@ -4,7 +4,8 @@ What is data visualization? How can animint help do that?
 
 ** What is data visualization?
 
-Data visualization is the art of turning data into pictures. 
+Data visualization is the art of turning data into pictures. First we
+will discuss data and then we will discuss visualization.
 
 *** What is data?
 
@@ -14,6 +15,18 @@ writing things down. For example, if you are trying a new diet, you
 may want to record what you eat and how you feel after each meal. In
 that case you could make a table with a row for each meal and four
 columns: date, time, what you ate, and how you felt after. 
+
+TODO discuss https://en.wikipedia.org/wiki/Lady_tasting_tea
+
+#+BEGIN_SRC R
+  ## Data from ?fisher.test
+  TeaTasting <-
+    matrix(c(3, 1, 1, 3),
+           nrow = 2,
+           dimnames = list(Guess = c("Milk", "Tea"),
+                           Truth = c("Milk", "Tea")))
+  fisher.test(TeaTasting, alternative = "greater")
+#+END_SRC
 
 Data analysis is the process of converting data into knowledge. For
 example, there are a number of questions you could attempt to answer
