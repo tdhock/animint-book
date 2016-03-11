@@ -16,7 +16,19 @@ may want to record what you eat and how you feel after each meal. In
 that case you could make a table with a row for each meal and four
 columns: date, time, what you ate, and how you felt after. 
 
-TODO discuss https://en.wikipedia.org/wiki/Lady_tasting_tea
+As another example, consider the famous tea tasting experiment
+proposed by Ronald Fisher
+(https://en.wikipedia.org/wiki/Lady_tasting_tea). A Lady claimed that
+she could taste the difference when milk is added to the teacup before
+or after the tea. Fisher prepared four cups of tea with milk added
+after, and four cups of tea with milk added before. Fisher then placed
+the cups in a random order, had the Lady taste all eight cups of tea,
+and asked her to identify the four in which milk was added after the
+tea. According to =help(fisher.test)= in R, the Lady correctly
+identified three of the four cups in which milk was added after the
+tea. Fisher than wrote down the following data: the total number of
+cups (8), the total number of cups with milk added (4), and the total
+number of cups that the Lady correctly identified (3).
 
 #+BEGIN_SRC R
   ## Data from ?fisher.test
