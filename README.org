@@ -44,6 +44,10 @@ animint: a grammar for animated and interactive data visualization
   - aes(href)
   - aes(tooltip)
   - .variable and .value aesthetics
+  - shiny
+- Ch X, the WorldBank-facets example
+- Ch X, knn example
+- Ch X, lasso example
 - Ch X, sharing animints
   - any web server
   - gist

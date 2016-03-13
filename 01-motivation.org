@@ -41,8 +41,10 @@ number of cups that the Lady correctly identified (3).
 #+END_SRC
 
 Data analysis is the process of converting data into knowledge. For
-example, there are a number of questions you could attempt to answer
-using the diet data described above:
+example, Fisher wanted to test whether or not the Lady could taste the
+different between the two types of tea. As another example, there are
+a number of questions you could attempt to answer using the diet data
+described above:
 - Do meals occur at regular times each day?
 - Is there any difference in mood after adopting the new diet?
 Perhaps these questions could be answered by simply looking at the

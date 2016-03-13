@@ -60,7 +60,7 @@ getBoundaryDF <- function(prob.vec){
   }
   do.call(rbind, contour.list)
 }
-for(n.folds in c(3, 5, 10, 15)){
+for(n.folds in c(10)){
   ## My 10-fold cross-validation split.
   set.seed(1)
   mixture$fold <- sample(rep(1:n.folds, l=nrow(mixture)))
