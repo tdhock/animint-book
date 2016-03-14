@@ -1,88 +1,193 @@
 Chapter 1
 
-What is data visualization? How can animint help do that?
+The purpose of this book is to explain the usage of animint, an R
+package for interactive data visualization. This introductory chapter
+answers the following questions:
+- What are data, and how are they analyzed?
+- What is data visualization, and when is it useful for data analysis?
+- What is interactive data visualization, and when is it useful?
+This introductory chapter uses the following outline:
+- What is data?
+- Small data -- data visualization is not necessary.
+- Medium data -- static data visualization is sufficient.
+- Large data -- interactive data visualization is useful.
 
-** What is data visualization?
-
-Data visualization is the art of turning data into pictures. First we
-will discuss data and then we will discuss visualization.
-
-*** What is data?
+* What is data?
 
 Data are any pieces of information that are systematically recorded,
-usually in a table. Anybody can create data, just by systematically
-writing things down. For example, if you are trying a new diet, you
-may want to record what you eat and how you feel after each meal. In
-that case you could make a table with a row for each meal and four
-columns: date, time, what you ate, and how you felt after. 
+either on paper or on a computer. Anybody can create data, just by
+systematically writing things down. Typically, data are created in
+order to help answer a specific question, and are organized into
+tables with rows for observations and columns for variables or
+different types of information. The word "data" is the plural form of
+"datum," which we use to refer to one observation/row of a data
+table. We use the term "data set" to refer to a subset of
+observations/rows, or the entire data table.
 
-As another example, consider the famous tea tasting experiment
+TODO: should we show example data tables?
+
+There are many examples of data that could be created to answer
+questions based on everyday experiences:
+- How does the weather this year compare to previous years? Have we
+  had more or less rain than usual? To answer these questions, we
+  could create a data table with column for measurements of different
+  weather conditions: temperature, rainfall, etc. There should also be
+  columns for the date and time of each observation, and a row for
+  each observation.
+- How is this new diet affecting me? If you are trying a new diet, you
+  may want to record what you eat and how you feel after each meal. In
+  that case you could make a table with a row for each meal and four
+  columns: date, time, what you ate, and how you felt after.
+- Does this new lung cancer treatment work better than the old
+  treatment? A doctor who conducts the clinical trial would randomly
+  assign patients to receive either the new or old treatment. The
+  doctor would then create a data table with a row for each patient,
+  and several columns: years the patient has smoked, treatment type
+  (new or old), patient age at treatment, patient age at death.
+
+We define "data analysis" as the process of answering these questions
+by converting the raw data table into other, more comphensible
+forms. One highly effective class of methods for data analysis is
+called "data visualization," which seeks to provide answers to
+questions by converting data into pictures. However, there are many
+different ways to perform data analysis, and data sets of different
+sizes should be analyzed using different techniques. We begin by
+discussing small data sets, for which data visualization is not
+necessary.
+
+* Small data analysis without visualization
+
+In this section, we will discuss "small data," which we define as
+follows. If we can perform data analysis by simply looking at the
+entire data table, then that is a small data set. For small data sets,
+there is no need to use data visualization. Instead, the data can
+simply be presented for visual inspection in a table (REF:TUFTE).
+
+As a concrete example, consider the famous tea tasting experiment
 proposed by Ronald Fisher
 (https://en.wikipedia.org/wiki/Lady_tasting_tea). A Lady claimed that
 she could taste the difference when milk is added to the teacup before
-or after the tea. Fisher prepared four cups of tea with milk added
-after, and four cups of tea with milk added before. Fisher then placed
-the cups in a random order, had the Lady taste all eight cups of tea,
-and asked her to identify the four in which milk was added after the
-tea. According to =help(fisher.test)= in R, the Lady correctly
-identified three of the four cups in which milk was added after the
-tea. Fisher than wrote down the following data: the total number of
-cups (8), the total number of cups with milk added (4), and the total
-number of cups that the Lady correctly identified (3).
+or after the tea. Fisher asked the question, can the Lady really taste
+the difference between the two types of tea?
+
+To answer that question, Fisher prepared four cups of tea with milk
+added after, and four cups of tea with milk added before. Fisher then
+placed the cups in a random order, had the Lady taste all eight cups
+of tea, and asked her to identify the four in which milk was added
+after the tea. According to =help(fisher.test)= in R, the Lady
+correctly identified three of the four cups in which milk was added
+after the tea. Fisher than wrote down the following data: the total
+number of cups (8), the total number of cups with milk added (4), and
+the total number of cups that the Lady correctly identified (3). In R,
+this data set can be viewed by printing a contingency table of count
+data:
 
 #+BEGIN_SRC R
-  ## Data from ?fisher.test
   TeaTasting <-
     matrix(c(3, 1, 1, 3),
            nrow = 2,
            dimnames = list(Guess = c("Milk", "Tea"),
                            Truth = c("Milk", "Tea")))
-  fisher.test(TeaTasting, alternative = "greater")
+  print(TeaTasting)
 #+END_SRC
 
-Data analysis is the process of converting data into knowledge. For
-example, Fisher wanted to test whether or not the Lady could taste the
-different between the two types of tea. As another example, there are
-a number of questions you could attempt to answer using the diet data
-described above:
-- Do meals occur at regular times each day?
-- Is there any difference in mood after adopting the new diet?
-Perhaps these questions could be answered by simply looking at the
-data table, if it is small enough. 
+In this case, the data set is small enough such that Fisher's question
+can be answered by simply looking at the data table itself. If the
+Lady had been able to correctly identify all four cups, then that
+would have been a very convincing demonstration of her
+ability. However, she was apparently only able to correctly identify
+three out of the four cups, which is less convincing.
 
-In this book we are not concerned with such small data sets. Instead,
-we will focus on data sets that are too big to be analyzed by manual
-visual inspection of the data table. For example, imagine that your
-data table of meals includes information for the last five years. How
-to use all that data to provide meaningful answers to your questions?
+The main topic of this book is data visualization, which is not
+necessary for such small data sets. Instead, we will focus on data
+sets that are too big to be analyzed by manual visual inspection of
+the data table.
 
-*** Data analysis on computers
+* Medium data analysis with static data visualizations
 
-TODO discuss relationship of data analysis and visualization.
+For medium sized data sets, simply inspecting the data table is no
+longer sufficient to answer the questions posed during data
+analysis. Medium data are big enough such that we need to use
+visualization to understand the data. 
 
-First, we assume that the data can be stored as plain text on a
-computer. For example you could type a data table into a spreadsheet
-which could be converted into a text file. Once the data is in a text
-file, several computer programs could be used to read and analyze the
-data.
-
-In this book, we will exclusively discuss R, a free/open-source
-program that provides an ideal environment for data analysis. 
+For example, consider the following data on atmospheric carbon dioxide
+(CO2) concentrations, recorded monthly between 1959 and 1997.
 
 #+BEGIN_SRC R
+  library(data.table)
   year.int <- as.integer(floor(time(co2)))
   month.int <- as.integer(time(co2) %% 1 * 12 + 1)
-  year.month.str <- sprintf("%d-%02d-15", year.int, month.int)
-  year.month.POSIXct <- strptime(year.month.str, "%Y-%m-%d")
-  co2.df <- data.frame(
+  year.month.chr <- sprintf("%d-%02d-15", year.int, month.int)
+  year.month.POSIXct <- as.POSIXct(strptime(year.month.str, "%Y-%m-%d"))
+  month.str <- strftime(year.month.POSIXct, "%B")
+  co2.details <- data.table(
     year.int,
     month.int,
-    year.month.str,
+    month.str,
     year.month.POSIXct,
     ppm=as.numeric(co2))
-  ggplot()+
-    geom_line(aes(year.month.POSIXct, ppm),
-              data=co2.df)
+  print(co2.details)
 #+END_SRC
 
-*** Why are pictures useful?
+Printing these data on the R command line shows that there are 468
+rows/observations total. This is not a huge number of observations,
+but it is already big enough so that answering questions is not easy
+by simple visual inspection of the data table. Instead, we will create
+a static data visualization:
+
+#+BEGIN_SRC R
+  library(ggplot2)
+  extremes <- co2.details[month.int %in% c(5, 10),]
+  ggplot()+
+    geom_point(aes(year.month.POSIXct, ppm, color=month.str),
+               data=extremes)+
+    geom_line(aes(year.month.POSIXct, ppm),
+              data=co2.details)
+#+END_SRC
+
+The static data visualization shows that CO2 concentrations increased
+over the second half of the twentieth century. This particular data
+visualization is called a Keeling Curve
+(https://en.wikipedia.org/wiki/Keeling_Curve). It is named after
+Charles David Keeling, the pioneering scientist who was collected the
+first frequent regular data on atmospheric CO2. The general increasing
+trend can be explained by considering the chemical process of
+combustion, which converts oxygen to CO2. Keeling noted that "the
+observed rate of increase is nearly that to be expected from the
+combustion of fossil fuel" (REF: The Concentration and Isotopic
+Abundances of Carbon Dioxide in the Atmosphere, Keeling 1960).
+
+The data visualization also reveals the interesting seasonal trend
+that attains a local maximum each May and a local minimum each
+October. This seasonal trend can be explained by considering the
+forests in the Northern Hemisphere. The leaves on the trees in these
+forests perform photosynthesis, the chemical conversion of CO2 to
+oxygen. During the winter months there are no leaves on the trees, so
+CO2 accumulates in the atmosphere until it peaks in May of each
+year. When the leaves come back each year, they perform photosynthesis
+throughout Spring and Summer, which causes the atmospheric CO2
+concentration to drop until it reaches its yearly minimum in October.
+
+We say that this data visualization is "static" because the reader can
+view it but can not change what is displayed. That is fine for medium
+sized data sets, in which we can see all the details of the data set.
+However, as we discuss in the following section, static data
+visualization is not sufficient to show all the details in larger data
+sets.
+
+* Large data analysis with interactive data visualization
+
+Some data sets are so large that it is not possible to plot all of the
+data at once in a static data visualization. For such "large data"
+sets, traditional approaches to data analysis include summarizing the
+data, and then visualizing the summary. However, the summary can be
+misleading, because it does not show all the details of the original
+data. In such situations, "interactive data visualization" becomes
+useful.
+
+* Chapter summary and exercises
+
+- Based on the definitions introduced in this chapter, what is the
+  difference between small and medium data?
+- What is the difference between medium and large data?
+
