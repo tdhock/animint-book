@@ -23,12 +23,10 @@ plots:
   - geom_text for the train/test/Bayes error rates.
 
 #+BEGIN_SRC R
-  library(class)
-  library(data.table)
   library(ElemStatLearn)
   data(mixture.example)
-
   input.cols <- c("X1", "X2")
+  str(mixture.example)
 
   ## create a test set, from help(mixture.example)
   library(MASS)
@@ -49,6 +47,8 @@ plots:
     data.frame(pred.grid, set="grid"))
   not.train$fold <- NA
 
+  library(class)
+  library(data.table)
   OneFold <- function(validation.fold){
     set <- ifelse(mixture$fold == validation.fold, "validation", "train")
     fold.data <- rbind(not.train, data.frame(mixture, set))
@@ -101,14 +101,15 @@ plots:
   show.neighbors <- 7
   neighbors.dt <- data.table(neighbors=show.neighbors)
   show.data <- data.all.folds[validation.fold==0 & neighbors==show.neighbors,]
-  pred.grid <- show.data[set=="grid",]
-  pred.grid[, label := pred.label]
+  show.points <- show.data[set=="train",]
+  boundary.grid <- show.data[set=="grid",]
+  boundary.grid[, label := pred.label]
 
   ## train/test/Bayes error text box.
   text.height <- 0.2
   max.X1 <- 0
-  min.X2 <- min(pred.grid$X2)
-  min.X1 <- min(pred.grid$X1)
+  min.X2 <- min(boundary.grid$X2)
+  min.X1 <- min(boundary.grid$X1)
   Bayes.error <- data.table(
     set="Bayes",
     validation.fold=NA,
@@ -122,7 +123,7 @@ plots:
   on.text <- function(X1, X2){
     X2 <= max(error.text$X2.top) & X1 <= max.X1
   }
-  show.grid <- pred.grid[!on.text(X1, X2),]
+  show.grid <- boundary.grid[!on.text(X1, X2),]
 
   ## Also compute decision boundaries.
   getBoundaryDF <- function(prob.vec){
@@ -138,7 +139,7 @@ plots:
     }
     do.call(rbind, contour.list)
   }
-  pred.boundary <- getBoundaryDF(pred.grid$probability)
+  pred.boundary <- getBoundaryDF(boundary.grid$probability)
   pred.boundary$boundary <- "predicted"
   Bayes.boundary <- getBoundaryDF(mixture.example$prob)
   Bayes.boundary$boundary <- "Bayes"
@@ -181,7 +182,7 @@ plots:
                fill=NA,
                size=3,
                shape=21,
-               data=show.data[set=="train",])+
+               data=show.points)+
     geom_text(aes(min.X1, X2.bottom, label=paste(set, "Error:")),
               data=error.text,
               hjust=0)+
@@ -215,7 +216,7 @@ plots:
                data=other.error)
   print(errorPlot)
 
-  viz <- list(
+  viz.static <- list(
     title="Figure 13.4 from Elements of Statistical Learning by Hastie et al",
     error=errorPlot,
     data=scatterPlot
@@ -223,206 +224,121 @@ plots:
   library(animint)
   animint2dir(viz)
 
-  viz <- list(
-    title=paste0("training k-nearest-neighbors via ",
-      n.folds, "-fold cross-validation"),
-    error=ggplot()+
-      geom_vline(aes(xintercept=neighbors, color=set),
-		 size=1,
-		 linetype="dashed",
-		 data=min.test.error)+
-      geom_rect(aes(xmin=neighbors-0.5, xmax=neighbors+0.5,
-                    ymin=n.folds-0.5, ymax=n.folds+0.5,
-                    color=set, size=fold, linetype=fold),
-		fill="transparent",
-		data=data.frame(
-                  validation.stats.best, fold="mean", facet=fac("CV folds")))+
-      geom_rect(aes(xmin=neighbors.combined-0.5, xmax=neighbors.combined+0.5,
-                    ymin=n.folds-0.5, ymax=n.folds+0.5,
-                    color=set, size=fold, 
-                    linetype=fold,
-                    key=n.folds,
-                    showSelected=rule),
-		fill="transparent",
-		data=data.frame(best, fold="selected", facet=fac("CV folds")))+
-      geom_text(aes(neighbors.combined+1, n.folds,
-                    color=set, 
-                    label=rule,
-                    showSelected2=fold,
-                    showSelected=rule),
-		hjust=0,
-		data=data.frame(best, fold="selected", facet=fac("CV folds")))+
-      scale_size_manual(values=c(mean=2, selected=1))+
-      theme_bw()+
-      geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd, fill=set,
-                      showSelected3=fold,
-                      showSelected2=set,
-                      showSelected=n.folds),
+  ## Re-design.
+  show.data <- data.all.folds[validation.fold==0,]
+  show.points <- show.data[set=="train",]
+  boundary.grid <- show.data[set=="grid",]
+  boundary.grid[, label := pred.label]
+  pred.boundary <- boundary.grid[, getBoundaryDF(probability), by=neighbors]
+  pred.boundary$boundary <- "predicted"
+  show.grid <- boundary.grid[!on.text(X1, X2),]
+
+  ## train/test/Bayes error text box.
+  text.height <- 0.2
+  max.X1 <- 0
+  min.X2 <- min(boundary.grid$X2)
+  min.X1 <- min(boundary.grid$X1)
+  other.error[, X2.bottom := min.X2 + text.height * 1:2]
+
+  Bayes.error <- data.table(
+    set="Bayes",
+    error.prop=0.21)
+  ##dput(RColorBrewer::brewer.pal(Inf, "Set1"))
+  set.colors <-
+    c("#E41A1C",
+      validation="#4DAF4A",
+      test="#984EA3",
+      train="#FF7F00", "#FFFF33", 
+      "#A65628", "#F781BF", "#999999")
+  scatterPlot <- ggplot()+
+    theme_bw()+
+    xlab("Input feature 1")+
+    ylab("Input feature 2")+
+    scale_color_manual(values=label.colors)+
+    scale_linetype_manual(values=c(Bayes="dashed", predicted="solid"))+
+    geom_point(aes(X1, X2, color=label,
+                   showSelected=neighbors),
+               size=0.2,
+               data=show.grid)+
+    geom_path(aes(X1, X2, group=paste(boundary, path.i),
+                  linetype=boundary, showSelected=neighbors),
+              size=1,
+              data=pred.boundary)+
+    geom_path(aes(X1, X2, group=paste(boundary, path.i),
+                  linetype=boundary),
+              color=set.colors[["test"]],
+              size=1,
+              data=Bayes.boundary)+
+    geom_point(aes(X1, X2, color=label,
+                   showSelected=neighbors),
+               fill=NA,
+               size=3,
+               shape=21,
+               data=show.points)+
+    geom_text(aes(min.X1, min.X2, label=paste(set, "Error:")),
+              data=Bayes.error,
+              hjust=0)+
+    geom_text(aes(max.X1, min.X2, label=sprintf("%.3f", error.prop)),
+              data=Bayes.error,
+              hjust=1)+
+    geom_text(aes(min.X1, X2.bottom, label=paste(set, "Error:"),
+                  showSelected=neighbors),
+              data=other.error,
+              hjust=0)+
+    geom_text(aes(max.X1, X2.bottom, label=sprintf("%.3f", error.prop),
+                  showSelected=neighbors),
+              data=other.error,
+              hjust=1)
+  print(scatterPlot+facet_wrap("neighbors")+theme(panel.margin=grid::unit(0, "lines")))
+
+  Bayes.segment <- data.table(
+    Bayes.error,
+    min.neighbors=1,
+    max.neighbors=29)
+  Bayes.segment$set <- "test"
+  Bayes.segment$error <- "Bayes"
+  validation.error$error <- "KNN"
+  other.error$error <- "KNN"
+  errorPlot <- ggplot()+
+    geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1,
+                      clickSelects=neighbors),
                   alpha=0.5,
-                  data=data.frame(
-                    validation.stats, fold="mean", facet=fac("percent error")))+
-      geom_line(aes(neighbors, mean, color=set,
-                    linetype=fold,
-                    showSelected=n.folds),
-		data=data.frame(
-                  validation.stats, fold="mean", facet=fac("percent error")))+
-      geom_point(aes(neighbors, mean, color=set,
-                     showSelected2=fold,
-                     showSelected=n.folds),
-		 data=data.frame(
-                   validation.stats.best,
-                   fold="mean", facet=fac("percent error")))+
-      theme(panel.margin=grid::unit(0, "cm"))+
-      facet_grid(facet ~ ., scales="free")+
-      scale_fill_manual(values=set.colors)+
-      scale_color_manual(values=set.colors,
-			 breaks=c("test", "validation", "train"))+
-      scale_linetype_manual(values=c(mean="dashed", selected="solid"))+
-      guides(
-	fill="none",
-	linetype=guide_legend(
-          override.aes=list(colour=set.colors[["validation"]]))
-	)+
-      geom_line(aes(neighbors, error.prop,
-                    linetype=fold,
-                    showSelected=validation.fold,
-                    showSelected2=n.folds,
-                    group=set,
-                    key=set,
-                    color=set),
-		data=data.frame(
-                  error, fold="selected", facet=fac("percent error")))+
-      make_tallrect(error, "neighbors")+
-      geom_widerect(aes(ymin=n.folds-0.5, ymax=n.folds+0.5,
-			clickSelects=n.folds),
-                    alpha=0.5,
-                    data=data.frame(
-                      validation.stats.best, facet=fac("CV folds")))+
-      geom_vline(aes(xintercept=neighbors.combined, color=set,
-                     clickSelects=rule,
-                     showSelected=n.folds),
-		 size=4,
-		 data=data.frame(best, facet=fac("validation fold")))+
-      ylab("")+
-      scale_x_continuous(
-	"nearest neighbors", breaks=c(range(error$neighbors), 10, 20))+
-      geom_segment(aes(0, error.prop,
-                       xend=30, yend=error.prop,
-                       color=set),
-                   size=1,
-                   data=data.frame(bayes.error, facet=fac("percent error")))+
-      geom_text(aes(0, error.prop, color=set, label="Bayes"),
-		hjust=1,
-		data=data.frame(bayes.error, facet=fac("percent error")))+
-      geom_text(aes(neighbors, 33, color=set,
-                    clickSelects=validation.fold,
-                    label=" best test error"),
-		hjust=0,
-		data=data.frame(min.test.error, facet=fac("percent error"))),
-    data=ggplot()+
-      theme_bw()+
-      theme(panel.margin=grid::unit(0, "lines"))+
-      facet_grid(. ~ set)+
-      theme_animint(width=600)+
-      geom_tile(aes(X1, X2, fill=probability,
-                    showSelected=neighbors,
-                    showSelected3=n.folds,
-                    showSelected2=validation.fold),
-		 data=show.grid)+
-      xlab("Input feature 1")+
-      ylab("Input feature 2")+
-      geom_point(aes(X1, X2, size=status,
-                     key=data.i,
-                     showSelected=neighbors,
-                     showSelected3=label,
-                     showSelected4=n.folds,
-                     showSelected2=validation.fold),
-		 color="black",
-		 data=show.data)+
-      scale_color_manual(values=label.colors)+
-      scale_fill_gradient2(
-	low=label.colors[1], midpoint=0.5, high=label.colors[2])+
-      scale_size_manual(values=c(error=5, correct=3.5))+
-      geom_point(aes(X1, X2, color=label,
-                     key=data.i,
-                     showSelected=neighbors,
-                     showSelected3=status,
-                     showSelected2=validation.fold,
-                     showSelected4=n.folds),
-		 data=show.data)+
-      geom_text(aes(X1, X2,
-                    showSelected=neighbors,
-                    label=paste0(
-                      neighbors,
-                      " nearest neighbor",
-                      ifelse(neighbors==1, "", "s"),
-                      " classifier")),
-		data=show.neighbors)+
-      geom_path(aes(X1, X2, group=path.i, linetype=boundary),
-		data=data.frame(Bayes.boundary, boundary="Bayes"))+
-      geom_path(aes(X1, X2, group=path.i, linetype=boundary,
-                    key=paste(path.i, neighbors, n.folds, validation.fold),
-                    showSelected=neighbors,
-                    showSelected3=n.folds,
-                    showSelected2=validation.fold),
-		data=data.frame(pred.boundary, boundary="predicted")),
-    first=list(
-      n.folds=3,
-      validation.fold="0",
-      neighbors=min.test.error$neighbors
-      ),
-    time=list(variable="neighbors", ms=2000),
-    duration=list(
-      n.folds=1000,
-      validation.fold=1000,
-      neighbors=1000,
-      rule=1000
-      )
-  )  
-  viz$error + facet_grid(facet ~ n.folds, scales="free")
+                  data=validation.error)+
+    geom_text(aes(min.neighbors, error.prop,
+                  color=set, label="Bayes",
+                  showSelected=error),
+              hjust=1,
+              data=Bayes.segment)+
+    geom_segment(aes(min.neighbors, error.prop,
+                     xend=max.neighbors, yend=error.prop,
+                     color=set, linetype=error),
+		 data=Bayes.segment)+
+    scale_color_manual(values=set.colors, breaks=names(set.colors))+
+    scale_fill_manual(values=set.colors)+
+    guides(fill="none")+
+    scale_linetype_manual("error", values=c(
+      KNN="solid",
+      Bayes="dashed"))+
+    ylab("Misclassification Errors")+
+    xlab("Number of Neighbors")+
+    geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
+                    fill=set, showSelected=error),
+		alpha=0.5,
+		data=validation.error)+
+    geom_line(aes(neighbors, mean,
+                  linetype=error, color=set),
+              data=validation.error)+
+    geom_line(aes(neighbors, error.prop, group=set,
+                  linetype=error, color=set),
+              data=other.error)
+  print(errorPlot)
 
-  animint2dir(viz, "figure-knn")
-
-
-
-  fold.data$pred <- factor(pred.label)
-  fold.data$is.error <- with(fold.data, pred != label)
-  data.by.set <- split(fold.data, fold.data$set)
-  for(set in c("train", "validation", "test")){
-    if(set %in% names(data.by.set)){
-      set.data <- data.by.set[[set]]
-      errors <- sum(set.data$is.error)
-      observations <- nrow(set.data)
-      error.prop <- 100*errors/observations
-      fold.error.list[[paste(neighbors, set)]] <- data.table(
-	neighbors, set, errors, observations, error.prop)
-    }
-  }#for(set
-
-
-  show.data <- subset(pred.data, set %in% c("train", "validation"))
-  show.grid <- subset(pred.data, set == "grid")
-  error.stats <- error[, list(
-    mean=mean(error.prop), sd=sd(error.prop), error="knn"
-    ), by=.(n.folds, set, neighbors)]
-  validation.stats <- error.stats[set=="validation",]
-  error.by.neighbors <- split(validation.error, validation.error$neighbors)
-  full.error <- subset(error, validation.fold==0)
-  full.error$error <- "knn"
-  bayes.error <- data.frame(error.prop=21, set="test", error="Bayes")
-  validation.stats.best <- validation.stats[, .SD[which.min(mean),], by=n.folds]
-  one.full.error <- full.error[n.folds==min(n.folds), ]
-  test.curve <- one.full.error[set=="test",]
-  min.test.error <- test.curve[which.min(errors), ]
-
-  show.data$status <- ifelse(show.data$is.error, "error", "correct")
-  show.grid$set <- NULL
-  min.test.error$n.folds <- NULL
-  fac <- function(x){
-    factor(x, c("CV folds", "validation fold", "percent error"))
-  }
-  show.neighbors <- show.grid[, list(
-    X1=mean(range(X1)), X2=3.05), by=neighbors]
+  viz.neighbors <- list(
+    title="K-Nearest Neighbors in Mixture Example",
+    error=errorPlot,
+    data=scatterPlot
+    )
+  animint2dir(viz.neighbors)
 #+END_SRC
 
 
