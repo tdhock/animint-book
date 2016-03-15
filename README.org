@@ -2,6 +2,7 @@
 
 - setup travis
 - convert to Rmd
+- setup https://github.com/vspinu/polymode
 - use http://rstudio.github.io/tufte/ ?
 
 ** Overview
