@@ -3,6 +3,8 @@ Chapter XX, visualizing the nearest neighbors classifier
 In this chapter we will explore several interactive data
 visualizations of the K-Nearest Neighbors (KNN) classifier.
 
+* Original static figure
+
 We start by reproducing a static version of Figure 13.4 from Elements
 of Statistical Learning by Hastie et al. That Figure consists of two
 plots:
@@ -22,36 +24,83 @@ plots:
   - geom_path for the decision boundaries.
   - geom_text for the train/test/Bayes error rates.
 
+We begin by loading the data set.
+
 #+BEGIN_SRC R
   library(ElemStatLearn)
   data(mixture.example)
-  input.cols <- c("X1", "X2")
   str(mixture.example)
-  
-  ## create a test set, from help(mixture.example)
+#+END_SRC
+
+We will use the following components of this data set:
+- x, the input matrix of the training data set (200 observations x 2
+  numeric features). 
+- y, the output vector of the training data set (200 class labels,
+  either 0 or 1).
+- xnew, the grid of points in the input space where we will show the
+  classifier predictions (6831 grid points x 2 numeric features).
+- prob, the true probability of class 1 at each of the grid points
+  (6831 numeric values between 0 and 1).
+- px1, the grid of points for the first input feature (69 numeric
+  values between -2.6 and 4.2). These will be used to compute the
+  Bayes decision boundary using the contourLines function.
+- px2, the grid of points for the second input feature (99 numeric
+  values between -2 and 2.9).
+- means, the 20 centers of the normal distributions in the simulation
+  model (20 centers x 2 input features).
+
+First, we create a test set, following the example code from
+help(mixture.example).
+
+#+BEGIN_SRC R
   library(MASS)
+  library(data.table)
   set.seed(123)
   centers <- c(sample(1:10, 5000, replace=TRUE), 
                sample(11:20, 5000, replace=TRUE))
   mix.test <- mvrnorm(10000, c(0,0), 0.2*diag(2))
-  test.points <- data.frame(
+  test.points <- data.table(
     mix.test + mixture.example$means[centers,],
     label=factor(c(rep(0, 5000), rep(1, 5000))))
-  
-  ## Combine grid and test points.
-  mixture <- with(mixture.example, data.frame(x, label=factor(y)))
-  pred.grid <- data.frame(mixture.example$xnew, label=NA)
+  test.points
+#+END_SRC  
+
+We then create a data table which includes all test points and grid
+points, which we will use in the test argument to the knn function.
+
+#+BEGIN_SRC R
+  pred.grid <- data.table(mixture.example$xnew, label=NA)
+  input.cols <- c("V1", "V2")
   names(pred.grid)[1:2] <- input.cols
-  not.train <- rbind(
-    data.frame(test.points, set="test"),
-    data.frame(pred.grid, set="grid"))
-  not.train$fold <- NA
-  
+  test.and.grid <- rbind(
+    data.table(test.points, set="test"),
+    data.table(pred.grid, set="grid"))
+  test.and.grid$fold <- NA
+  test.and.grid
+#+END_SRC  
+
+We randomly assign each observation of the training data set to one of
+ten folds.
+
+#+BEGIN_SRC R
+  n.folds <- 10
+  set.seed(2)
+  mixture <- with(mixture.example, data.table(x, label=factor(y)))
+  mixture$fold <- sample(rep(1:n.folds, l=nrow(mixture)))
+  mixture
+#+END_SRC
+
+We define the following OneFold function, which divides the 200
+observations into one train and one validation set. It then computes
+the predicted probability of the K-Nearest-Neighbors classifier for
+each of the data points in all sets (train, validation, test, and
+grid).
+
+#+BEGIN_SRC R
   library(class)
-  library(data.table)
   OneFold <- function(validation.fold){
     set <- ifelse(mixture$fold == validation.fold, "validation", "train")
-    fold.data <- rbind(not.train, data.frame(mixture, set))
+    fold.data <- rbind(test.and.grid, data.table(mixture, set))
     fold.data$data.i <- 1:nrow(fold.data)
     train.df <- subset(fold.data, set == "train")
     data.by.neighbors <- list()
@@ -59,8 +108,8 @@ plots:
       cat(sprintf("n.folds=%4d validation.fold=%d neighbors=%d\n",
                   n.folds, validation.fold, neighbors))
       pred.label <- 
-        knn(train.df[, input.cols],
-            fold.data[, input.cols],
+        knn(train.df[, input.cols, with=FALSE],
+            fold.data[, input.cols, with=FALSE],
             train.df$label,
             k=neighbors,
             prob=TRUE)
@@ -72,22 +121,33 @@ plots:
     }#for(neighbors
     do.call(rbind, data.by.neighbors)
   }#for(validation.fold
-  
-  ## My 10-fold cross-validation split.
-  n.folds <- 10
-  set.seed(2)
-  mixture$fold <- sample(rep(1:n.folds, l=nrow(mixture)))
+#+END_SRC  
+
+Below, we run the OneFold function in parallel using the doParallel
+package. Note that validation folds 1:10 will be used to compute the
+validation set error. The validation fold 0 treats all 200
+observations as a train set, and will be used for visualizing the
+learned decision boundaries of the K-Nearest-Neighbors classifier.
+
+#+BEGIN_SRC R
   library(doParallel)
   registerDoParallel()
   data.all.folds <- foreach(validation.fold=0:10, .combine=rbind) %dopar% {
     one.fold <- OneFold(validation.fold)
     data.table(validation.fold, one.fold)
   }
-  
   data.all.folds[, pred.label := ifelse(0.5 < probability, "1", "0")]
   data.all.folds[, is.error := label != pred.label]
+  data.all.folds
+#+END_SRC  
+
+The data table of predictions contains almost 3 million observations!
+When there are so many data, visualizing all of them at once is not
+practical or informative. Instead of visualizing them all at once, we
+will compute and plot the mean validation error for each model.
+
+#+BEGIN_SRC R
   labeled.data <- data.all.folds[!is.na(label),]
-  
   error.stats <- labeled.data[, list(
     error.prop=mean(is.error)
     ), by=.(set, validation.fold, neighbors)]
@@ -95,102 +155,33 @@ plots:
     mean=mean(error.prop),
     sd=sd(error.prop)/sqrt(.N)
     ), by=.(set, neighbors)]
-  other.error <- error.stats[validation.fold==0,]
-  
-  ## Get the subset of data that is shown in the original Figure.
-  show.neighbors <- 7
-  neighbors.dt <- data.table(neighbors=show.neighbors)
-  show.data <- data.all.folds[validation.fold==0 & neighbors==show.neighbors,]
-  show.points <- show.data[set=="train",]
-  boundary.grid <- show.data[set=="grid",]
-  boundary.grid[, label := pred.label]
-  
-  ## train/test/Bayes error text box.
-  text.height <- 0.2
-  max.X1 <- 0
-  min.X2 <- min(boundary.grid$X2)
-  min.X1 <- min(boundary.grid$X1)
+  validation.error
+#+END_SRC
+
+Below we construct data tables for the Bayes error, and the train/
+test error.
+
+#+BEGIN_SRC R
   Bayes.error <- data.table(
     set="Bayes",
     validation.fold=NA,
     neighbors=NA,
     error.prop=0.21)
-  error.text <- rbind(
-    Bayes.error,
-    other.error[neighbors==show.neighbors,])
-  error.text[, X2.top := min.X2 + text.height * (1:.N)]
-  error.text[, X2.bottom := X2.top - text.height]
-  on.text <- function(X1, X2){
-    X2 <= max(error.text$X2.top) & X1 <= max.X1
-  }
-  show.grid <- boundary.grid[!on.text(X1, X2),]
-  
-  ## Also compute decision boundaries.
-  getBoundaryDF <- function(prob.vec){
-    stopifnot(length(prob.vec) == 6831)
-    several.paths <- with(mixture.example, contourLines(
-      px1, px2,
-      matrix(prob.vec, length(px1), length(px2)),
-      levels=0.5))
-    contour.list <- list()
-    for(path.i in seq_along(several.paths)){
-      contour.list[[path.i]] <- with(several.paths[[path.i]], data.table(
-        path.i, X1=x, X2=y))
-    }
-    do.call(rbind, contour.list)
-  }
-  pred.boundary <- getBoundaryDF(boundary.grid$probability)
-  pred.boundary$boundary <- "predicted"
-  Bayes.boundary <- getBoundaryDF(mixture.example$prob)
-  Bayes.boundary$boundary <- "Bayes"
-  
-  ##dput(RColorBrewer::brewer.pal(Inf, "Set1"))
-  label.colors <-
-    c("#E41A1C",
-      "0"="#377EB8", "#4DAF4A", "#984EA3",
-      "1"="#FF7F00", "#FFFF33", 
-      "#A65628", "#F781BF", "#999999")
-  ##dput(RColorBrewer::brewer.pal(Inf, "Set1"))
+  Bayes.error
+  other.error <- error.stats[validation.fold==0,]
+  head(other.error)
+#+END_SRC
+
+The code below reproduces the plot of the error curves from the
+original Figure. Note that we used the color palette from
+dput(RColorBrewer::brewer.pal(Inf, "Set1")).
+
+#+BEGIN_SRC R
   set.colors <-
-    c("#E41A1C",
-      test="#377EB8",
-      validation="#4DAF4A",
-      Bayes="#984EA3",
-      train="#FF7F00", "#FFFF33", 
-      "#A65628", "#F781BF", "#999999")
-  scatterPlot <- ggplot()+
-    theme_bw()+
-    theme(axis.text=element_blank(),
-          axis.ticks=element_blank(),
-          axis.title=element_blank())+
-    ggtitle("7-Nearest Neighbors")+
-    scale_color_manual(values=label.colors)+
-    scale_linetype_manual(values=c(Bayes="dashed", predicted="solid"))+
-    geom_point(aes(X1, X2, color=label),
-               size=0.2,
-               data=show.grid)+
-    geom_path(aes(X1, X2, group=paste(boundary, path.i),
-                  linetype=boundary),
-              size=1,
-              data=pred.boundary)+
-    geom_path(aes(X1, X2, group=paste(boundary, path.i),
-                  linetype=boundary),
-              color=set.colors[["Bayes"]],
-              size=1,
-              data=Bayes.boundary)+
-    geom_point(aes(X1, X2, color=label),
-               fill=NA,
-               size=3,
-               shape=21,
-               data=show.points)+
-    geom_text(aes(min.X1, X2.bottom, label=paste(set, "Error:")),
-              data=error.text,
-              hjust=0)+
-    geom_text(aes(max.X1, X2.bottom, label=sprintf("%.3f", error.prop)),
-              data=error.text,
-              hjust=1)
-  print(scatterPlot)
-  
+    c(test="#377EB8", #blue
+      validation="#4DAF4A",#green
+      Bayes="#984EA3",#purple
+      train="#FF7F00")#orange
   errorPlot <- ggplot()+
     geom_hline(aes(yintercept=error.prop, color=set, linetype=set),
                data=Bayes.error)+
@@ -215,7 +206,124 @@ plots:
     geom_point(aes(neighbors, error.prop, color=set),
                data=other.error)
   print(errorPlot)
-  
+#+END_SRC  
+
+For the static data visualization of the feature space, we show only
+the model with 7 neighbors.
+
+#+BEGIN_SRC R
+  show.neighbors <- 7
+  show.data <- data.all.folds[validation.fold==0 & neighbors==show.neighbors,]
+  show.points <- show.data[set=="train",]
+  show.points
+#+END_SRC  
+
+Next, we compute the Train, Test, and Bayes mis-classification error
+rates which we will show in the bottom left of the feature space plot.
+
+#+BEGIN_SRC R
+  text.height <- 0.2
+  max.V1 <- 0
+  min.V2 <- min(show.grid$V2)
+  min.V1 <- min(show.grid$V1)
+  error.text <- rbind(
+    Bayes.error,
+    other.error[neighbors==show.neighbors,])
+  error.text[, V2.top := min.V2 + text.height * (1:.N)]
+  error.text[, V2.bottom := V2.top - text.height]
+  error.text  
+#+END_SRC
+
+We define the following function which we will use to compute the
+decision boundaries.
+
+#+BEGIN_SRC R
+  getBoundaryDF <- function(prob.vec){
+    stopifnot(length(prob.vec) == 6831)
+    several.paths <- with(mixture.example, contourLines(
+      px1, px2,
+      matrix(prob.vec, length(px1), length(px2)),
+      levels=0.5))
+    contour.list <- list()
+    for(path.i in seq_along(several.paths)){
+      contour.list[[path.i]] <- with(several.paths[[path.i]], data.table(
+        path.i, V1=x, V2=y))
+    }
+    do.call(rbind, contour.list)
+  }
+#+END_SRC
+
+We use this function to compute the decision boundaries for the
+learned 7-Nearest-Neighbors classifier, and for the optimal Bayes
+classifier.
+
+#+BEGIN_SRC R
+  boundary.grid <- show.data[set=="grid",]
+  boundary.grid[, label := pred.label]
+  pred.boundary <- getBoundaryDF(boundary.grid$probability)
+  pred.boundary$boundary <- "predicted"
+  Bayes.boundary <- getBoundaryDF(mixture.example$prob)
+  Bayes.boundary$boundary <- "Bayes"
+  Bayes.boundary
+#+END_SRC
+
+Below, we consider only the grid points that do not overlap the text
+labels.
+
+#+BEGIN_SRC R
+  on.text <- function(V1, V2){
+    V2 <= max(error.text$V2.top) & V1 <= max.V1
+  }
+  show.grid <- boundary.grid[!on.text(V1, V2),]
+  show.grid
+#+END_SRC
+
+The scatterplot below reproduces the 7-Nearest-Neighbors classifier of
+the original Figure. 
+
+#+BEGIN_SRC R
+  label.colors <-
+    c("#E41A1C",
+      "0"="#377EB8", "#4DAF4A", "#984EA3",
+      "1"="#FF7F00", "#FFFF33", 
+      "#A65628", "#F781BF", "#999999")
+  scatterPlot <- ggplot()+
+    theme_bw()+
+    theme(axis.text=element_blank(),
+          axis.ticks=element_blank(),
+          axis.title=element_blank())+
+    ggtitle("7-Nearest Neighbors")+
+    scale_color_manual(values=label.colors)+
+    scale_linetype_manual(values=c(Bayes="dashed", predicted="solid"))+
+    geom_point(aes(V1, V2, color=label),
+               size=0.2,
+               data=show.grid)+
+    geom_path(aes(V1, V2, group=paste(boundary, path.i),
+                  linetype=boundary),
+              size=1,
+              data=pred.boundary)+
+    geom_path(aes(V1, V2, group=paste(boundary, path.i),
+                  linetype=boundary),
+              color=set.colors[["Bayes"]],
+              size=1,
+              data=Bayes.boundary)+
+    geom_point(aes(V1, V2, color=label),
+               fill=NA,
+               size=3,
+               shape=21,
+               data=show.points)+
+    geom_text(aes(min.V1, V2.bottom, label=paste(set, "Error:")),
+              data=error.text,
+              hjust=0)+
+    geom_text(aes(max.V1, V2.bottom, label=sprintf("%.3f", error.prop)),
+              data=error.text,
+              hjust=1)
+  print(scatterPlot)
+#+END_SRC  
+
+Finally, we combine the two ggplots and render them as an animint.
+
+#+BEGIN_SRC R
   viz.static <- list(
     title="Figure 13.4 from Elements of Statistical Learning by Hastie et al",
     error=errorPlot,
@@ -223,25 +331,36 @@ plots:
     )
   library(animint)
   structure(viz.static, class="animint")
-  
-  ## Re-design.
+#+END_SRC  
+
+This data viz does have three interactive legends, but it is static in
+the sense that it displays only the model predictions for 7-Nearest
+Neighbors.
+
+* Select the number of neighbors using interactivity
+
+#+BEGIN_SRC R
   show.data <- data.all.folds[validation.fold==0,]
   show.points <- show.data[set=="train",]
   boundary.grid <- show.data[set=="grid",]
   boundary.grid[, label := pred.label]
   pred.boundary <- boundary.grid[, getBoundaryDF(probability), by=neighbors]
   pred.boundary$boundary <- "predicted"
-  show.grid <- boundary.grid[!on.text(X1, X2),]
+  show.grid <- boundary.grid[!on.text(V1, V2),]
   show.text <- show.grid[, list(
-    X1=mean(range(X1)), X2=3.05), by=neighbors]
-  
+    V1=mean(range(V1)), V2=3.05), by=neighbors]
+#+END_SRC  
+
+#+BEGIN_SRC R
   ## train/test/Bayes error text box.
   text.height <- 0.2
-  max.X1 <- 0
-  min.X2 <- min(boundary.grid$X2)
-  min.X1 <- min(boundary.grid$X1)
-  other.error[, X2.bottom := min.X2 + text.height * 1:2]
-  
+  max.V1 <- 0
+  min.V2 <- min(boundary.grid$V2)
+  min.V1 <- min(boundary.grid$V1)
+  other.error[, V2.bottom := min.V2 + text.height * 1:2]
+#+END_SRC  
+
+#+BEGIN_SRC R
   Bayes.error <- data.table(
     set="Bayes",
     error.prop=0.21)
@@ -258,41 +377,41 @@ plots:
     ylab("Input feature 2")+
     scale_color_manual(values=label.colors)+
     scale_linetype_manual(values=c(Bayes="dashed", predicted="solid"))+
-    geom_point(aes(X1, X2, color=label,
+    geom_point(aes(V1, V2, color=label,
                    showSelected=neighbors),
                size=0.2,
                data=show.grid)+
-    geom_path(aes(X1, X2, group=paste(boundary, path.i),
+    geom_path(aes(V1, V2, group=paste(boundary, path.i),
                   linetype=boundary, showSelected=neighbors),
               size=1,
               data=pred.boundary)+
-    geom_path(aes(X1, X2, group=paste(boundary, path.i),
+    geom_path(aes(V1, V2, group=paste(boundary, path.i),
                   linetype=boundary),
               color=set.colors[["test"]],
               size=1,
               data=Bayes.boundary)+
-    geom_point(aes(X1, X2, color=label,
+    geom_point(aes(V1, V2, color=label,
                    fill=is.error,
                    showSelected=neighbors),
                size=3,
                shape=21,
                data=show.points)+
     scale_fill_manual(values=c("TRUE"="black", "FALSE"="transparent"))+
-    geom_text(aes(min.X1, min.X2, label=paste(set, "Error:")),
+    geom_text(aes(min.V1, min.V2, label=paste(set, "Error:")),
               data=Bayes.error,
               hjust=0)+
-    geom_text(aes(max.X1, min.X2, label=sprintf("%.3f", error.prop)),
+    geom_text(aes(max.V1, min.V2, label=sprintf("%.3f", error.prop)),
               data=Bayes.error,
               hjust=1)+
-    geom_text(aes(min.X1, X2.bottom, label=paste(set, "Error:"),
+    geom_text(aes(min.V1, V2.bottom, label=paste(set, "Error:"),
                   showSelected=neighbors),
               data=other.error,
               hjust=0)+
-    geom_text(aes(max.X1, X2.bottom, label=sprintf("%.3f", error.prop),
+    geom_text(aes(max.V1, V2.bottom, label=sprintf("%.3f", error.prop),
                   showSelected=neighbors),
               data=other.error,
               hjust=1)+
-    geom_text(aes(X1, X2,
+    geom_text(aes(V1, V2,
                   showSelected=neighbors,
                   label=paste0(
                     neighbors,
@@ -301,7 +420,9 @@ plots:
                     " classifier")),
               data=show.text)
   print(scatterPlot+facet_wrap("neighbors")+theme(panel.margin=grid::unit(0, "lines")))
-  
+#+END_SRC  
+
+#+BEGIN_SRC R
   Bayes.segment <- data.table(
     Bayes.error,
     min.neighbors=1,
@@ -349,7 +470,9 @@ plots:
                   alpha=0.5,
                   data=validation.error)
   print(errorPlot)
-  
+#+END_SRC  
+
+#+BEGIN_SRC R
   viz.neighbors <- list(
     title="K-Nearest Neighbors in Mixture Example",
     error=errorPlot,
@@ -360,4 +483,4 @@ plots:
   structure(viz.neighbors, class="animint")
 #+END_SRC
 
-
+* Select the number of cross-validation folds using interactivity
