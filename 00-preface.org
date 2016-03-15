@@ -1,0 +1,22 @@
+Preface
+
+The chapters of this book are organized as follows.
+
+Chapters 1-2 introduce data visualization using the grammar of
+graphics, as implemented in the ggplot2 R package. They should be
+especially useful for readers who are completely new to data analysis,
+and readers who have never used ggplot2.
+
+Chapters 3-4 cover clickSelects and showSelected, the main new
+keywords that animint introduces for interactive data visualization
+design.
+
+Chapter 5-6 covers some other features of animint, including how to
+share your interactive data visualizations on the web.
+
+Chapter 7 covers the limitations of the animint R package, and
+explains workarounds for some common issues.
+
+Chapters 8-XX each explain in detail how to create an informative
+visualization for a particular data set.
+

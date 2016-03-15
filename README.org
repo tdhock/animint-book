@@ -8,17 +8,17 @@
 
 animint: a grammar for animated and interactive data visualization
 
-- Ch 1, why animint?
+- Ch 1, Motivation
   - big, complex data sets. 
     - big => interactive (too many subsets to show at once)
     - complex => multi-layer (data, labels, model, and errors)
-  - Sketching: plot idea => sketch => code
   - understanding, communicating, teaching.
   - limitation of ggplot2: link between plots unclear, too many
     details to show at once.
   - limitation of d3: no high-level grammar for describing plots and
     interactions.
 - Ch 2, static data visualization with ggplot2
+  - Sketching: plot idea => sketch => code
   - why grammar of graphics? multi-layer, multi-panel graphics easy.
   - why multi-layer? anything more complicated than basic plots.
   - why multi-panel? aligned axes or data subsets. motivation for
@@ -40,19 +40,19 @@ animint: a grammar for animated and interactive data visualization
     model selection curves?
 - Ch 4, the clickSelects keyword
   - WorldBank scatterplot with time series.
-- Ch X, other features
+- Ch 5, other features
   - aes(href)
   - aes(tooltip)
   - .variable and .value aesthetics
   - shiny
-- Ch X, the WorldBank-facets example
-- Ch X, knn example
-- Ch X, lasso example
-- Ch X, sharing animints
+- Ch 6, sharing animints
   - any web server
   - gist
   - rmarkdown
   - github pages
-- Ch X, limitations of animint
+- Ch 7, limitations of animint
   - shiny. WorldBank-facets, changing aesthetic mappings.
   - dc+crossfilter. axes, facets, data updated after clickSelects.
+- Ch X, the WorldBank-facets example
+- Ch X, knn example
+- Ch X, lasso example

@@ -1,4 +1,4 @@
-Chapter 1
+Chapter 1, Motivation
 
 The purpose of this book is to explain the usage of animint, an R
 package for interactive data visualization. This introductory chapter
@@ -11,6 +11,8 @@ This introductory chapter uses the following outline:
 - Small data -- data visualization is not necessary.
 - Medium data -- static data visualization is sufficient.
 - Large data -- interactive data visualization is useful.
+
+TODO: Figure comparing small, medium, large data.
 
 * What is data?
 
@@ -46,14 +48,18 @@ questions based on everyday experiences:
   (new or old), patient age at treatment, patient age at death.
 
 We define "data analysis" as the process of answering these questions
-by converting the raw data table into other, more comphensible
+by converting the raw data table into other, more comprehensible
 forms. One highly effective class of methods for data analysis is
 called "data visualization," which seeks to provide answers to
-questions by converting data into pictures. However, there are many
-different ways to perform data analysis, and data sets of different
-sizes should be analyzed using different techniques. We begin by
-discussing small data sets, for which data visualization is not
-necessary.
+questions by converting a data set into an informative picture. The
+term "data visualization" refers to both the picture itself (alsa
+known as a plot, figure, graph, or data viz), and the process of
+creating the picture.
+
+There are many different ways to perform data analysis, and data sets
+of different sizes should be analyzed using different techniques. We
+begin by discussing small data sets, for which data visualization is
+not necessary.
 
 * Small data analysis without visualization
 
@@ -118,12 +124,13 @@ For example, consider the following data on atmospheric carbon dioxide
   year.int <- as.integer(floor(time(co2)))
   month.int <- as.integer(time(co2) %% 1 * 12 + 1)
   year.month.chr <- sprintf("%d-%02d-15", year.int, month.int)
-  year.month.POSIXct <- as.POSIXct(strptime(year.month.str, "%Y-%m-%d"))
+  year.month.POSIXct <- as.POSIXct(strptime(year.month.chr, "%Y-%m-%d"))
   month.str <- strftime(year.month.POSIXct, "%B")
+  month <- factor(month.str, month.str[1:12])
   co2.details <- data.table(
     year.int,
     month.int,
-    month.str,
+    month,
     year.month.POSIXct,
     ppm=as.numeric(co2))
   print(co2.details)
@@ -139,17 +146,17 @@ a static data visualization:
   library(ggplot2)
   extremes <- co2.details[month.int %in% c(5, 10),]
   ggplot()+
-    geom_point(aes(year.month.POSIXct, ppm, color=month.str),
-               data=extremes)+
     geom_line(aes(year.month.POSIXct, ppm),
-              data=co2.details)
+              data=co2.details)+
+    geom_point(aes(year.month.POSIXct, ppm, color=month),
+               data=extremes)
 #+END_SRC
 
 The static data visualization shows that CO2 concentrations increased
 over the second half of the twentieth century. This particular data
 visualization is called a Keeling Curve
 (https://en.wikipedia.org/wiki/Keeling_Curve). It is named after
-Charles David Keeling, the pioneering scientist who was collected the
+Charles David Keeling, the pioneering scientist who collected the
 first frequent regular data on atmospheric CO2. The general increasing
 trend can be explained by considering the chemical process of
 combustion, which converts oxygen to CO2. Keeling noted that "the
@@ -177,13 +184,43 @@ sets.
 
 * Large data analysis with interactive data visualization
 
-Some data sets are so large that it is not possible to plot all of the
-data at once in a static data visualization. For such "large data"
-sets, traditional approaches to data analysis include summarizing the
-data, and then visualizing the summary. However, the summary can be
-misleading, because it does not show all the details of the original
-data. In such situations, "interactive data visualization" becomes
-useful.
+Some data sets are so large that it is not possible or desirable to
+plot all of the data at once in a static data visualization. For such
+"large data" sets, traditional approaches to data analysis include
+summarizing the data, and then visualizing the summary. However, the
+summary can be misleading, because it does not show all the details of
+the original data. In such situations, "interactive data
+visualization" becomes useful.
+
+First, let us consider a slightly more complicated form of the Keeling
+Curve data visualization.
+
+#+BEGIN_SRC R
+  TimeSeries <- ggplot()+
+    geom_line(aes(year.month.POSIXct, ppm),
+              size=1,
+              data=co2.details)+
+    geom_point(aes(year.month.POSIXct, ppm, color=month),
+               data=co2.details)+
+    scale_color_brewer(palette="Set3")
+  print(TimeSeries)
+#+END_SRC
+
+The plot above shows colored points for each month of the year, rather
+than for only May and September, the yearly local minima that we
+wanted to emphasize. Since it lacks this emphasis, this static plot is
+not as informative as the previous plot. This is an example where it
+is not desirable to plot all of the data at once. We can solve this
+problem using the interactive plot
+
+#+BEGIN_SRC R
+  viz <- list(
+    TimeSeries=TimeSeries,
+    first=list(month=c("May", "October"))
+    )
+  library(animint)
+  structure(viz, class="animint")
+#+END_SRC
 
 * Chapter summary and exercises
 
