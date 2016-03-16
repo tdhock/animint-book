@@ -1,13 +1,13 @@
 Chapter XX, visualizing the nearest neighbors classifier
 
-In this chapter we will explore several interactive data
+In this chapter we will explore several data
 visualizations of the K-Nearest Neighbors (KNN) classifier.
 
 * Original static figure
 
 We start by reproducing a static version of Figure 13.4 from Elements
 of Statistical Learning by Hastie et al. That Figure consists of two
-plots:
+plots (TODO SKETCH):
 - mis-classification error curves, as a function of the number of
   neighbors:
   - geom_line and geom_point for the error curves.
@@ -23,6 +23,8 @@ plots:
     background.
   - geom_path for the decision boundaries.
   - geom_text for the train/test/Bayes error rates.
+
+** Plot of mis-classification error curves
 
 We begin by loading the data set.
 
@@ -97,27 +99,27 @@ each of the data points in all sets (train, validation, test, and
 grid).
 
 #+BEGIN_SRC R
-  library(class)
   OneFold <- function(validation.fold){
+    require(class)
     set <- ifelse(mixture$fold == validation.fold, "validation", "train")
     fold.data <- rbind(test.and.grid, data.table(mixture, set))
     fold.data$data.i <- 1:nrow(fold.data)
-    train.df <- subset(fold.data, set == "train")
+    only.train <- subset(fold.data, set == "train")
     data.by.neighbors <- list()
     for(neighbors in seq(1, 30, by=2)){
       cat(sprintf("n.folds=%4d validation.fold=%d neighbors=%d\n",
                   n.folds, validation.fold, neighbors))
       pred.label <- 
-        knn(train.df[, input.cols, with=FALSE],
+	knn(only.train[, input.cols, with=FALSE],
             fold.data[, input.cols, with=FALSE],
-            train.df$label,
+            only.train$label,
             k=neighbors,
             prob=TRUE)
       prob.winning.class <- attr(pred.label, "prob")
       fold.data$probability <- ifelse(
-        pred.label=="1", prob.winning.class, 1-prob.winning.class)
+	pred.label=="1", prob.winning.class, 1-prob.winning.class)
       data.by.neighbors[[paste(neighbors)]] <- 
-        data.table(neighbors, fold.data)
+	data.table(neighbors, fold.data)
     }#for(neighbors
     do.call(rbind, data.by.neighbors)
   }#for(validation.fold
@@ -144,7 +146,9 @@ learned decision boundaries of the K-Nearest-Neighbors classifier.
 The data table of predictions contains almost 3 million observations!
 When there are so many data, visualizing all of them at once is not
 practical or informative. Instead of visualizing them all at once, we
-will compute and plot the mean validation error for each model.
+will compute and plot summary statistics. In the code below we compute
+the mean and standard error of the mis-classification error for each
+model (over the 10 validation folds).
 
 #+BEGIN_SRC R
   labeled.data <- data.all.folds[!is.na(label),]
@@ -158,8 +162,8 @@ will compute and plot the mean validation error for each model.
   validation.error
 #+END_SRC
 
-Below we construct data tables for the Bayes error, and the train/
-test error.
+Below we construct data tables for the Bayes error (which we know is
+0.21 for the mixture example data), and the train/test error.
 
 #+BEGIN_SRC R
   Bayes.error <- data.table(
@@ -208,6 +212,8 @@ dput(RColorBrewer::brewer.pal(Inf, "Set1")).
   print(errorPlot)
 #+END_SRC  
 
+** Plot of decision boundaries in the input feature space
+
 For the static data visualization of the feature space, we show only
 the model with 7 neighbors.
 
@@ -223,13 +229,13 @@ rates which we will show in the bottom left of the feature space plot.
 
 #+BEGIN_SRC R
   text.height <- 0.2
-  max.V1 <- 0
-  min.V2 <- min(show.grid$V2)
-  min.V1 <- min(show.grid$V1)
+  text.V1.prop <- 0
+  text.V2.bottom <- -2
+  text.V1.error <- -2.6
   error.text <- rbind(
     Bayes.error,
     other.error[neighbors==show.neighbors,])
-  error.text[, V2.top := min.V2 + text.height * (1:.N)]
+  error.text[, V2.top := text.V2.bottom + text.height * (1:.N)]
   error.text[, V2.bottom := V2.top - text.height]
   error.text  
 #+END_SRC
@@ -247,7 +253,7 @@ decision boundaries.
     contour.list <- list()
     for(path.i in seq_along(several.paths)){
       contour.list[[path.i]] <- with(several.paths[[path.i]], data.table(
-        path.i, V1=x, V2=y))
+	path.i, V1=x, V2=y))
     }
     do.call(rbind, contour.list)
   }
@@ -272,7 +278,7 @@ labels.
 
 #+BEGIN_SRC R
   on.text <- function(V1, V2){
-    V2 <= max(error.text$V2.top) & V1 <= max.V1
+    V2 <= max(error.text$V2.top) & V1 <= text.V1.prop
   }
   show.grid <- boundary.grid[!on.text(V1, V2),]
   show.grid
@@ -312,14 +318,16 @@ the original Figure.
                size=3,
                shape=21,
                data=show.points)+
-    geom_text(aes(min.V1, V2.bottom, label=paste(set, "Error:")),
+    geom_text(aes(text.V1.error, V2.bottom, label=paste(set, "Error:")),
               data=error.text,
               hjust=0)+
-    geom_text(aes(max.V1, V2.bottom, label=sprintf("%.3f", error.prop)),
+    geom_text(aes(text.V1.prop, V2.bottom, label=sprintf("%.3f", error.prop)),
               data=error.text,
               hjust=1)
   print(scatterPlot)
 #+END_SRC  
+
+** Combined plots
 
 Finally, we combine the two ggplots and render them as an animint.
 
@@ -339,42 +347,157 @@ Neighbors.
 
 * Select the number of neighbors using interactivity
 
+In this section we propose an interactive re-design which allows the
+user to select K, the number of neighbors in the K-Nearest-Neighbors
+classifier.
+
+TODO:SKETCH
+
+** Clickable error curves plot
+
+We begin with a re-design of the error curves plot.
+
+Note the following changes:
+- add a selector for the number of neighbors (geom_tallrect).
+- change the Bayes decision boundary from a hline with a legend entry,
+  to a segment with a text label.
+- add a linetype legend to distinguish error rates from the Bayes and
+  KNN models.
+- change the error bars (geom_linerange) to error bands (geom_ribbon).
+
+The only new data that we need to define are the endpoints of the
+segment that we will use to plot the Bayes decision boundary.
+
+#+BEGIN_SRC R
+  Bayes.segment <- data.table(
+    Bayes.error,
+    min.neighbors=1,
+    max.neighbors=29,
+    set="test",
+    error="Bayes")
+#+END_SRC
+
+We also add an error variable to the data tables that contain the
+prediction error of the K-Nearest-Neighbors models. This error
+variable will be used for the linetype legend.
+
+#+BEGIN_SRC R
+  validation.error$error <- "KNN"
+  other.error$error <- "KNN"
+#+END_SRC
+
+We re-define the plot of the error curves below. Note that 
+- We use showSelected in geom_text and geom_ribbon, so that they will
+  be hidden when the interactive legends are clicked.
+- We use clickSelects in geom_tallrect, to select the number of
+  neighbors. Clickable geoms should be last (top layer) so that they
+  are not obscured by non-clickable geoms (bottom layers).
+
+#+BEGIN_SRC R
+  errorPlot <- ggplot()+
+    ggtitle("Select number of neighbors")+
+    geom_text(aes(min.neighbors, error.prop,
+                  color=set, label="Bayes",
+                  showSelected=error),
+              hjust=1,
+              data=Bayes.segment)+
+    geom_segment(aes(min.neighbors, error.prop,
+                     xend=max.neighbors, yend=error.prop,
+                     color=set, linetype=error),
+		 data=Bayes.segment)+
+    scale_color_manual(values=set.colors, breaks=names(set.colors))+
+    scale_fill_manual(values=set.colors)+
+    guides(fill="none")+
+    scale_linetype_manual("error", values=c(
+      KNN="solid",
+      Bayes="dashed"))+
+    ylab("Misclassification Errors")+
+    scale_x_continuous(
+      "Number of Neighbors",
+      limits=c(-1, 30),
+      breaks=c(1, 10, 20, 29))+
+    geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
+                    fill=set,
+                    showSelected=error,
+                    showSelected2=set),
+		alpha=0.5,
+		data=validation.error)+
+    geom_line(aes(neighbors, mean,
+                  linetype=error, color=set),
+              data=validation.error)+
+    geom_line(aes(neighbors, error.prop, group=set,
+                  linetype=error, color=set),
+              data=other.error)+
+    geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1,
+                      clickSelects=neighbors),
+                  alpha=0.5,
+                  data=validation.error)
+  print(errorPlot)
+#+END_SRC  
+
+** Feature space plot that shows the selected number of neighbors 
+
+Next, we focus on a re-design of the feature space plot. In the
+previous section we considered only the subset of data from the model
+with 7 neighbors. Our re-design includes the following changes:
+- We use neighbors as a showSelected variable.
+- We add a legend to show which training data points are
+  mis-classified.
+- We use equal spaced coordinates so that visual distance (pixels) is
+  the same as the Euclidean distance in the feature space.
+
 #+BEGIN_SRC R
   show.data <- data.all.folds[validation.fold==0,]
   show.points <- show.data[set=="train",]
-  boundary.grid <- show.data[set=="grid",]
-  boundary.grid[, label := pred.label]
-  pred.boundary <- boundary.grid[, getBoundaryDF(probability), by=neighbors]
-  pred.boundary$boundary <- "predicted"
-  show.grid <- boundary.grid[!on.text(V1, V2),]
-  show.text <- show.grid[, list(
-    V1=mean(range(V1)), V2=3.05), by=neighbors]
+  show.points
 #+END_SRC  
 
+Below, we compute the predicted decision boundaries separately for
+each K-Nearest-Neighbors model.
+
 #+BEGIN_SRC R
-  ## train/test/Bayes error text box.
-  text.height <- 0.2
-  max.V1 <- 0
-  min.V2 <- min(boundary.grid$V2)
-  min.V1 <- min(boundary.grid$V1)
-  other.error[, V2.bottom := min.V2 + text.height * 1:2]
+  boundary.grid <- show.data[set=="grid",]
+  boundary.grid[, label := pred.label]
+  show.grid <- boundary.grid[!on.text(V1, V2),]
+  pred.boundary <- boundary.grid[, getBoundaryDF(probability), by=neighbors]
+  pred.boundary$boundary <- "predicted"
+  pred.boundary
 #+END_SRC  
+
+Instead of showing the number of neighbors in the plot title, below we
+create a geom_text element that will be updated based on the number of
+selected neighbors.
+
+#+BEGIN_SRC R
+  show.text <- show.grid[, list(
+    V1=mean(range(V1)), V2=3.05), by=neighbors]
+#+END_SRC
+
+Below we compute the position of the text in the bottom left, which we
+will use to display the error rate of the selected model.
+
+#+BEGIN_SRC R
+  other.error[, V2.bottom := text.V2.bottom + text.height * 1:2]
+#+END_SRC
+
+Below we re-define the Bayes error data without a neighbors column, so
+that it appears in each showSelected subset.
 
 #+BEGIN_SRC R
   Bayes.error <- data.table(
     set="Bayes",
     error.prop=0.21)
-  ##dput(RColorBrewer::brewer.pal(Inf, "Set1"))
-  set.colors <-
-    c("#E41A1C",
-      validation="#4DAF4A",
-      test="#984EA3",
-      train="#FF7F00", "#FFFF33", 
-      "#A65628", "#F781BF", "#999999")
+#+END_SRC
+
+Finally, we re-define the ggplot, using neighbors as a showSelected
+variable in the point, path, and text geoms.
+
+#+BEGIN_SRC R
   scatterPlot <- ggplot()+
     theme_bw()+
     xlab("Input feature 1")+
     ylab("Input feature 2")+
+    coord_equal()+
     scale_color_manual(values=label.colors)+
     scale_linetype_manual(values=c(Bayes="dashed", predicted="solid"))+
     geom_point(aes(V1, V2, color=label,
@@ -397,17 +520,17 @@ Neighbors.
                shape=21,
                data=show.points)+
     scale_fill_manual(values=c("TRUE"="black", "FALSE"="transparent"))+
-    geom_text(aes(min.V1, min.V2, label=paste(set, "Error:")),
+    geom_text(aes(text.V1.error, text.V2.bottom, label=paste(set, "Error:")),
               data=Bayes.error,
               hjust=0)+
-    geom_text(aes(max.V1, min.V2, label=sprintf("%.3f", error.prop)),
+    geom_text(aes(text.V1.prop, text.V2.bottom, label=sprintf("%.3f", error.prop)),
               data=Bayes.error,
               hjust=1)+
-    geom_text(aes(min.V1, V2.bottom, label=paste(set, "Error:"),
+    geom_text(aes(text.V1.error, V2.bottom, label=paste(set, "Error:"),
                   showSelected=neighbors),
               data=other.error,
               hjust=0)+
-    geom_text(aes(max.V1, V2.bottom, label=sprintf("%.3f", error.prop),
+    geom_text(aes(text.V1.prop, V2.bottom, label=sprintf("%.3f", error.prop),
                   showSelected=neighbors),
               data=other.error,
               hjust=1)+
@@ -419,58 +542,21 @@ Neighbors.
                     ifelse(neighbors==1, "", "s"),
                     " classifier")),
               data=show.text)
-  print(scatterPlot+facet_wrap("neighbors")+theme(panel.margin=grid::unit(0, "lines")))
-#+END_SRC  
+#+END_SRC
+
+Before compiling the interactive data viz, we print a static ggplot
+with a facet for each value of neighbors.
 
 #+BEGIN_SRC R
-  Bayes.segment <- data.table(
-    Bayes.error,
-    min.neighbors=1,
-    max.neighbors=29)
-  Bayes.segment$set <- "test"
-  Bayes.segment$error <- "Bayes"
-  validation.error$error <- "KNN"
-  other.error$error <- "KNN"
-  errorPlot <- ggplot()+
-    ggtitle("Select number of neighbors")+
-    geom_text(aes(min.neighbors, error.prop,
-                  color=set, label="Bayes",
-                  showSelected=error),
-              hjust=1,
-              data=Bayes.segment)+
-    geom_segment(aes(min.neighbors, error.prop,
-                     xend=max.neighbors, yend=error.prop,
-                     color=set, linetype=error),
-                 data=Bayes.segment)+
-    scale_color_manual(values=set.colors, breaks=names(set.colors))+
-    scale_fill_manual(values=set.colors)+
-    guides(fill="none")+
-    scale_linetype_manual("error", values=c(
-      KNN="solid",
-      Bayes="dashed"))+
-    ylab("Misclassification Errors")+
-    scale_x_continuous(
-      "Number of Neighbors",
-      limits=c(-1, 30),
-      breaks=c(1, 10, 20, 29))+
-    geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
-                    fill=set,
-                    showSelected=error,
-                    showSelected2=set),
-                alpha=0.5,
-                data=validation.error)+
-    geom_line(aes(neighbors, mean,
-                  linetype=error, color=set),
-              data=validation.error)+
-    geom_line(aes(neighbors, error.prop, group=set,
-                  linetype=error, color=set),
-              data=other.error)+
-    geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1,
-                      clickSelects=neighbors),
-                  alpha=0.5,
-                  data=validation.error)
-  print(errorPlot)
-#+END_SRC  
+  scatterPlot+
+    facet_wrap("neighbors")+
+    theme(panel.margin=grid::unit(0, "lines"))
+#+END_SRC
+
+** Combined interactive data viz
+
+Finally, we combine the two plots in a single data viz with neighbors
+as a selector variable.
 
 #+BEGIN_SRC R
   viz.neighbors <- list(
@@ -483,4 +569,26 @@ Neighbors.
   structure(viz.neighbors, class="animint")
 #+END_SRC
 
+Note that neighbors is used as a time variable, so animation shows the
+predictions of the different models.
+
 * Select the number of cross-validation folds using interactivity
+
+TODO
+
+* Chapter summary and exercises
+
+We showed how to add two interactive features to a data visualization
+of predictions of the K-Nearest-Neighbors model. We started with a
+static data visualization which only showed predictions of the
+7-Nearest-Neighbors model. Then, we created an interactive re-design
+which allowed selecting K, the number of neighbors. We did another
+re-design which added a plot for selecting the number of
+cross-validation folds. 
+
+Exercises:
+- So far, the feature space plots only showed model predictions and
+  errors for the entire train data set (validation.fold==0). Create a
+  re-design which includes a new plot or facet for selecting
+  validation.fold, and a facetted feature space plot (one facet for
+  train set, one facet for validation set).

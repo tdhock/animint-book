@@ -1,7 +1,8 @@
 ** TODOs
 
 - setup travis
-- convert to Rmd
+- convert to Rmd with one animint (otherwise loading probably too
+  slow).
 - setup https://github.com/vspinu/polymode
 - use http://rstudio.github.io/tufte/ ?
 
@@ -29,8 +30,6 @@ animint: a grammar for animated and interactive data visualization
   - e.g. one frame of WorldBank-facets data viz.
   - e.g. WorldBank data facet(year).
   - e.g. change-point data viz + facet(segments ~ profile).
-  - e.g. montreal bike data?
-  - e.g. ESL data examples (knn, lasso).
 - Ch 3, the showSelected keyword
   - animation package examples?
   - time option
@@ -55,5 +54,7 @@ animint: a grammar for animated and interactive data visualization
   - shiny. WorldBank-facets, changing aesthetic mappings.
   - dc+crossfilter. axes, facets, data updated after clickSelects.
 - Ch X, the WorldBank-facets example
+- Ch X, montreal bike data?
 - Ch X, knn example
 - Ch X, lasso example
+- Ch X, SVM example
