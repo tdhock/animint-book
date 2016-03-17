@@ -1,4 +1,4 @@
-Chapter XX, visualizing the nearest neighbors classifier
+
 
 In this chapter we will explore several data
 visualizations of the K-Nearest Neighbors (KNN) classifier.
@@ -37,20 +37,20 @@ str(mixture.example)
 
 We will use the following components of this data set:
 
-* x, the input matrix of the training data set (200 observations x 2
+* `x`, the input matrix of the training data set (200 observations x 2
   numeric features). 
-* y, the output vector of the training data set (200 class labels,
+* `y`, the output vector of the training data set (200 class labels,
   either 0 or 1).
-* xnew, the grid of points in the input space where we will show the
+* `xnew`, the grid of points in the input space where we will show the
   classifier predictions (6831 grid points x 2 numeric features).
-* prob, the true probability of class 1 at each of the grid points
+* `prob`, the true probability of class 1 at each of the grid points
   (6831 numeric values between 0 and 1).
-* px1, the grid of points for the first input feature (69 numeric
+* `px1`, the grid of points for the first input feature (69 numeric
   values between -2.6 and 4.2). These will be used to compute the
   Bayes decision boundary using the contourLines function.
-* px2, the grid of points for the second input feature (99 numeric
+* `px2`, the grid of points for the second input feature (99 numeric
   values between -2 and 2.9).
-* means, the 20 centers of the normal distributions in the simulation
+* `means`, the 20 centers of the normal distributions in the simulation
   model (20 centers x 2 input features).
 
 First, we create a test set, following the example code from
@@ -365,8 +365,8 @@ We begin with a re-design of the error curves plot.
 
 Note the following changes:
 * add a selector for the number of neighbors (`geom_tallrect`).
-* change the Bayes decision boundary from a hline with a legend entry,
-  to a segment with a text label.
+* change the Bayes decision boundary from `geom_hline` with a legend
+  entry, to a `geom_segment` with a text label.
 * add a linetype legend to distinguish error rates from the Bayes and
   KNN models.
 * change the error bars (`geom_linerange`) to error bands (`geom_ribbon`).
@@ -403,6 +403,7 @@ We re-define the plot of the error curves below. Note that
 errorPlot <- ggplot()+
   ggtitle("Select number of neighbors")+
   theme_bw()+
+  theme_animint(height=500)+
   geom_text(aes(min.neighbors, error.prop,
                 color=set, label="Bayes",
                 showSelected=error),
@@ -502,6 +503,7 @@ variable in the point, path, and text geoms.
 ```{r}
 scatterPlot <- ggplot()+
   theme_bw()+
+  theme_animint(width=500, height=500)+
   xlab("Input feature 1")+
   ylab("Input feature 2")+
   coord_equal()+
@@ -590,8 +592,8 @@ of predictions of the K-Nearest-Neighbors model. We started with a
 static data visualization which only showed predictions of the
 7-Nearest-Neighbors model. Then, we created an interactive re-design
 which allowed selecting K, the number of neighbors. We did another
-re-design which added a plot for selecting the number of
-cross-validation folds. 
+re-design which added a facet for selecting the number of
+cross-validation folds.
 
 Exercises:
 * So far, the feature space plots only showed model predictions and
