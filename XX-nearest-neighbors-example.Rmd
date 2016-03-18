@@ -179,28 +179,37 @@ other.error <- error.stats[validation.fold==0,]
 head(other.error)
 ```
 
-The code below reproduces the plot of the error curves from the
-original Figure. Note that we used the color palette from
-`dput(RColorBrewer::brewer.pal(Inf, "Set1"))`.
+Below we construct a color palette from
+`dput(RColorBrewer::brewer.pal(Inf, "Set1"))`, and linetype palettes.
 
 ```{r}
-set.colors <-
-  c(test="#377EB8", #blue
-    validation="#4DAF4A",#green
-    Bayes="#984EA3",#purple
-    train="#FF7F00")#orange
+set.colors <- c(
+  test="#377EB8", #blue
+  validation="#4DAF4A",#green
+  Bayes="#984EA3",#purple
+  train="#FF7F00")#orange
+classifier.linetypes <- c(
+  Bayes="dashed",
+  KNN="solid")
+set.linetypes <- set.colors
+set.linetypes[] <- classifier.linetypes[["KNN"]]
+set.linetypes["Bayes"] <- classifier.linetypes[["Bayes"]]
+cbind(set.linetypes, set.colors)
+```
+
+The code below reproduces the plot of the error curves from the
+original Figure. 
+
+```{r}
 library(ggplot2)
 errorPlot <- ggplot()+
   theme_bw()+
   geom_hline(aes(yintercept=error.prop, color=set, linetype=set),
              data=Bayes.error)+
-  scale_color_manual("error type", values=set.colors, breaks=names(set.colors))+
-  scale_linetype_manual("error type", values=c(
-                                        train="solid",
-                                        validation="solid",
-                                        test="solid",
-                                        Bayes="dashed"),
-                        breaks=names(set.colors))+
+  scale_color_manual(
+    "error type", values=set.colors, breaks=names(set.colors))+
+  scale_linetype_manual(
+    "error type", values=set.linetypes, breaks=names(set.linetypes))+
   ylab("Misclassification Errors")+
   xlab("Number of Neighbors")+
   geom_linerange(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
@@ -233,7 +242,7 @@ Next, we compute the Train, Test, and Bayes mis-classification error
 rates which we will show in the bottom left of the feature space plot.
 
 ```{r}
-text.height <- 0.2
+text.height <- 0.25
 text.V1.prop <- 0
 text.V2.bottom <- -2
 text.V1.error <- -2.6
@@ -272,9 +281,9 @@ classifier.
 boundary.grid <- show.data[set=="grid",]
 boundary.grid[, label := pred.label]
 pred.boundary <- getBoundaryDF(boundary.grid$probability)
-pred.boundary$boundary <- "predicted"
+pred.boundary$classifier <- "KNN"
 Bayes.boundary <- getBoundaryDF(mixture.example$prob)
-Bayes.boundary$boundary <- "Bayes"
+Bayes.boundary$classifier <- "Bayes"
 Bayes.boundary
 ```
 
@@ -293,12 +302,9 @@ The scatterplot below reproduces the 7-Nearest-Neighbors classifier of
 the original Figure. 
 
 ```{r}
-
-label.colors <-
-  c("#E41A1C",
-    "0"="#377EB8", "#4DAF4A", "#984EA3",
-    "1"="#FF7F00", "#FFFF33", 
-    "#A65628", "#F781BF", "#999999")
+label.colors <- c(
+  "0"="#377EB8",
+  "1"="#FF7F00")
 scatterPlot <- ggplot()+
   theme_bw()+
   theme(axis.text=element_blank(),
@@ -306,16 +312,14 @@ scatterPlot <- ggplot()+
         axis.title=element_blank())+
   ggtitle("7-Nearest Neighbors")+
   scale_color_manual(values=label.colors)+
-  scale_linetype_manual(values=c(Bayes="dashed", predicted="solid"))+
+  scale_linetype_manual(values=classifier.linetypes)+
   geom_point(aes(V1, V2, color=label),
              size=0.2,
              data=show.grid)+
-  geom_path(aes(V1, V2, group=paste(boundary, path.i),
-                linetype=boundary),
+  geom_path(aes(V1, V2, group=path.i, linetype=classifier),
             size=1,
             data=pred.boundary)+
-  geom_path(aes(V1, V2, group=paste(boundary, path.i),
-                linetype=boundary),
+  geom_path(aes(V1, V2, group=path.i, linetype=classifier),
             color=set.colors[["Bayes"]],
             size=1,
             data=Bayes.boundary)+
@@ -372,15 +376,17 @@ Note the following changes:
 * change the error bars (`geom_linerange`) to error bands (`geom_ribbon`).
 
 The only new data that we need to define are the endpoints of the
-segment that we will use to plot the Bayes decision boundary.
+segment that we will use to plot the Bayes decision boundary. Note
+that we also re-define the set "test" to emphasize the fact that the
+Bayes error is the best achievable error rate for test data.
 
 ```{r}
 Bayes.segment <- data.table(
   Bayes.error,
+  classifier="Bayes",
   min.neighbors=1,
-  max.neighbors=29,
-  set="test",
-  error="Bayes")
+  max.neighbors=29)
+Bayes.segment$set <- "test"
 ```
 
 We also add an error variable to the data tables that contain the
@@ -388,8 +394,8 @@ prediction error of the K-Nearest-Neighbors models. This error
 variable will be used for the linetype legend.
 
 ```{r}
-validation.error$error <- "KNN"
-other.error$error <- "KNN"
+validation.error$classifier <- "KNN"
+other.error$classifier <- "KNN"
 ```
 
 We re-define the plot of the error curves below. Note that 
@@ -400,25 +406,29 @@ We re-define the plot of the error curves below. Note that
   are not obscured by non-clickable geoms (bottom layers).
 
 ```{r}
+set.colors <-
+  c(test="#984EA3",#purple
+    validation="#4DAF4A",#green
+    Bayes="#984EA3",#purple
+    train="black")#red
 errorPlot <- ggplot()+
   ggtitle("Select number of neighbors")+
   theme_bw()+
   theme_animint(height=500)+
   geom_text(aes(min.neighbors, error.prop,
                 color=set, label="Bayes",
-                showSelected=error),
+                showSelected=classifier),
             hjust=1,
             data=Bayes.segment)+
   geom_segment(aes(min.neighbors, error.prop, 
                    xend=max.neighbors, yend=error.prop,
-                   color=set, linetype=error),
+                   color=set,
+                   showSelected=classifier, linetype=classifier),
                data=Bayes.segment)+
   scale_color_manual(values=set.colors, breaks=names(set.colors))+
   scale_fill_manual(values=set.colors)+
-  guides(fill="none")+
-  scale_linetype_manual("error", values=c(
-                                   KNN="solid",
-                                   Bayes="dashed"))+
+  guides(fill="none", linetype="none")+
+  scale_linetype_manual(values=classifier.linetypes)+
   ylab("Misclassification Errors")+
   scale_x_continuous(
     "Number of Neighbors",
@@ -426,15 +436,15 @@ errorPlot <- ggplot()+
     breaks=c(1, 10, 20, 29))+
   geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
                   fill=set,
-                  showSelected=error,
+                  showSelected=classifier,
                   showSelected2=set),
               alpha=0.5,
               data=validation.error)+
-  geom_line(aes(neighbors, mean,
-                linetype=error, color=set),
+  geom_line(aes(neighbors, mean, color=set,
+                showSelected=classifier, linetype=classifier),
             data=validation.error)+
-  geom_line(aes(neighbors, error.prop, group=set,
-                linetype=error, color=set),
+  geom_line(aes(neighbors, error.prop, group=set, color=set,
+                showSelected=classifier, linetype=classifier),
             data=other.error)+
   geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1,
                     clickSelects=neighbors),
@@ -457,6 +467,7 @@ with 7 neighbors. Our re-design includes the following changes:
 ```{r}
 show.data <- data.all.folds[validation.fold==0,]
 show.points <- show.data[set=="train",]
+show.points[, prediction := ifelse(is.error, "error", "correct")]
 show.points
 ```
 
@@ -468,7 +479,7 @@ boundary.grid <- show.data[set=="grid",]
 boundary.grid[, label := pred.label]
 show.grid <- boundary.grid[!on.text(V1, V2),]
 pred.boundary <- boundary.grid[, getBoundaryDF(probability), by=neighbors]
-pred.boundary$boundary <- "predicted"
+pred.boundary$classifier <- "KNN"
 pred.boundary
 ```
 
@@ -502,33 +513,33 @@ variable in the point, path, and text geoms.
 
 ```{r}
 scatterPlot <- ggplot()+
+  ggtitle("Mis-classification errors in train set")+
   theme_bw()+
   theme_animint(width=500, height=500)+
   xlab("Input feature 1")+
   ylab("Input feature 2")+
   coord_equal()+
   scale_color_manual(values=label.colors)+
-  scale_linetype_manual(values=c(Bayes="dashed", predicted="solid"))+
+  scale_linetype_manual(values=classifier.linetypes)+
   geom_point(aes(V1, V2, color=label,
                  showSelected=neighbors),
              size=0.2,
              data=show.grid)+
-  geom_path(aes(V1, V2, group=paste(boundary, path.i),
-                linetype=boundary, showSelected=neighbors),
+  geom_path(aes(V1, V2, group=path.i, linetype=classifier,
+                showSelected=neighbors),
             size=1,
             data=pred.boundary)+
-  geom_path(aes(V1, V2, group=paste(boundary, path.i),
-                linetype=boundary),
+  geom_path(aes(V1, V2, group=path.i, linetype=classifier),
             color=set.colors[["test"]],
             size=1,
             data=Bayes.boundary)+
   geom_point(aes(V1, V2, color=label,
-                 fill=is.error,
+                 fill=prediction,
                  showSelected=neighbors),
              size=3,
              shape=21,
              data=show.points)+
-  scale_fill_manual(values=c("TRUE"="black", "FALSE"="transparent"))+
+  scale_fill_manual(values=c(error="black", correct="transparent"))+
   geom_text(aes(text.V1.error, text.V2.bottom, label=paste(set, "Error:")),
             data=Bayes.error,
             hjust=0)+
@@ -573,6 +584,7 @@ viz.neighbors <- list(
   error=errorPlot,
   data=scatterPlot,
   first=list(neighbors=7),
+  selector.types=list(classifier="multiple"),
   time=list(variable="neighbors", ms=3000)
   )
 structure(viz.neighbors, class="animint")
