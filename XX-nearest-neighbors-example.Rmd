@@ -604,8 +604,8 @@ predictions of the different models.
 In this section we discuss a second re-design which allows the user to
 select the number of folds used to compute the validation error curve.
 
-The function below assigns each observation of the training data set
-to a fold, and then runs.
+The for loop below computes the validation error curve for several
+different values of `n.folds`.
 
 ```{r}
 error.by.folds <- list()
@@ -631,21 +631,18 @@ for(n.folds in c(3, 5, 15)){
 validation.error.several <- do.call(rbind, error.by.folds)
 ```
 
+The code below computes the minimum of the error curve for each value
+of `n.folds`.
+
 ```{r}
 min.validation <- validation.error.several[, .SD[which.min(mean),], by=n.folds]
-ggplot()+
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
-  facet_grid(n.folds ~ .)+
-  geom_point(aes(neighbors, mean),
-             data=min.validation)+
-  geom_line(aes(neighbors, mean),
-            data=validation.error.several)
 ```
+
+The code below creates a new error curve plot with two facets.
 
 ```{r}
 facets <- function(df, facet){
-  data.frame(df, facet=factor(facet, c("all n.folds", "selected n.folds")))
+  data.frame(df, facet=factor(facet, c("n.folds", "Misclassification Errors")))
 }
 errorPlot <- ggplot()+
   ggtitle("Select number of folds and neighbors")+
@@ -657,16 +654,17 @@ errorPlot <- ggplot()+
                 color=set, label="Bayes",
                 showSelected=classifier),
             hjust=1,
-            data=facets(Bayes.segment, "selected n.folds"))+
+            data=facets(Bayes.segment, "Misclassification Errors"))+
   geom_segment(aes(min.neighbors, error.prop, 
                    xend=max.neighbors, yend=error.prop,
                    color=set,
                    showSelected=classifier, linetype=classifier),
-               data=facets(Bayes.segment, "selected n.folds"))+
+               data=facets(Bayes.segment, "Misclassification Errors"))+
   scale_color_manual(values=set.colors, breaks=names(set.colors))+
   scale_fill_manual(values=set.colors, breaks=names(set.colors))+
   guides(fill="none", linetype="none")+
   scale_linetype_manual(values=classifier.linetypes)+
+  ylab("")+
   scale_x_continuous(
     "Number of Neighbors",
     limits=c(-1, 30),
@@ -677,24 +675,33 @@ errorPlot <- ggplot()+
                   showSelected2=set,
                   showSelected3=n.folds),
               alpha=0.5,
-              data=facets(validation.error.several, "selected n.folds"))+
+              data=facets(validation.error.several, "Misclassification Errors"))+
   geom_line(aes(neighbors, mean, color=set,
                 showSelected=classifier,
                 showSelected3=n.folds,
                 linetype=classifier),
-            data=facets(validation.error.several, "selected n.folds"))+
+            data=facets(validation.error.several, "Misclassification Errors"))+
   geom_line(aes(neighbors, error.prop, group=set, color=set,
                 showSelected=classifier, linetype=classifier),
-            data=facets(other.error, "selected n.folds"))+
+            data=facets(other.error, "Misclassification Errors"))+
   geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1,
                     clickSelects=neighbors),
                 alpha=0.5,
                 data=validation.error)+
   geom_point(aes(neighbors, n.folds, color=set, clickSelects=n.folds),
              size=9,
-             data=facets(min.validation, "all n.folds"))
-errorPlot
+             data=facets(min.validation, "n.folds"))
 ```
+
+The code below previews the new error curve plot, adding an additional
+facet for the showSelected variable.
+
+```{r}
+errorPlot+facet_grid(facet ~ n.folds, scales="free")
+```
+
+The code below creates an interactive data viz using the new error
+curve plot.
 
 ```{r}
 viz.folds <- list(
@@ -702,7 +709,7 @@ viz.folds <- list(
   data=scatterPlot,
   first=list(neighbors=7, n.folds=10)
   )
-structure(viz.neighbors, class="animint")
+structure(viz.folds, class="animint")
 ```
 
 # Chapter summary and exercises
