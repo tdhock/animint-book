@@ -1,7 +1,16 @@
+In this chapter we will explore several data visualizations of the
+K-Nearest Neighbors (KNN) classifier.
 
+Chapter outline:
 
-In this chapter we will explore several data
-visualizations of the K-Nearest Neighbors (KNN) classifier.
+* We will start with the original static data visualization,
+  re-designed as two ggplots rendered by animint. There is a plot of
+  10-fold cross-validation error, and a plot of the predictions of the
+  7-Nearest-Neighbors classifier.
+* We propose a re-design that allows selecting the number of neighbors
+  used for the model predictions.
+* We propose a second re-design that allows selecting the number of
+  folds used to compute the cross-validation error.
 
 # Original static figure
 
@@ -120,6 +129,9 @@ OneFold <- function(validation.fold){
     prob.winning.class <- attr(pred.label, "prob")
     fold.data$probability <- ifelse(
       pred.label=="1", prob.winning.class, 1-prob.winning.class)
+    fold.data[, pred.label := ifelse(0.5 < probability, "1", "0")]
+    fold.data[, is.error := label != pred.label]
+    fold.data[, prediction := ifelse(is.error, "error", "correct")]
     data.by.neighbors[[paste(neighbors)]] <- 
       data.table(neighbors, fold.data)
   }#for(neighbors
@@ -137,12 +149,10 @@ learned decision boundaries of the K-Nearest-Neighbors classifier.
 ```{r}
 library(doParallel)
 registerDoParallel()
-data.all.folds <- foreach(validation.fold=0:10, .combine=rbind) %dopar% {
+data.all.folds <- foreach(validation.fold=0:n.folds, .combine=rbind) %dopar% {
   one.fold <- OneFold(validation.fold)
   data.table(validation.fold, one.fold)
 }
-data.all.folds[, pred.label := ifelse(0.5 < probability, "1", "0")]
-data.all.folds[, is.error := label != pred.label]
 data.all.folds
 ```
 
@@ -343,7 +353,6 @@ Finally, we combine the two ggplots and render them as an animint.
 
 ```{r}
 viz.static <- list(
-  title="Figure 13.4 from Elements of Statistical Learning by Hastie et al",
   error=errorPlot,
   data=scatterPlot
   )
@@ -410,7 +419,7 @@ set.colors <-
   c(test="#984EA3",#purple
     validation="#4DAF4A",#green
     Bayes="#984EA3",#purple
-    train="black")#red
+    train="black")
 errorPlot <- ggplot()+
   ggtitle("Select number of neighbors")+
   theme_bw()+
@@ -467,7 +476,6 @@ with 7 neighbors. Our re-design includes the following changes:
 ```{r}
 show.data <- data.all.folds[validation.fold==0,]
 show.points <- show.data[set=="train",]
-show.points[, prediction := ifelse(is.error, "error", "correct")]
 show.points
 ```
 
@@ -580,11 +588,9 @@ as a selector variable.
 
 ```{r}
 viz.neighbors <- list(
-  title="K-Nearest Neighbors in Mixture Example",
   error=errorPlot,
   data=scatterPlot,
   first=list(neighbors=7),
-  selector.types=list(classifier="multiple"),
   time=list(variable="neighbors", ms=3000)
   )
 structure(viz.neighbors, class="animint")
@@ -595,7 +601,109 @@ predictions of the different models.
 
 # Select the number of cross-validation folds using interactivity
 
-TODO
+In this section we discuss a second re-design which allows the user to
+select the number of folds used to compute the validation error curve.
+
+The function below assigns each observation of the training data set
+to a fold, and then runs.
+
+```{r}
+error.by.folds <- list()
+error.by.folds[["10"]] <- data.table(n.folds=10, validation.error)
+for(n.folds in c(3, 5, 15)){
+  set.seed(2)
+  mixture <- with(mixture.example, data.table(x, label=factor(y)))
+  mixture$fold <- sample(rep(1:n.folds, l=nrow(mixture)))
+  only.validation <- foreach(validation.fold=1:n.folds, .combine=rbind) %dopar% {
+    one.fold <- OneFold(validation.fold)
+    data.table(validation.fold, one.fold[set=="validation",])
+  }
+  only.validation.error <- only.validation[, list(
+    error.prop=mean(is.error)
+  ), by=.(set, validation.fold, neighbors)]
+  only.validation.stats <- only.validation.error[, list(
+    mean=mean(error.prop),
+    sd=sd(error.prop)/sqrt(.N)
+  ), by=.(set, neighbors)]
+  error.by.folds[[paste(n.folds)]] <-
+    data.table(n.folds, only.validation.stats, classifier="KNN")
+}
+validation.error.several <- do.call(rbind, error.by.folds)
+```
+
+```{r}
+min.validation <- validation.error.several[, .SD[which.min(mean),], by=n.folds]
+ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(n.folds ~ .)+
+  geom_point(aes(neighbors, mean),
+             data=min.validation)+
+  geom_line(aes(neighbors, mean),
+            data=validation.error.several)
+```
+
+```{r}
+facets <- function(df, facet){
+  data.frame(df, facet=factor(facet, c("all n.folds", "selected n.folds")))
+}
+errorPlot <- ggplot()+
+  ggtitle("Select number of folds and neighbors")+
+  theme_bw()+
+  theme_animint(height=500)+
+  theme(panel.margin=grid::unit(0, "cm"))+
+  facet_grid(facet ~ ., scales="free")+
+  geom_text(aes(min.neighbors, error.prop,
+                color=set, label="Bayes",
+                showSelected=classifier),
+            hjust=1,
+            data=facets(Bayes.segment, "selected n.folds"))+
+  geom_segment(aes(min.neighbors, error.prop, 
+                   xend=max.neighbors, yend=error.prop,
+                   color=set,
+                   showSelected=classifier, linetype=classifier),
+               data=facets(Bayes.segment, "selected n.folds"))+
+  scale_color_manual(values=set.colors, breaks=names(set.colors))+
+  scale_fill_manual(values=set.colors, breaks=names(set.colors))+
+  guides(fill="none", linetype="none")+
+  scale_linetype_manual(values=classifier.linetypes)+
+  scale_x_continuous(
+    "Number of Neighbors",
+    limits=c(-1, 30),
+    breaks=c(1, 10, 20, 29))+
+  geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
+                  fill=set,
+                  showSelected=classifier,
+                  showSelected2=set,
+                  showSelected3=n.folds),
+              alpha=0.5,
+              data=facets(validation.error.several, "selected n.folds"))+
+  geom_line(aes(neighbors, mean, color=set,
+                showSelected=classifier,
+                showSelected3=n.folds,
+                linetype=classifier),
+            data=facets(validation.error.several, "selected n.folds"))+
+  geom_line(aes(neighbors, error.prop, group=set, color=set,
+                showSelected=classifier, linetype=classifier),
+            data=facets(other.error, "selected n.folds"))+
+  geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1,
+                    clickSelects=neighbors),
+                alpha=0.5,
+                data=validation.error)+
+  geom_point(aes(neighbors, n.folds, color=set, clickSelects=n.folds),
+             size=9,
+             data=facets(min.validation, "all n.folds"))
+errorPlot
+```
+
+```{r}
+viz.folds <- list(
+  error=errorPlot,
+  data=scatterPlot,
+  first=list(neighbors=7, n.folds=10)
+  )
+structure(viz.neighbors, class="animint")
+```
 
 # Chapter summary and exercises
 
@@ -608,6 +716,15 @@ re-design which added a facet for selecting the number of
 cross-validation folds.
 
 Exercises:
+
+* The probability column of the show.grid data table is the predicted
+  probability of class 1. How would you re-design the visualization to
+  show the predicted probability rather than the predicted class at
+  each grid point? The main challenge is that probability is a numeric
+  variable, but ggplot2 enforces that each scale must be either
+  continuous or discrete (not both). You could use a continuous fill
+  scale, but then you would have to use a different scale to show the
+  prediction variable.
 * So far, the feature space plots only showed model predictions and
   errors for the entire train data set (validation.fold==0). Create a
   re-design which includes a new plot or facet for selecting
