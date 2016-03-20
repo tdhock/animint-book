@@ -9,62 +9,77 @@ Chapter 2
 Basics of data visualization using ggplot2, the multi-layer,
 multi-panel grammer of graphics.
 
+Chapter outline:
+- Brief history of the grammar of graphics
+- Basic ggplot
+- Multi-layer ggplots
+- Multi-panel ggplots
+
 # Brief history of the grammar of graphics
 
 Wilkinson proposed a general grammar of graphics to describe and
-create a large class of static data visualizations [Wilkinson
-2006]. Wickham implemented many ideas from the grammar in the ggplot2
-R package [Wickham 2009]. The grammar describes \vocab{static}
-graphics, which can be viewed equally well on a computer screen or on
-paper. 
+create a large class of static data visualizations
+[Wilkinson 2006]. Wickham implemented several ideas from that grammar
+in the ggplot2 R package [Wickham 2009]. Wilkinson's grammar describes
+\vocab{static} graphics, which can be viewed equally well on a
+computer screen or on paper.
 
-In contrast, the main topic of this book is \vocab{interactive}
-graphics, which are best viewed on a computer with a mouse or trackpad
-that can be used to interact with the plot. Since many concepts from
-static graphics are also useful in interactive graphics
+The main topic of this book is animint, an R package for
+\vocab{interactive} graphics. In contrast to static graphics,
+interactive graphics are best viewed on a computer with a mouse and
+keyboard that can be used to interact with the plot. Since many
+concepts from static graphics are also useful for interactive graphics
 (e.g. legends), the animint package is implemented as an extension of
 ggplot2. In this chapter we will introduce the main features of
 ggplot2 which will also be useful for interactive plot design in later
 chapters.
 
-# A basic static ggplot
+# A basic ggplot with one geom and one facet
 
 The R code below produces a scatterplot of life expectancy and
 fertility rate for each country in the WorldBank data set.
 
-```{r, cache=FALSE}
+```{r}
 data(WorldBank, package="animint")
 library(ggplot2)
 p <- ggplot()+
-geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
-	   data=subset(WorldBank, year==1975))
+  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+             data=subset(WorldBank, year==1975))
 print(p)
 ```
 
-Each ggplot contain exactly one \vocab{layer}, a =geom_point= which
-displays a circle for every row the in =data= set specified. The =aes=
-specifies the mapping of data variables to visual properties. The =x=
-and =y= properties are used for the horizontal and vertical position,
-and the =color= property specifies the color each point.
+Each ggplot contain exactly one \vocab{layer}, a `geom_point` which
+displays a circle for every row the in data set specified. The `aes`
+specifies the mapping of data variables to visual properties. The `x`
+and `y` properties are used for the horizontal and vertical position,
+and the `color` property specifies the color each point.
 
 This ggplot can be rendered by animint via
 
-```{r, cache=FALSE}
+```{r}
 library(animint)
 viz <- list(scatter=p)
 structure(viz, class="animint")
 ```
 
-The first line assigns the ggplot to a named element of the =viz=
-list, and the second line gives the list the class =animint=. When
-executing this code on the R command line, R will run the
-=print.animint= function. That will run the =animint2dir= compiler,
-which converts the animint =viz= list to a directory of data and code
-files that can be rendered in a web browser. 
+The first line loads the animint package, the second line assigns the
+ggplot `p` to a named element of the `viz` list, and the third line
+gives the list the class `animint`. When executing this code on the R
+command line, R will run the `print.animint` function via the S3
+object system (http://adv-r.had.co.nz/OO-essentials.html#s3). That
+will run the `animint2dir` function, which converts the animint `viz`
+list to a directory of data and code files that can be rendered in a
+web browser.
 
 When viewed in a web browser, the plot should look mostly the same as
 the version in R. One difference is that the region legend is
 interactive: clicking a legend entry will hide or show the points of
 that color.
 
-TODO: discuss theme_animint, title= etc?
+TODO: discuss theme_animint, title, etc?
+
+# Multi-layer data visualization (multiple geoms)
+
+# Multi-panel data visualization (facets)
+
+# Chapter summary and exercises

@@ -52,8 +52,8 @@ by converting the raw data table into other, more comprehensible
 forms. One highly effective class of methods for data analysis is
 called "data visualization," which seeks to provide answers to
 questions by converting a data set into an informative picture. The
-term "data visualization" refers to both the picture itself (alsa
-known as a plot, figure, graph, or data viz), and the process of
+term "data visualization" refers to both the picture itself (also
+known as a plot, figure, graph, graphic, or data viz), and the process of
 creating the picture.
 
 There are many different ways to perform data analysis, and data sets
@@ -63,11 +63,11 @@ not necessary.
 
 * Small data analysis without visualization
 
-In this section, we will discuss "small data," which we define as
-follows. If we can perform data analysis by simply looking at the
-entire data table, then that is a small data set. For small data sets,
-there is no need to use data visualization. Instead, the data can
-simply be presented for visual inspection in a table (REF:TUFTE).
+In this section, we will discuss "small data," which are small enough
+such that data analysis can be done by simply looking at the entire
+data table. For small data sets, there is no need to use data
+visualization. Instead, the data can simply be presented for visual
+inspection in a table (REF:TUFTE).
 
 As a concrete example, consider the famous tea tasting experiment
 proposed by Ronald Fisher
