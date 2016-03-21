@@ -21,11 +21,11 @@ Wilkinson proposed a general grammar of graphics to describe and
 create a large class of static data visualizations
 [Wilkinson 2006]. Wickham implemented several ideas from that grammar
 in the ggplot2 R package [Wickham 2009]. Wilkinson's grammar describes
-\vocab{static} graphics, which can be viewed equally well on a
+*static* graphics, which can be viewed equally well on a
 computer screen or on paper.
 
 The main topic of this book is animint, an R package for
-\vocab{interactive} graphics. In contrast to static graphics,
+*interactive* graphics. In contrast to static graphics,
 interactive graphics are best viewed on a computer with a mouse and
 keyboard that can be used to interact with the plot. Since many
 concepts from static graphics are also useful for interactive graphics
@@ -49,11 +49,11 @@ basic <- ggplot()+
 basic
 ```
 
-Each ggplot contain exactly one \vocab{layer}, a `geom_point` which
-displays a circle for every row the in data set specified. The `aes`
-specifies the mapping of data variables to visual properties. The `x`
-and `y` properties are used for the horizontal and vertical position,
-and the `color` property specifies the color each point.
+Each ggplot contain exactly one *layer*, a `geom_point` which displays
+a circle for every row the in data set specified. The `aes` specifies
+the mapping of data variables to visual properties. The `x` and `y`
+properties are used for the horizontal and vertical position, and the
+`color` property specifies the color each point.
 
 This ggplot can be rendered by animint via
 
@@ -64,13 +64,14 @@ structure(basic.viz, class="animint")
 ```
 
 The first line loads the animint package, the second line assigns the
-ggplot `p` to a named element of the `viz` list, and the third line
-gives the list the class `animint`. When executing this code on the R
-command line, R will run the `print.animint` function via the S3
-object system [http://adv-r.had.co.nz/OO-essentials.html#s3]. That
-will run the `animint2dir` function, which converts the animint `viz`
-list to a directory of data and code files that can be rendered in a
-web browser.
+ggplot `basic` to a named element of the `basic.viz` list, and the
+third line gives the list the class `"animint"`. When executing this
+code on the R command line, R will run the `print.animint` function
+via the S3 object system
+[http://adv-r.had.co.nz/OO-essentials.html#s3]. That will run the
+`animint2dir` function, which converts the animint `basic.viz` list to
+a directory of data and code files that can be rendered in a web
+browser.
 
 When viewed in a web browser, the plot should look mostly the same as
 the version in R. One difference is that the region legend is
@@ -92,7 +93,7 @@ two.layers <- basic+
   geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                 group=country),
             data=WorldBank1970.75)
-two.layer.viz <- list(scatter=multi.layer)
+two.layer.viz <- list(scatter=two.layers)
 structure(two.layer.viz, class="animint")
 ```
 
@@ -139,8 +140,8 @@ Multi-panel data visualization is useful in two situations:
 
 * You want to align the axes of several related plots containing
   different geoms.
-* There are too many observations to display informatively on one
-  plot.
+* There are too many observations to display informatively in one
+  panel.
   
 ## Aligned axes
   
@@ -150,7 +151,7 @@ a scatterplot with data from 1975, and a time series with data from
 1960-2010.
   
 ```{r}
-viz.two.plots <- multi.layer.viz
+viz.two.plots <- two.layer.viz
 viz.two.plots$timeSeries <- ggplot()+
   geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
             data=WorldBank)
@@ -233,7 +234,12 @@ structure(viz.panels, class="animint")
 ```
 
 The data visualization above contains a single ggplot with three
-panels.
+panels. It shows more of the WorldBank data set than the previous
+single-panel visualization with data only from 1975. However, it still
+only shows a small subset of these data (from 1975, 1985, and
+1995). In the next chapter, we will show how the new `showSelected`
+keyword can be used to achieve animation, and show more of this data
+set.
 
 # Chapter summary and exercises
 
