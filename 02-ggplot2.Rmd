@@ -11,7 +11,7 @@ multi-panel grammer of graphics.
 
 Chapter outline:
 - Brief history of the grammar of graphics
-- Basic ggplot
+- Rendering a basic ggplot using animint
 - Multi-layer ggplots
 - Multi-panel ggplots
 
@@ -34,7 +34,7 @@ ggplot2. In this chapter we will introduce the main features of
 ggplot2 which will also be useful for interactive plot design in later
 chapters.
 
-# A basic ggplot with one geom and one facet
+# Rendering a basic ggplot using animint
 
 The R code below produces a scatterplot of life expectancy and
 fertility rate for each country in the WorldBank data set.
@@ -42,10 +42,11 @@ fertility rate for each country in the WorldBank data set.
 ```{r}
 data(WorldBank, package="animint")
 library(ggplot2)
-p <- ggplot()+
+WorldBank1975 <- subset(WorldBank, year==1975)
+basic <- ggplot()+
   geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
-             data=subset(WorldBank, year==1975))
-print(p)
+             data=WorldBank1975)
+basic
 ```
 
 Each ggplot contain exactly one \vocab{layer}, a `geom_point` which
@@ -58,15 +59,15 @@ This ggplot can be rendered by animint via
 
 ```{r}
 library(animint)
-viz <- list(scatter=p)
-structure(viz, class="animint")
+basic.viz <- list(scatter=basic)
+structure(basic.viz, class="animint")
 ```
 
 The first line loads the animint package, the second line assigns the
 ggplot `p` to a named element of the `viz` list, and the third line
 gives the list the class `animint`. When executing this code on the R
 command line, R will run the `print.animint` function via the S3
-object system (http://adv-r.had.co.nz/OO-essentials.html#s3). That
+object system [http://adv-r.had.co.nz/OO-essentials.html#s3]. That
 will run the `animint2dir` function, which converts the animint `viz`
 list to a directory of data and code files that can be rendered in a
 web browser.
@@ -76,10 +77,195 @@ the version in R. One difference is that the region legend is
 interactive: clicking a legend entry will hide or show the points of
 that color.
 
-TODO: discuss theme_animint, title, etc?
+TODO discuss `theme_animint`, title, etc?
 
 # Multi-layer data visualization (multiple geoms)
 
+Multi-layer data visualization is useful when you want to display
+several different data sets in the same plot. For example, consider
+the following R code which adds a `geom_path` to the previous data
+visualization.
+
+```{r}
+WorldBank1970.75 <- subset(WorldBank, year %in% 1970:1975)
+two.layers <- basic+
+  geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+                group=country),
+            data=WorldBank1970.75)
+two.layer.viz <- list(scatter=multi.layer)
+structure(two.layer.viz, class="animint")
+```
+
+This plot shows a data visualization with 2 geoms/layers: 
+
+* the `geom_point` shows the life expectancy, fertility rate, and
+  region of all countries in 1975.
+* the `geom_path` shows the same variables for the previous 5 years.
+
+The addition of the `geom_path` shows how the countries changed over
+time. In particular, it shows that most countries moved to the right
+and down, meaning higher life expectancy and lower fertility
+rate. However, there are some exceptions. For example, the two East
+Asian countries in the bottom left suffered a decrease in life
+expectancy over this period. And there are some countries which showed
+an increased fertility rate. What are these countries?
+
+To answer that question we can try to add another layer with a text
+label for each country's name.
+
+```{r}
+three.layers <- two.layers+
+  geom_text(aes(x=life.expectancy, y=fertility.rate, color=region,
+                label=country),
+            data=WorldBank1975)
+three.layer.viz <- list(scatter=three.layers)
+structure(three.layer.viz, class="animint")
+```
+
+This data viz is not so easy to read, since there are so many
+overlapping text labels. The interactive region legend helps a little,
+by allowing the user to hide data from selected regions. However, it
+would be even better if the user could show and hide the text for
+individual countries. That type of interaction can be achieved using
+the showSelected and clickSelects aesthetics which we explain in
+Chapters 3-4.
+
+For now, we move on to discuss the other main advantage of ggplot2:
+facets.
+
 # Multi-panel data visualization (facets)
 
+Multi-panel data visualization is useful in two situations:
+
+* You want to align the axes of several related plots containing
+  different geoms.
+* There are too many observations to display informatively on one
+  plot.
+  
+## Aligned axes
+  
+Facets are useful to align the axes of related plots. For example,
+consider the following data visualization which consists of two plots:
+a scatterplot with data from 1975, and a time series with data from
+1960-2010.
+  
+```{r}
+viz.two.plots <- multi.layer.viz
+viz.two.plots$timeSeries <- ggplot()+
+  geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
+            data=WorldBank)
+structure(viz.two.plots, class="animint")
+```
+
+The data visualization above contains two ggplots. Both ggplots map
+the fertility rate variable to the y axis. However, since they are
+separate plots, the ranges of their y axes are computed
+separately. That means that the two y axis are not exactly
+aligned. That is a problem since it would make it easier to decode the
+data visualization if each unit of vertical space was used to show the
+same amount of fertility rate. To achieve that effect, we use facets
+in the data visualization below.
+
+```{r}
+addColumn <- function(df, time.period){
+  data.frame(df, time.period=factor(time.period, c("1975", "1960-2010")))
+}
+viz.aligned <- list(
+  scatter=ggplot()+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+               data=addColumn(WorldBank1975, "1975"))+
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+                  group=country),
+              data=addColumn(WorldBank1970.75, "1975"))+
+    geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
+              data=addColumn(WorldBank, "1960-2010"))+
+    facet_grid(. ~ time.period, scales="free")
+  )
+structure(viz.aligned, class="animint")
+```
+
+The data visualization above contains a single ggplot with two panels
+and three layers. The left panel shows the `geom_point` and
+`geom_path`, and the right panel shows the `geom_line`.
+
+Note that we used the `addColumn` function to add a `time.period`
+variable to each data set, and then we used that variable in
+`facet_grid(scales="free")`. This is a useful idiom in general for
+creating a multi-panel data visualization with aligned axes. In
+particular, if we wanted to change the order of the panels in the data
+visualization, we would only need to edit the order of the factor
+levels in the definition of `addColumn`.
+
+## Display the same geoms in each panel
+
+The second reason for using plots with multiple panels in a data
+visualization is to show different observations of a large data
+set. For example, the code below creates two data sets based on three
+years of the WorldBank data set.
+
+```{r}
+show.point.list <- list()
+show.path.list <- list()
+for(show.year in c(1975, 1985, 1995)){
+  show.point.list[[paste(show.year)]] <- data.frame(
+    show.year, subset(WorldBank, year==show.year))
+  five.before <- show.year - 5
+  show.path.list[[paste(show.year)]] <- data.frame(
+    show.year, subset(WorldBank, five.before <= year & year <= show.year))
+}
+show.point <- do.call(rbind, show.point.list)
+show.path <- do.call(rbind, show.path.list)
+```
+
+Then we create a data visualization with three panels.
+
+```{r}
+viz.panels <- list(
+  scatter=ggplot()+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+               data=show.point)+
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+                  group=country),
+              data=show.path)+
+    facet_grid(. ~ show.year)
+  )
+structure(viz.panels, class="animint")
+```
+
+The data visualization above contains a single ggplot with three
+panels.
+
 # Chapter summary and exercises
+
+This chapter presented the basics of static data visualization using
+ggplot2. We showed how animint can be used to render a list of ggplots
+in a web browser. We explained two features of ggplot2 that make it
+ideal for data visualization: multi-layer and multi-panel graphics.
+
+Exercises:
+
+* What is the purpose of multi-layer graphics?
+* What are the two different reasons for creating multi-panel
+  graphics?
+* Let us define "A < B" to mean that "B can contain several A." Which
+  of the following statements is true?
+  * ggplot < panel
+  * panel < ggplot
+  * ggplot < animint
+  * animint < ggplot
+  * layer < panel
+  * panel < layer
+  * layer < ggplot
+  * ggplot < layer
+* In the `viz.aligned` facets, why is it important to use the
+  `scales="free"` argument?
+* In `viz.aligned` we showed a ggplot with a scatterplot panel on the
+  left and a time series panel on the right. Make another version of
+  the data visualization with the time series panel on the left and
+  the scatterplot panel on the right.
+* In `viz.aligned` the scatterplot displays fertility rate and life
+  expectancy, but the time series displays only fertility rate. Make
+  another version of the data visualization that shows both time
+  series. Hint: use both horizontal and vertical panels in
+  `facet_grid`.
+* What are some limitations of static graphics?
