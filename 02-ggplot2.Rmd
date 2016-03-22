@@ -49,13 +49,15 @@ basic <- ggplot()+
 basic
 ```
 
-Each ggplot contain exactly one *layer*, a `geom_point` which displays
+This ggplot contain exactly one *layer*, a `geom_point` which displays
 a circle for every row the in data set specified. The `aes` specifies
 the mapping of data variables to visual properties. The `x` and `y`
 properties are used for the horizontal and vertical position, and the
 `color` property specifies the color each point.
 
-This ggplot can be rendered by animint via
+This ggplot can be rendered with animint, by first assigning the
+ggplot to a named element of a list, and then giving that list the
+class `"animint"`.
 
 ```{r}
 library(animint)
@@ -78,7 +80,43 @@ the version in R. One difference is that the region legend is
 interactive: clicking a legend entry will hide or show the points of
 that color.
 
-TODO discuss `theme_animint`, title, etc?
+# Manual color legends
+
+The colors that are used in the legend can be manually specified via
+`scale_color_manual`. Typically we will choose one of the ColorBrewer
+palettes:
+
+```{r}
+RColorBrewer::display.brewer.all()
+```
+
+For example to get the R code for the Set1 palette, we can write
+
+```{r}
+dput(RColorBrewer::brewer.pal(Inf, "Set1"))
+```
+
+We can then copy that R code from the terminal and paste it into our
+text editor
+
+```{r}
+region.colors <- 
+  c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
+    "#A65628", "#F781BF", "#999999")
+names(region.colors) <- levels(WorldBank$region)
+region.colors
+```
+
+Then we can use it with `scale_color_manual` 
+
+```{r}
+ggplot()+
+  scale_color_manual(values=region.colors)+
+  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+             data=WorldBank1975)
+```
+
+TODO: move this to an appendix.
 
 # Multi-layer data visualization (multiple geoms)
 
@@ -88,11 +126,11 @@ the following R code which adds a `geom_path` to the previous data
 visualization.
 
 ```{r}
-WorldBank1970.75 <- subset(WorldBank, year %in% 1970:1975)
+WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
 two.layers <- basic+
   geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                 group=country),
-            data=WorldBank1970.75)
+            data=WorldBankBefore1975)
 two.layer.viz <- list(scatter=two.layers)
 structure(two.layer.viz, class="animint")
 ```
@@ -109,10 +147,9 @@ and down, meaning higher life expectancy and lower fertility
 rate. However, there are some exceptions. For example, the two East
 Asian countries in the bottom left suffered a decrease in life
 expectancy over this period. And there are some countries which showed
-an increased fertility rate. What are these countries?
-
-To answer that question we can try to add another layer with a text
-label for each country's name.
+an increased fertility rate. Can we add the names of these countries
+to this data viz? Below, we add another layer with a text label for
+each country's name.
 
 ```{r}
 three.layers <- two.layers+
@@ -136,14 +173,22 @@ facets.
 
 # Multi-panel data visualization (facets)
 
-Multi-panel data visualization is useful in two situations:
+Panels or facets are sub-plots that show related data
+visualizations. One of the main strengths of ggplot2 is that different
+kinds of multi-panel plots are relatively easy to create. Multi-panel
+data visualization is used in two different ways:
 
 * You want to align the axes of several related plots containing
-  different geoms.
-* There are too many observations to display informatively in one
-  panel.
+  different geoms. This facilitates comparison between several
+  different geoms, and is a technique that is also useful for
+  interactive data visualization.
+* You want to divide the data from one geom into several panels. This
+  facilitates comparison between data subsets, and is less useful for
+  interactive data visualization (interactivity can often be used
+  instead, to achieve the same effect of comparing data subsets).
+
   
-## Aligned axes
+## Different geoms in each panel (aligned axes)
   
 Facets are useful to align the axes of related plots. For example,
 consider the following data visualization which consists of two plots:
@@ -177,7 +222,7 @@ viz.aligned <- list(
                data=addColumn(WorldBank1975, "1975"))+
     geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                   group=country),
-              data=addColumn(WorldBank1970.75, "1975"))+
+              data=addColumn(WorldBankBefore1975, "1975"))+
     geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
               data=addColumn(WorldBank, "1960-2010"))+
     facet_grid(. ~ time.period, scales="free")
@@ -187,22 +232,33 @@ structure(viz.aligned, class="animint")
 
 The data visualization above contains a single ggplot with two panels
 and three layers. The left panel shows the `geom_point` and
-`geom_path`, and the right panel shows the `geom_line`.
+`geom_path`, and the right panel shows the `geom_line`. The panels
+have a shared axis for fertility rate, which ensures that the time
+series can be directly compared with the scatterplot.
 
 Note that we used the `addColumn` function to add a `time.period`
 variable to each data set, and then we used that variable in
-`facet_grid(scales="free")`. This is a useful idiom in general for
-creating a multi-panel data visualization with aligned axes. In
-particular, if we wanted to change the order of the panels in the data
-visualization, we would only need to edit the order of the factor
-levels in the definition of `addColumn`.
+`facet_grid(scales="free")`. We call this the "addColumn-then-facet"
+idiom, which is useful in general for creating a multi-panel data
+visualization with aligned axes (TODO:ref appendix). In particular, if
+we wanted to change the order of the panels in the data visualization,
+we would only need to edit the order of the factor levels in the
+definition of `addColumn`.
 
-## Display the same geoms in each panel
+## Same geoms in each panel (compare data subsets)
 
 The second reason for using plots with multiple panels in a data
-visualization is to show different observations of a large data
-set. For example, the code below creates two data sets based on three
-years of the WorldBank data set.
+visualization is to compare subsets of observations. This facilitates
+comparison between data subsets, and can be used in at least two
+different situations
+
+* One geom's data set has too many observations to display
+  informatively in one panel.
+* You want to compare different subsets of data that is plotted for
+  one geom.
+  
+For example, the code below creates two data sets based on three years
+of the WorldBank data set. 
 
 ```{r}
 show.point.list <- list()
@@ -218,7 +274,16 @@ show.point <- do.call(rbind, show.point.list)
 show.path <- do.call(rbind, show.path.list)
 ```
 
-Then we create a data visualization with three panels.
+We used a for loop over three values of `show.year`, the variable
+which we will use later in `facet_grid`. For each value of
+`show.year`, we store a data subset as a named element of a
+list. After the for loop, we use `do.call` with `rbind` to combine the
+data subsets. This is an example of the "list-of-data-tables" idiom,
+which is also useful for interactive data visualization (TODO: ref
+appendix).
+
+Below, we facet on the `show.year` variable to create a data
+visualization with three panels.
 
 ```{r}
 viz.panels <- list(
@@ -237,9 +302,17 @@ The data visualization above contains a single ggplot with three
 panels. It shows more of the WorldBank data set than the previous
 single-panel visualization with data only from 1975. However, it still
 only shows a small subset of these data (from 1975, 1985, and
-1995). In the next chapter, we will show how the new `showSelected`
-keyword can be used to achieve animation, and show more of this data
-set.
+1995). 
+
+You may be tempted to try using a panel to display every year (not
+just 1975, 1985, and 1995). However, beware that this type of
+multi-panel data visualization is especially useful if there are only
+a few data subsets. With more than about 10 panels, it becomes
+difficult to see all the data at once, and thus difficult to make
+meaningful comparisons.
+
+In the next chapter, we will show how the new `showSelected` keyword
+can be used to achieve animation, and show more of this data set.
 
 # Chapter summary and exercises
 
@@ -252,17 +325,19 @@ Exercises:
 
 * What is the purpose of multi-layer graphics?
 * What are the two different reasons for creating multi-panel
-  graphics?
+  graphics? Which of these two types is useful with interactivity?
 * Let us define "A < B" to mean that "B can contain several A." Which
   of the following statements is true?
-  * ggplot < panel
-  * panel < ggplot
-  * ggplot < animint
-  * animint < ggplot
-  * layer < panel
-  * panel < layer
-  * layer < ggplot
-  * ggplot < layer
+
+	* ggplot < panel
+	* panel < ggplot
+	* ggplot < animint
+	* animint < ggplot
+	* layer < panel
+	* panel < layer
+	* layer < ggplot
+	* ggplot < layer
+	
 * In the `viz.aligned` facets, why is it important to use the
   `scales="free"` argument?
 * In `viz.aligned` we showed a ggplot with a scatterplot panel on the
@@ -274,4 +349,6 @@ Exercises:
   another version of the data visualization that shows both time
   series. Hint: use both horizontal and vertical panels in
   `facet_grid`.
-* What are some limitations of static graphics?
+* Create a multi-panel data visualization that shows each year of the
+  `WorldBank` data set in a separate panel. What are the limitations
+  of using static graphics to visualize these data?
