@@ -1,6 +1,11 @@
 Preface
 
-The chapters of this book are organized as follows.
+The chapters of this book are organized as follows. The first seven
+chapters should be read sequentially, since they give a step by step
+guide to interactive data visualization using animint. The remaining
+chapters can be read in any order, since each chapter explains how to
+make data visualizations for a particular data set. Several useful R
+code idioms are explained in detail in an appendix.
 
 Chapters 1-2 introduce data visualization using the grammar of
 graphics, as implemented in the ggplot2 R package. They should be
@@ -17,6 +22,6 @@ share your interactive data visualizations on the web.
 Chapter 7 covers the limitations of the animint R package, and
 explains workarounds for some common issues.
 
-Chapters 8-XX each explain in detail how to create an informative
-visualization for a particular data set.
+Chapters 8-XX each explain in detail how to create informative
+visualizations for a particular data set.
 

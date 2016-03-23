@@ -1,9 +1,11 @@
+To edit Rmd in emacs try https://github.com/vspinu/polymode via
+https://github.com/tdhock/dotfiles/blob/master/.emacs
+
 ** TODOs
 
 - setup travis
 - convert to Rmd with one animint (otherwise loading probably too
   slow).
-- setup https://github.com/vspinu/polymode
 - use http://rstudio.github.io/tufte/ ?
 
 ** Overview
@@ -46,15 +48,17 @@ animint: a grammar for animated and interactive data visualization
   - .variable and .value aesthetics
   - shiny
 - Ch 6, sharing animints
+  - animint2dir
   - any web server
-  - gist
+  - animint2gist
   - rmarkdown
   - github pages
 - Ch 7, limitations of animint
   - shiny. WorldBank-facets, changing aesthetic mappings.
-  - dc+crossfilter. axes, facets, data updated after clickSelects.
-- Ch X, the WorldBank-facets example
-- Ch X, montreal bike data?
-- Ch X, knn example
-- Ch X, lasso example
-- Ch X, SVM example
+  - updating axes. workaround: normalize data to a common scale.
+  - brush / lasso. workaround: click individual data points.
+- Ch 8, the WorldBank-facets example
+- Ch 9, montreal bike data?
+- Ch 10, knn example
+- Ch 11, lasso example
+- Ch 12, SVM example
