@@ -1,0 +1,172 @@
+Chapter 3
+
+The showSelected keyword. After reading this chapter, you will be able
+to use animint to make animated graphics that advance automatically
+over time, like a video.
+
+Chapter outline:
+
+* Adding showSelected to sketch ideas.
+* Selection menus
+* Transitions: the duration option and key aesthetic
+* Animation: the time option
+
+# Sketching with showSelected
+
+In fact we have already seen an example of the showSelected keyword,
+in the interactive legends that we saw in the previous two
+chapters. TODO:SKETCH.
+
+# Selection menus 
+
+The R code below produces a scatterplot of life expectancy and
+fertility rate for each country in the WorldBank data set. 
+
+```{r}
+data(WorldBank, package="animint")
+library(ggplot2)
+basic <- ggplot()+
+  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
+                 showSelected=year),
+             data=WorldBank)
+basic
+```
+
+Note that the ggplot above contains the `showSelected` aesthetic, one
+of the two main features introduced in animint. The `showSelected`
+aesthetic is ignored by ggplot2, which produced a scatterplot with one
+point for every country and year.
+
+In constrast, rendering the same ggplot using animint yields the
+interactive data visualization below.
+
+```{r}
+library(animint)
+viz.basic <- list(scatter=basic)
+structure(viz.basic, class="animint")
+```
+
+Note that the data viz above has two selection variables: region and
+year. Each variable has a menu that can be used to change the current
+selection.
+
+Discrete legend variables such as region default to multiple
+selection, so several values are selected and shown at once. Try
+changing the selected region in the interactive legend and the
+selection menu. When you change the selection using either method,
+both the interactive legend and the selection menu should update to
+reflect the current selection. 
+
+Other selection variables such as year default to single selection, so
+only one value is selected and shown at any time. Try changing the
+selected value of the year variable using the selection menu. You
+should see the points in the scatterplot immediately update to show
+the fertility rate and life expectancy of all the countries in the
+year that you selected.
+
+# Transitions: the duration option and key aesthetic
+
+You may have noticed that there are three buttons at the bottom of
+each data visualization created by animint. Try clicking the "Show
+animation controls" button above. This table contains a row for each
+selection variable. The text boxes show the number of milliseconds
+that are used for transition durations after updating each selection
+variable. The default transition duration for each selection variable
+is 0, meaning data will be immediately placed at their new positions
+after updating each variable.
+
+To illustrate the significance of transition durations, try changing
+the transition duration of the year variable to 2000. Then, change the
+selected value of the year variable. You should see the data points
+move slowly to their new positions, over a duration of 2 seconds.
+
+Some transitions result in points moving only a little bit, to nearby
+positions (e.g. 1979-1980). Other transitions result in points moving
+a lot more, to far away locations (e.g. 1980-1981). Why is that?
+
+Smooth transitions only make sense for data points that exist both
+before and after changing the selection. In the R code below we
+compute a table of counts of data points that can be plotted in each
+of these three years.
+
+```{r}
+three.years <- subset(WorldBank, 1979 <= year & year <= 1981)
+can.plot <- with(three.years, {
+  (!is.na(life.expectancy)) & (!is.na(fertility.rate))
+})
+table(three.years$year, can.plot)
+```
+
+It is clear from the table above that there are 187 points that can be
+plotted in 1979 and 1980. However, in 1981 there is one more data
+point, corresponding to a country for which we did not have data in
+1980. Below we show the data for that country, Kosovo.
+
+```{r}
+subset(three.years, country=="Kosovo")
+```
+
+Indeed, the table above shows that fertility rate and life expectancy
+are missing for Kosovo during 1979-1980. Thus it does not make sense
+to do a smooth transition for countries such as Kosovo which would not
+be plotted either before or after the transition. How to specify that
+in the data visualization? In the code below, we use
+`aes(key=country)` to specify that the `country` variable should be
+used to match data points before and after changing the selection.
+
+```{r}
+scatter.key <- ggplot()+
+  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
+                 key=country,
+                 showSelected=year),
+             data=WorldBank)
+```
+
+Like `showSelected`, the `key` aesthetic is only meaningful for
+interactive data visualization, so ggplot2 will ignore it. However, if
+we render this ggplot using animint, the `country` variable will be
+used to make sure transtion durations are meaningful. To specify a
+default transition duration for the `year` variable, we use the
+`duration` option in the data viz below.
+
+```{r}
+viz.duration <- list(
+  scatter=scatter.key,
+  duration=list(year=2000))
+structure(viz.duration, class="animint")
+```
+
+The `duration` option must be a named list. Each name should be a
+selection variable, and each value should specify the number of
+milliseconds to use for a transition duration when the selected value
+of that variable is changed.
+
+If you click "Show animation controls" in the data viz above, you will
+see that the text box for the year variable is 2000, as specified in
+the R code. If you change the selection from 1980 to 1981, you should
+see a proper transition.
+
+# Animation: the time option
+
+The `time` option is used to specify a variable to use for animation.
+
+```{r}
+viz.duration.time <- viz.duration
+viz.duration.time$time <- list(variable="year", ms=2000)
+structure(viz.duration.time, class="animint")
+```
+
+# Chapter summary and exercises
+
+This chapter explained the showSelected aesthetic, selection menus,
+transition durations, and animation.
+
+Exercises:
+
+* Translate an example from the animation package. Hint: in the code
+  for the animation package there is always a for loop over the time
+  variable. Instead of calling a plotting function inside the for
+  loop, use the list-of-data-tables idiom to store the data that
+  should be plotted (TODO:ref appendix). Then use those data along
+  with `showSelected` aesthetics to create ggplots, and render them
+  using animint.
