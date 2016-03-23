@@ -4,18 +4,19 @@ layout: default
 output: bookdown::html_chapter
 ---
 
-Chapter 2
+# Chapter 2: data visualization using ggplot2
 
-Basics of data visualization using ggplot2, the multi-layer,
+This chapter presents ggplot2, an implementation of the multi-layer,
 multi-panel grammer of graphics.
 
 Chapter outline:
-- Brief history of the grammar of graphics
-- Rendering a basic ggplot using animint
-- Multi-layer ggplots
-- Multi-panel ggplots
 
-# Brief history of the grammar of graphics
+* Brief history of the grammar of graphics
+* Rendering a basic ggplot using animint
+* Multi-layer ggplots
+* Multi-panel ggplots
+
+## Brief history of the grammar of graphics
 
 Wilkinson proposed a general grammar of graphics to describe and
 create a large class of static data visualizations
@@ -34,7 +35,7 @@ ggplot2. In this chapter we will introduce the main features of
 ggplot2 which will also be useful for interactive plot design in later
 chapters.
 
-# Rendering a basic ggplot using animint
+## Rendering a basic ggplot using animint
 
 The R code below produces a scatterplot of life expectancy and
 fertility rate for each country in the WorldBank data set.
@@ -80,13 +81,13 @@ the version in R. One difference is that the region legend is
 interactive: clicking a legend entry will hide or show the points of
 that color.
 
-# Manual color legends
+## Manual color legends
 
 The colors that are used in the legend can be manually specified via
 `scale_color_manual`. Typically we will choose one of the ColorBrewer
 palettes:
 
-```{r}
+```{r, fig.height=8}
 RColorBrewer::display.brewer.all()
 ```
 
@@ -118,7 +119,7 @@ ggplot()+
 
 TODO: move this to an appendix.
 
-# Multi-layer data visualization (multiple geoms)
+## Multi-layer data visualization (multiple geoms)
 
 Multi-layer data visualization is useful when you want to display
 several different data sets in the same plot. For example, consider
@@ -171,7 +172,7 @@ Chapters 3-4.
 For now, we move on to discuss the other main advantage of ggplot2:
 facets.
 
-# Multi-panel data visualization (facets)
+## Multi-panel data visualization (facets)
 
 Panels or facets are sub-plots that show related data
 visualizations. One of the main strengths of ggplot2 is that different
@@ -188,7 +189,7 @@ data visualization is used in two different ways:
   instead, to achieve the same effect of comparing data subsets).
 
   
-## Different geoms in each panel (aligned axes)
+### Different geoms in each panel (aligned axes)
   
 Facets are useful to align the axes of related plots. For example,
 consider the following data visualization which consists of two plots:
@@ -245,7 +246,7 @@ we wanted to change the order of the panels in the data visualization,
 we would only need to edit the order of the factor levels in the
 definition of `addColumn`.
 
-## Same geoms in each panel (compare data subsets)
+### Same geoms in each panel (compare data subsets)
 
 The second reason for using plots with multiple panels in a data
 visualization is to compare subsets of observations. This facilitates
@@ -314,7 +315,7 @@ meaningful comparisons.
 In the next chapter, we will show how the new `showSelected` keyword
 can be used to achieve animation, and show more of this data set.
 
-# Chapter summary and exercises
+## Chapter summary and exercises
 
 This chapter presented the basics of static data visualization using
 ggplot2. We showed how animint can be used to render a list of ggplots
