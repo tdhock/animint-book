@@ -120,20 +120,19 @@ For example, consider the following data on atmospheric carbon dioxide
 (CO2) concentrations, recorded monthly between 1959 and 1997.
 
 #+BEGIN_SRC R
-  library(data.table)
   year.int <- as.integer(floor(time(co2)))
   month.int <- as.integer(time(co2) %% 1 * 12 + 1)
   year.month.chr <- sprintf("%d-%02d-15", year.int, month.int)
   year.month.POSIXct <- as.POSIXct(strptime(year.month.chr, "%Y-%m-%d"))
   month.str <- strftime(year.month.POSIXct, "%B")
   month <- factor(month.str, month.str[1:12])
-  co2.details <- data.table(
+  co2.details <- data.frame(
     year.int,
     month.int,
     month,
     year.month.POSIXct,
     ppm=as.numeric(co2))
-  print(co2.details)
+  tail(co2.details)
 #+END_SRC
 
 Printing these data on the R command line shows that there are 468
@@ -201,9 +200,8 @@ Curve data visualization.
               size=1,
               data=co2.details)+
     geom_point(aes(year.month.POSIXct, ppm, color=month),
-               data=co2.details)+
-    scale_color_brewer(palette="Set3")
-  print(TimeSeries)
+               data=co2.details)
+  TimeSeries
 #+END_SRC
 
 The plot above shows colored points for each month of the year, rather

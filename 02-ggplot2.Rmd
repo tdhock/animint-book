@@ -41,8 +41,9 @@ fertility rate for each country in the WorldBank data set.
 
 ```{r}
 data(WorldBank, package="animint")
-library(ggplot2)
+tail(WorldBank)
 WorldBank1975 <- subset(WorldBank, year==1975)
+library(ggplot2)
 basic <- ggplot()+
   geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
              data=WorldBank1975)
