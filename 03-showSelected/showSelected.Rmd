@@ -1,23 +1,63 @@
-Chapter 3
+# Chapter 3, the showSelected keyword
 
-The showSelected keyword. After reading this chapter, you will be able
-to use animint to make animated graphics that advance automatically
-over time, like a video.
+This chapter explains showSelected, one of the two main keywords that
+animint introduces for interactive data visualization. After reading
+this chapter, you will be able to
 
-Chapter outline:
+* Use the showSelected keyword in your plot sketches to specify geoms
+  for which only a subset of data should be plotted at any time.
+* Use selection menus in animint to change the subset of plotted data.
+* Specify smooth transitions between data subsets using the duration
+  option and key aesthetic.
+* Create animated data visualizations using the time option.
 
-* Adding showSelected to sketch ideas.
-* Selection menus
-* Transitions: the duration option and key aesthetic
-* Animation: the time option
+## Sketching with showSelected
 
-# Sketching with showSelected
+In this section, we will explain how the showSelected keyword can be
+used in plot sketches. The showSelected keyword specifies a variable
+to use for subsetting the data before plotting.
 
-In fact we have already seen an example of the showSelected keyword,
-in the interactive legends that we saw in the previous two
-chapters. TODO:SKETCH.
+In fact, we have already seen an example of the showSelected keyword,
+in the interactive legends that we created in the previous two
+chapters. For example, consider the sketch below of the Keeling Curve
+data visualization from Chapter 1.
 
-# Selection menus 
+TODO: SKETCH co2.
+
+The sketch above includes `showSelected=month` for the `geom_point`,
+meaning that it should show the subset of data for the selected
+months. In contrast, since the `geom_line` does not include
+`showSelected` keywords, it always shows the entire data set
+(regardless of the selected months).
+
+As another example, consider the sketch below of the `basic` WorldBank
+data visualization from Chapter 2.
+
+TODO: SKETCH WorldBank.
+
+The sketch above specifies `showSelected=region` for the `geom_point`,
+meaning that it should show the subset of data for the selected
+regions. Note that the code we used in chapter 2 did not explicitly
+specify `showSelected=region`. Instead, we specified
+`aes(color=region)`, and animint automatically assigned
+`aes(showSelectedLegendColor=region)`. In general, animint will assign
+a showSelected aesthetic for each variable that is used in a
+categorical legend.
+
+Each variable that is used with a showSelected aesthetic is treated by
+animint as a *selection variable*. For example, the Keeling Curve data
+viz has one selection variable (month), and so does the WorldBank data
+viz (region). For each selection variable, animint keeps track of the
+currently selected values. When the selection changes, animint updates
+the subset of data that is shown.
+
+Each of the data visualizations sketched above has only one selection
+variable. However, a data visualization can have any number of
+selection variables. In the next section, we will explore a
+visualization of the World Bank data that has selection variables for
+`region` and `year`.
+
+## Selecting data subsets using menus 
 
 The R code below produces a scatterplot of life expectancy and
 fertility rate for each country in the WorldBank data set. 
@@ -64,7 +104,7 @@ should see the points in the scatterplot immediately update to show
 the fertility rate and life expectancy of all the countries in the
 year that you selected.
 
-# Transitions: the duration option and key aesthetic
+## Transitions: the duration option and key aesthetic
 
 You may have noticed that there are three buttons at the bottom of
 each data visualization created by animint. Try clicking the "Show
@@ -146,7 +186,7 @@ see that the text box for the year variable is 2000, as specified in
 the R code. If you change the selection from 1980 to 1981, you should
 see a proper transition.
 
-# Animation: the time option
+## Animation: the time option
 
 The `time` option is used to specify a variable to use for animation.
 
@@ -156,13 +196,18 @@ viz.duration.time$time <- list(variable="year", ms=2000)
 structure(viz.duration.time, class="animint")
 ```
 
-# Chapter summary and exercises
+## Chapter summary and exercises
 
 This chapter explained the showSelected aesthetic, selection menus,
 transition durations, and animation.
 
 Exercises:
 
+* Make an improved version of `viz.aligned` from the previous
+  chapter. Instead of fixing the year at 1975, use
+  `aes(showSelected=year)` so that the user can select a year. Add
+  geoms that show the selected year: a `geom_text` on the scatterplot,
+  and a `geom_vline` on the time series.
 * Translate an example from the animation package. Hint: in the code
   for the animation package there is always a for loop over the time
   variable. Instead of calling a plotting function inside the for
