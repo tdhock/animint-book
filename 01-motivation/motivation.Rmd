@@ -57,8 +57,8 @@ forms. One highly effective class of methods for data analysis is
 called "data visualization," which seeks to provide answers to
 questions by converting a data set into an informative picture. The
 term "data visualization" refers to both the picture itself (also
-known as a plot, figure, graph, graphic, or data viz), and the process of
-creating the picture.
+known as a plot, chart, figure, graph, graphic, or data viz), and the
+process of creating the picture.
 
 There are many different ways to perform data analysis, and data sets
 of different sizes should be analyzed using different techniques. We

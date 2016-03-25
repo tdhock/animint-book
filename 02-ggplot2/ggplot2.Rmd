@@ -4,76 +4,173 @@ layout: default
 output: bookdown::html_chapter
 ---
 
-# Chapter 2: data visualization using ggplot2
+# Chapter 2, data visualization using the grammar of graphics
 
-This chapter presents ggplot2, an implementation of the multi-layer,
-multi-panel grammer of graphics.
+This chapter explains the grammar of graphics, which is a powerful
+model for describing a large class of data visualizations. After
+reading this chapter, you will be able to
 
-Chapter outline:
+* State the advantages of the grammar of graphics relative to previous
+  plotting systems
+* Install the animint R package from GitHub
+* Translate plot sketches into ggplot code in R
+* Render ggplots on web pages using animint
+* Specify manual scales for legends in ggplots
+* Create multi-layer ggplots
+* Create multi-panel ggplots
 
-* Brief history of the grammar of graphics
-* Rendering a basic ggplot using animint
-* Multi-layer ggplots
-* Multi-panel ggplots
+## History and purpose of the grammar of graphics
 
-## Brief history of the grammar of graphics
+Most computer systems for data analysis provide functions for creating
+plots to visualize patterns in data. The oldest systems provide very
+general functions for drawing basic plot components such as lines and
+points (e.g. the `graphics` and `grid` packages in R). If you use one
+of these general systems, then it is your job to put the components
+together to form a meaningful, interpretable plot. The advantage of
+general systems is that they impose few limitations on what kinds of
+plots can be created. The disadvantage is that general systems
+typically do not provide functions for automating common plotting
+tasks (axes, panels, legends).
 
-Wilkinson proposed a general grammar of graphics to describe and
-create a large class of static data visualizations
-[Wilkinson 2006]. Wickham implemented several ideas from that grammar
-in the ggplot2 R package [Wickham 2009]. Wilkinson's grammar describes
-*static* graphics, which can be viewed equally well on a
-computer screen or on paper.
+To overcome the disadvantages of these general plotting systems,
+charting packages such as `lattice` were developed (TODO: ref Sarkar
+book). Such packages have several pre-defined chart types, and provide
+a dedicated function for creating each chart type. For example,
+`lattice` provides the `bwplot` function for making box and whisker
+plots. The advantage of such systems is that they make it much easier
+to create entire plots, including a legend and panels. The
+disadvantage is the set of pre-defined chart types, which means that
+it is not easy to create more complex graphics.
 
-The main topic of this book is animint, an R package for
-*interactive* graphics. In contrast to static graphics,
-interactive graphics are best viewed on a computer with a mouse and
-keyboard that can be used to interact with the plot. Since many
-concepts from static graphics are also useful for interactive graphics
-(e.g. legends), the animint package is implemented as an extension of
-ggplot2. In this chapter we will introduce the main features of
-ggplot2 which will also be useful for interactive plot design in later
-chapters.
+TODO: figure or table.
 
-## Rendering a basic ggplot using animint
+Newer plotting systems based on the grammar of graphics are situated
+between these two extremes. Wilkinson proposed the grammar of graphics
+in order to describe and create a large class of plots (TODO: cite
+first edition of grammar of graphics book). Wickham later implemented
+several ideas from the grammar of graphics in the `ggplot2` R package
+(TODO: cite ggplot2 book). The `ggplot2` package has several
+advantages with respect to previous plotting systems.
 
-The R code below produces a scatterplot of life expectancy and
-fertility rate for each country in the WorldBank data set.
+* Like general plotting systems, and unlike `lattice`, `ggplot2`
+  imposes few limitations on the types of plots that can be created
+  (there are no pre-defined chart types).
+* Unlike general plotting systems, and like `lattice`, `ggplot2` makes
+  it easy to include common plot elements such as axes, panels, and
+  legends.
+* Since `ggplot2` is based on the grammar of graphics, an explicit
+  mapping of data variables to visual properties is required. Later in
+  this chapter, we will explain how this mapping allows sketches of
+  plot ideas to be directly translated into R code.
+
+Finally, all of the previously discussed plotting systems are intended
+for creating *static* graphics, which can be viewed equally well on a
+computer screen or on paper. However, the main topic of this book is
+`animint`, an R package for *interactive* graphics. In contrast to
+static graphics, interactive graphics are best viewed on a computer
+with a mouse and keyboard that can be used to interact with the plot.
+
+Since many concepts from static graphics are also useful in
+interactive graphics, the `animint` package is implemented as an
+extension of `ggplot2`. In this chapter we will introduce the main
+features of `ggplot2` which will also be useful for interactive plot
+design in later chapters.
+
+## Installing animint
+
+The `animint` R package is hosted on GitHub, so you can install
+`animint` by using the `devtools` package. To make sure that `animint`
+is installed, open R and execute the following code.
+
+```{r}
+if(!require(animint)){
+  install.packages("devtools")
+  devtools::install_github("tdhock/animint", upgrade_dependencies=FALSE)
+}
+```
+
+## Translating plot sketches into ggplots
+
+This section explains how to translate a plot sketch into R `ggplot2`
+code. We use a data set from the World Bank as an example, and we
+begin by loading and looking at these data.
 
 ```{r}
 data(WorldBank, package="animint")
 tail(WorldBank)
-WorldBank1975 <- subset(WorldBank, year==1975)
-library(ggplot2)
-basic <- ggplot()+
-  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
-             data=WorldBank1975)
-basic
+dim(WorldBank)
 ```
 
-This ggplot contain exactly one *layer*, a `geom_point` which displays
-a circle for every row the in data set specified. The `aes` specifies
-the mapping of data variables to visual properties. The `x` and `y`
-properties are used for the horizontal and vertical position, and the
-`color` property specifies the color each point.
+The `WorldBank` data set consist of measures such as fertility rate
+and life expectancy for each country over the period 1960-2010. The
+code above prints the last few rows and the dimension of the data
+table (11342 rows and 15 columns).
 
-This ggplot can be rendered with animint, by first assigning the
-ggplot to a named element of a list, and then giving that list the
-class `"animint"`.
+Suppose that we are interested to see if there is any relationship
+between life expectancy and fertility rate. We could fix one year,
+then use those two data variables in a scatterplot. Consider the
+figure below which sketches the main components of that data
+visualization.
+
+TODO:SKETCH.
+
+The sketch above shows life expectancy on the horizontal (x) axis,
+fertility rate on the vertical (y) axis, and a legend for the
+region. These elements of the sketch can be directly translated into R
+code using the following method. First, we need to construct a data
+table that has one row for every country in 1975, and columns named
+`life.expectancy`, `fertility.rate`, and `region`. The `WorldBank`
+data already has these columns, so all we need to do is consider the
+subset for the year 1975:
+
+```{r}
+WorldBank1975 <- subset(WorldBank, year==1975)
+head(WorldBank1975)
+```
+
+The code above prints the data for 1975, which clearly has the
+appropriate columns, and one row for each country. The next step is to
+use the notes in the sketch to code a ggplot with a corresponding
+`aes` or aesthetic mapping of data variables to visual properties:
+
+```{r}
+library(ggplot2)
+scatter <- ggplot()+
+  geom_point(
+    mapping=aes(x=life.expectancy, y=fertility.rate, color=region),
+    data=WorldBank1975)
+scatter
+```
+
+The `aes` function is called with names for visual properties (`x`,
+`y`, `color`) and values for the corresponding data variables
+(`life.expectancy`, `fertility.rate`, `region`). This mapping is
+applied to the variables in the `WorldBank1975` data table, in order
+to create the visual properties of the `geom_point`. The ggplot was
+saved as the `scatter` object, which when printed on the R command
+line shows the plot on a graphics device. Note that the `ggplot2`
+system automatically shows a `region` color legend.
+
+## Rendering ggplots on web pages using animint
+
+This section explains how the `animint` package can be used to render
+ggplots as web pages. This ggplot can be rendered with animint, by
+first assigning the ggplot to a named element of a list, and then
+giving that list the class `"animint"`.
 
 ```{r}
 library(animint)
-basic.viz <- list(scatter=basic)
-structure(basic.viz, class="animint")
+scatter.viz <- list(scatter=scatter)
+structure(scatter.viz, class="animint")
 ```
 
 The first line loads the animint package, the second line assigns the
-ggplot `basic` to a named element of the `basic.viz` list, and the
+ggplot `scatter` to a named element of the `scatter.viz` list, and the
 third line gives the list the class `"animint"`. When executing this
 code on the R command line, R will run the `print.animint` function
 via the S3 object system
 [http://adv-r.had.co.nz/OO-essentials.html#s3]. That will run the
-`animint2dir` function, which converts the animint `basic.viz` list to
+`animint2dir` function, which converts the animint `scatter.viz` list to
 a directory of data and code files that can be rendered in a web
 browser.
 
@@ -129,7 +226,7 @@ visualization.
 
 ```{r}
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
-two.layers <- basic+
+two.layers <- scatter+
   geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                 group=country),
             data=WorldBankBefore1975)
@@ -325,11 +422,13 @@ ideal for data visualization: multi-layer and multi-panel graphics.
 
 Exercises:
 
+* What are the three main advantages of `ggplot2` relative to previous
+  plotting systems such as `grid` and `lattice`?
 * What is the purpose of multi-layer graphics?
 * What are the two different reasons for creating multi-panel
   graphics? Which of these two types is useful with interactivity?
-* Let us define "A < B" to mean that "B can contain several A." Which
-  of the following statements is true?
+* Let us define "A < B" to mean that "one B can contain several A."
+  Which of the following statements is true?
 
 	* ggplot < panel
 	* panel < ggplot
@@ -351,6 +450,15 @@ Exercises:
   another version of the data visualization that shows both time
   series. Hint: use both horizontal and vertical panels in
   `facet_grid`.
+* Use `aes(size=population)` in the scatterplot to show the population
+  of each country. Hint: `scale_size_animint(pixel.range=c(5, 10)`
+  means that circles with a radius of 5/10 pixels should be used
+  represent the minimum/maximum population.
 * Create a multi-panel data visualization that shows each year of the
   `WorldBank` data set in a separate panel. What are the limitations
   of using static graphics to visualize these data?
+* Create `viz.aligned` using a plotting system that is not based on
+  the grammar of graphics. For example, you can use functions from the
+  `graphics` package in R (`plot`, `points`, `lines`, etc), or
+  matplotlib in Python. What are some advantages of ggplot2 and
+  animint?
