@@ -142,7 +142,7 @@ viz.wide <- list(
                    showSelected2=pmean),
                data=data.table(loss.seq, what="series"))
 )
-animint2dir(viz, "figure-poisson-series-wide")
+animint2dir(viz.wide, "figure-poisson-series-wide")
 
 median.dt <- data.table(
   count=max(seq.vec),
@@ -153,6 +153,10 @@ viz <- list(
     theme(panel.margin=grid::unit(0, "lines"))+
     theme_animint(height=600)+
     facet_grid(loss.name ~ ., scales="free")+
+    geom_vline(aes(xintercept=pmean, showSelected=pmean),
+               data=vline,
+               color="grey",
+               size=1)+
     geom_hline(aes(yintercept=loss,
                    showSelected=pred.value,
                    showSelected2=pmean,
