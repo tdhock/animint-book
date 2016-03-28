@@ -19,6 +19,190 @@ gfit <- glm(label ~ pos + neg, df, family="poisson")
 glink.vec <- predict(gfit, type="link")
 gresp.vec <- predict(gfit, type="response")
 
+expected.loss.list <- list(
+  L0=function(pred, mean){
+    prob <- dpois(pred, mean)
+    1 - prob
+  },
+  L1=function(pred, mean){
+    stopifnot(is.integer(pred))
+    stopifnot(length(pred)==1)
+    y <- 0:pred
+    prob <- dpois(y, mean)
+    expected.loss <- (pred-y)*prob
+    mean-pred+2*sum(expected.loss)
+  },
+  L2=function(pred, mean){
+    residual <- pred-mean
+    residual * residual + mean
+  })
+loss.fun.list <- list(
+  L0=function(pred, label)ifelse(pred==label, 0, 1),
+  L1=function(pred, label)abs(pred-label),
+  L2=function(pred, label){
+    residual <- pred - label
+    residual * residual
+  })
+pred.fun.list <- list(
+  L0=function(mean){
+    if(mean==0){
+      0
+    }else{
+      unique(c(ceiling(mean-1), floor(mean)))
+    }
+  },
+  L1=function(mean){
+    count <- qpois(0.5, mean)
+    prob <- dpois(count, mean)
+    if(prob==0.5) c(count, count+1) else count
+  }, L2=function(mean)unique(c(ceiling(mean-0.5), floor(mean+0.5)))
+)
+expected.list <- list()
+loss.seq.list <- list()
+vline.list <- list()
+prob.dt.list <- list()
+seq.vec <- 0:10
+best.pred.list <- list()
+for(pmean in c(seq(0, 9, by=0.5), log(2))){
+  prob.vec <- dpois(seq.vec, pmean)
+  for(loss.name in names(loss.fun.list)){
+    loss.fun <- loss.fun.list[[loss.name]]
+    pred.fun <- pred.fun.list[[loss.name]]
+    best.pred.list[[paste(pmean, loss.name)]] <- data.table(
+      pmean, loss.name, count=pred.fun(pmean))
+    expected.fun <- expected.loss.list[[loss.name]]
+    for(pred.value in seq.vec){
+      expected.value <- expected.fun(pred.value, pmean)
+      loss.vec <- loss.fun(pred.value, seq.vec)
+      one.term <- loss.vec * prob.vec
+      series <- cumsum(one.term)
+      expected.list[[paste(pmean, pred.value, loss.name)]] <- data.table(
+        pmean, loss.name, pred.value, loss=expected.value)
+      loss.seq.list[[paste(pmean, pred.value, loss.name)]] <- data.table(
+        pmean, loss.name, pred.value, count=seq.vec, series)
+    }
+  }
+  prob.dt.list[[paste(pmean)]] <- data.table(
+    pmean,
+    probability=prob.vec,
+    cum.prob=cumsum(prob.vec),
+    pred.value=seq.vec)
+  vline.list[[paste(pmean)]] <- data.table(pmean)
+}
+loss.seq <- do.call(rbind, loss.seq.list)
+expected <- do.call(rbind, expected.list)
+vline <- do.call(rbind, vline.list)
+expected[, min.loss := min(loss), by=.(pmean, loss.name)]
+expected[, status := ifelse(loss==min.loss, "min loss", "bigger loss")]
+prob.dt <- do.call(rbind, prob.dt.list)
+best.pred <- do.call(rbind, best.pred.list)
+hline.dt <- expected
+hline.dt$status <- "series"
+
+ggplot()+
+  geom_vline(aes(xintercept=pmean), data=vline)+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(loss.name ~ pmean, scales="free")+
+  geom_point(aes(pred.value, loss, color=status),
+             data=expected)
+
+viz.wide <- list(
+  loss=ggplot()+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))+
+    theme_animint(width=1000)+
+    facet_grid(loss.name ~ what, scales="free")+
+    geom_hline(aes(yintercept=loss,
+                   showSelected=pred.value,
+                   showSelected2=pmean,
+                   showSelected3=status),
+               color="grey",
+               data=hline.dt)+
+    geom_vline(aes(xintercept=pmean, clickSelects=pmean),
+               size=5,
+               alpha=0.7,
+               data=data.table(vline, what="expected"))+
+    geom_point(aes(pred.value, loss, color=status,
+                   showSelected=pmean,
+                   clickSelects=pred.value),
+               size=5,
+               data=data.table(expected, what="expected"))+
+    geom_text(aes(7, 0, label=sprintf("Poisson mean = %.2f", pmean),
+                  showSelected=pmean),
+              data=data.table(what="expected", loss.name="L0", vline))+
+    geom_text(aes(max(seq.vec), 0, label=paste(
+      "Series for expected loss, predicted value =", pred.value),
+      showSelected=pred.value,
+      showSelected2=pmean),
+      hjust=1,
+      data=data.table(expected[loss.name=="L0",], what="series"))+
+    geom_point(aes(count, series,
+                   showSelected=pred.value,
+                   showSelected2=pmean),
+               data=data.table(loss.seq, what="series"))
+)
+animint2dir(viz, "figure-poisson-series-wide")
+
+median.dt <- data.table(
+  count=max(seq.vec),
+  cum.prob=0.5)
+viz <- list(
+  loss=ggplot()+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))+
+    theme_animint(height=600)+
+    facet_grid(loss.name ~ ., scales="free")+
+    geom_hline(aes(yintercept=loss,
+                   showSelected=pred.value,
+                   showSelected2=pmean,
+                   showSelected3=status),
+               color="grey",
+               data=hline.dt)+
+    geom_hline(aes(yintercept=cum.prob),
+               color="grey",
+               data=data.table(median.dt, loss.name="cumulative prob"))+
+    geom_vline(aes(xintercept=count, color=status,
+                   key=paste(pmean, count),
+                   showSelected=pmean),
+               data=data.table(best.pred, status="min loss"))+
+    geom_vline(aes(xintercept=pmean, clickSelects=pmean),
+               size=5,
+               alpha=0.6,
+               data=data.table(
+                 vline,
+                 loss.name="probability"))+
+    geom_point(aes(count, series, color=status,
+                   showSelected=pred.value,
+                   showSelected2=pmean),
+               data=data.table(loss.seq, status="series"))+
+    geom_point(aes(pred.value, probability, 
+                   showSelected=pmean),
+               size=4,
+               data=data.table(
+                 prob.dt, loss.name="probability"))+
+    geom_point(aes(pred.value, cum.prob, 
+                   showSelected=pmean),
+               size=4,
+               data=data.table(
+                 prob.dt, loss.name="cumulative prob"))+
+    geom_point(aes(pred.value, loss, color=status,
+                   showSelected=pmean,
+                   key=pred.value,
+                   clickSelects=pred.value),
+               size=5,
+               alpha=0.8,
+               data=expected)+
+    geom_text(aes(max(seq.vec), 0, label=sprintf("Poisson mean = %.2f", pmean),
+                  showSelected=pmean),
+              hjust=1,
+              data=data.table(loss.name="L0", vline))+
+    scale_x_continuous("predicted value", breaks=seq.vec),
+  duration=list(pmean=1000, pred.value=1000)
+)
+animint2dir(viz, "figure-poisson-series")
+
+
 PoissonLoss <- function(count, seg.mean, weight = 1){
   stopifnot(is.numeric(count))
   stopifnot(is.numeric(seg.mean))
@@ -48,28 +232,29 @@ finite.range <- range(finite.predictor)
 linear.predictor.grid <-
   seq(finite.range[1], finite.range[2], l=length(exp.linear.predictor))
 exp.vec <- sort(unique(c(exp.linear.predictor, exp(linear.predictor.grid))))
-predicted.vec <- floor(exp.vec)
 loss.list <- list()
 seg.list <- list()
 minima.list <- list()
 for(label.value in 0:3){
-  if(0 < label.value){
-    seg.list[[paste(label.value, "left")]] <- data.table(
+  seg.list[[paste(label.value)]] <- if(0 == label.value){
+    data.table(
       label.value,
-      min.exp=0, max.exp=label.value, is.error=1)
+      min.exp=c(0, 0.5),
+      max.exp=c(0.5, Inf),
+      is.error=c(0, 1))
+  }else{
+    data.table(
+      label.value,
+      min.exp=c(0, label.value-0.5, label.value+0.5),
+      max.exp=c(label.value-0.5, label.value+0.5, Inf),
+      is.error=c(1, 0, 1))
   }
-  seg.list[[paste(label.value, "middle, right")]] <- data.table(
-    label.value,
-    min.exp=label.value + c(0, 1),
-    max.exp=c(label.value + 1, Inf),
-    is.error=c(0, 1))
   label.vec <- rep(label.value, length(exp.vec))
   loss.value <- PoissonLoss(label.vec, exp.vec)
-  is.error <- as.numeric(predicted.vec != label.value)
   loss.list[[paste(label.value)]] <- data.table(
     exp.linear.predictor=exp.vec,
     linear.predictor=log(exp.vec),
-    label.value, loss.value, predicted.vec, is.error)
+    label.value, loss.value)
   minima.list[[paste(label.value)]] <- data.table(
     label.value)
 }
