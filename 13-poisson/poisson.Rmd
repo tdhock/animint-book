@@ -1,0 +1,71 @@
+# Chapter 13, Poisson regression
+
+This goal of this chapter is to create an interactive data
+visualization that explains
+[Poisson regression](https://en.wikipedia.org/wiki/Poisson_regression),
+a machine learning model for predicting an integer-valued output from
+inputs that are real-valued vectors.
+
+## Probability mass function plot
+
+The goal of this section is to create a data visualization that shows
+the probability mass function for a selected Poisson mean parameter.
+
+TODO: sketch point(prob versus count), tallrect mean.
+
+```{r}
+library(data.table)
+poisson.mean.diff <- 0.5
+poisson.mean.vec <- seq(0, 10, by=poisson.mean.diff)
+quantile.max <- 0.99
+poisson.prob.list <- list()
+for(poisson.mean in poisson.mean.vec){
+  count.max <- qpois(quantile.max, poisson.mean)
+  count <- 0:count.max
+  probability <- dpois(count, poisson.mean)
+  cum.prob <- cumsum(probability)
+  poisson.prob.list[[paste(poisson.mean)]] <- data.table(
+    poisson.mean,
+    count,
+    probability,
+    cum.prob)
+}
+poisson.prob <- do.call(rbind, poisson.prob.list)
+poisson.prob
+```
+
+The static data viz below shows one facet for each Poisson
+distribution.
+
+```{r}
+mean.tallrects <- data.table(
+  poisson.mean=poisson.mean.vec,
+  min=poisson.mean.vec - poisson.mean.diff/2,
+  max=poisson.mean.vec + poisson.mean.diff/2)
+prob.mass <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "cm"))+
+  geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+                alpha=0.6,
+                data=mean.tallrects)+
+  geom_point(aes(count, probability, showSelected=poisson.mean),
+             data=poisson.prob)
+prob.mass+
+  facet_wrap("poisson.mean")
+```
+
+We next create an interactive version with animint.
+
+```{r}
+viz <- list(prob=prob.mass)
+structure(viz, class="animint")
+```
+
+You can click the viz above to change the mean of the Poisson
+distribution.
+
+## Add a panel for cumulative distribution function
+
+
+
+## Chapter summary and exercises

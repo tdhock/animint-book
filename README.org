@@ -62,3 +62,4 @@ animint: a grammar for animated and interactive data visualization
 - Ch 10, knn example
 - Ch 11, lasso example
 - Ch 12, SVM example
+- Ch 13, Poisson regression
