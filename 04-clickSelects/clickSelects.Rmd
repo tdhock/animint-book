@@ -1,0 +1,111 @@
+# Chapter 4, clickSelects
+
+This chapter explains clickSelects, one of the two main keywords that
+animint introduces for interactive data visualization. The
+clickSelects keyword specifies a geom for which clicking updates a
+selection variable. Each geom in a data visualization has its own data
+set, and its own definition of the clickSelects keyword. So clicking
+on different geoms can change different selection variables.
+
+After reading this chapter, you will be able to
+
+* Understand how interactive legends implicitly use clickSelects.
+* Use the clickSelects keyword in your plot sketches.
+* Translate your plot sketches with clickSelects into R code.
+  
+## Interactive legends and clickSelects
+
+In this section, we will explain how the clickSelects keyword is
+implicitly used in interactive legends. 
+
+In fact, we have already implicitly used clickSelects, which was
+automatically created for the interactive legends in the previous
+chapters. For example, consider the sketch of the World Bank data viz
+from the last chapter.
+
+TODO: sketch.
+
+Since the legend has `clickSelects=region`, clicking an entry of that
+legend updates the `region` selection variable. Note that animint
+automatically generates interactive legends, so you do not need to
+explicitly specify `clickSelects=region` for the legend. In fact, when
+we specified `color=region` for the `geom_point`, animint does two
+things automatically:
+
+* `showSelectedLegendColor=region` is assigned to the same
+  `geom_point`.
+* `clickSelects=region` is assigned to the color legend.
+
+Note that `clickSelects` aesthetics are not limited to interactive
+legends. Each geom has its own `clickSelects` variable, which
+determines which selection variable is updated after clicking that
+geom. In the next section we will give several examples of how
+clickSelects can be used in combination with showSelected to create
+interactive data visualizations.
+
+## clickSelects with single selection
+
+The goal of this section is to create the following visualization of
+the World Bank data.
+
+TODO: sketch of 
+
+To start, consider the following R code which generates a
+scatterplot of the World Bank data:
+
+```{r}
+data(WorldBank, package="animint")
+library(animint)
+scatter <- ggplot()+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
+                   key=country,
+                   showSelected=year,
+                   clickSelects=country),
+               data=WorldBank)
+scatter
+```
+
+Note that ggplot2 ignores the animint aesthetics (key, showSelected,
+and clickSelects), so the plot above is not interactive. In contrast,
+rendering the same ggplot using animint results in the following
+interactive plot:
+
+```{r}
+viz.scatter <- list(
+  scatter=scatter,
+  duration=list(year=2000))
+structure(viz.scatter, class="animint")
+```
+
+Try clicking data points in the scatterplot above. You should see the
+value of the `country` selection menu change after clicking a data
+point. You should also see that the data point for the selected
+country is darker than the others. This serves to highlight the
+current selection, and is performed automatically for each geom with
+`clickSelects`. By default the selected point has alpha=1 (fully
+opaque, no transparency), and the other points have alpha=0.5
+(semi-transparent).
+
+The data visualization above shows the currently selected country in
+the selection menu, but it would be better to show it as a text label
+on the scatterplot. We can do that by adding a `geom_text` layer with
+several showSelected aesthetics:
+
+```{r}
+viz.text <- viz.scatter
+viz.text$scatter <- scatter+
+  geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
+                showSelected=year,
+                showSelected2=country,
+                showSelected3=region),
+            data=WorldBank)
+structure(viz.text, class="animint")
+```
+
+Note that the viz above, each point except the selected country is
+semi-transparent. Clicking another point changes the value of the
+`country` selection variable to the corresponding country.
+
+## clickSelects with multiple selection
+
+## Chapter summary and exercises
