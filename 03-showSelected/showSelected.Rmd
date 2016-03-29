@@ -15,12 +15,16 @@ this chapter, you will be able to
 
 In this section, we will explain how the showSelected keyword can be
 used in plot sketches. The showSelected keyword specifies a variable
-to use for subsetting the data before plotting.
+to use for subsetting the data before plotting. Each geom in a data
+visualization has its own data set, and its own definition of
+showSelected variables. That means different geoms can specify
+different data sets and showSelected keywords to show different data
+subsets.
 
-In fact, we have already seen an example of the showSelected keyword,
-in the interactive legends that we created in the previous two
-chapters. For example, consider the sketch below of the Keeling Curve
-data visualization from Chapter 1.
+In fact, we have already used the showSelected keyword, which was
+automatically created by the interactive legends that we created in
+the previous two chapters. For example, consider the sketch below of
+the Keeling Curve data visualization from Chapter 1.
 
 TODO: SKETCH co2.
 
@@ -30,19 +34,28 @@ months. In contrast, since the `geom_line` does not include
 `showSelected` keywords, it always shows the entire data set
 (regardless of the selected months).
 
-As another example, consider the sketch below of the `basic` WorldBank
+As another example, consider the sketch below of the first WorldBank
 data visualization from Chapter 2.
 
 TODO: SKETCH WorldBank.
 
 The sketch above specifies `showSelected=region` for the `geom_point`,
 meaning that it should show the subset of data for the selected
-regions. Note that the code we used in chapter 2 did not explicitly
-specify `showSelected=region`. Instead, we specified
-`aes(color=region)`, and animint automatically assigned
+regions.
+
+Note that the code we used in chapter 2 did not explicitly specify
+`showSelected=region`. Instead, we specified `aes(color=region)`, and
+animint automatically assigned
 `aes(showSelectedLegendColor=region)`. In general, animint will assign
 a showSelected aesthetic for each variable that is used in a
 categorical legend.
+
+However, the showSelected keyword is not limited to use with
+categorical legends. You can use showSelected keywords for any data
+variables you like, by explicitly specifying them in the aesthetic
+mapping. The animint package recognizes any aesthetic that contains
+the substring `showSelected`, for example `aes(showSelected=year,
+showSelected2=country, showSelectedRegion=region)`.
 
 Each variable that is used with a showSelected aesthetic is treated by
 animint as a *selection variable*. For example, the Keeling Curve data
@@ -65,11 +78,11 @@ fertility rate for each country in the WorldBank data set.
 ```{r}
 data(WorldBank, package="animint")
 library(ggplot2)
-basic <- ggplot()+
+scatter <- ggplot()+
   geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
                  showSelected=year),
              data=WorldBank)
-basic
+scatter
 ```
 
 Note that the ggplot above contains the `showSelected` aesthetic, one
@@ -82,8 +95,8 @@ interactive data visualization below.
 
 ```{r}
 library(animint)
-viz.basic <- list(scatter=basic)
-structure(viz.basic, class="animint")
+viz.scatter <- list(scatter=scatter)
+structure(viz.scatter, class="animint")
 ```
 
 Note that the data viz above has two selection variables: region and
@@ -208,10 +221,11 @@ Exercises:
   `aes(showSelected=year)` so that the user can select a year. Add
   geoms that show the selected year: a `geom_text` on the scatterplot,
   and a `geom_vline` on the time series.
-* Translate an example from the animation package. Hint: in the code
-  for the animation package there is always a for loop over the time
-  variable. Instead of calling a plotting function inside the for
-  loop, use the list-of-data-tables idiom to store the data that
-  should be plotted (TODO:ref appendix). Then use those data along
-  with `showSelected` aesthetics to create ggplots, and render them
-  using animint.
+* Translate one of the
+  [animation package examples](http://vis.supstat.com/categories.html#animation-ref)
+  to an animint. Hint: in the code for the animation package there is
+  always a for loop over the time variable. Instead of calling a
+  plotting function inside the for loop, use the list-of-data-tables
+  idiom to store the data that should be plotted (TODO:ref
+  appendix). Then use those data along with `showSelected` aesthetics
+  to create ggplots, and render them using animint.
