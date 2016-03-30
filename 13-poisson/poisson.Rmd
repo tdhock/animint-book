@@ -4,9 +4,16 @@ This goal of this chapter is to create an interactive data
 visualization that explains
 [Poisson regression](https://en.wikipedia.org/wiki/Poisson_regression),
 a machine learning model for predicting an integer-valued output from
-inputs that are real-valued vectors.
+inputs that are real-valued vectors. This is a "linear regression"
+model since it learns a linear function from the inputs to the
+output. Like least squares regression, Poisson regression can be
+formulated as a maximum likelihood problem. However, it differs from
+least squares linear regression since it uses a Poisson distribution
+to model the output labels, instead of a Gaussian distribution. This
+modeling choice is appropriate when output labels are non-negative
+integers. 
 
-## Probability mass function plot
+## Plot the probability mass function and select the Poisson mean parameter
 
 The goal of this section is to create a data visualization that shows
 the probability mass function for a selected Poisson mean parameter.
@@ -57,15 +64,92 @@ prob.mass+
 We next create an interactive version with animint.
 
 ```{r}
-viz <- list(prob=prob.mass)
-structure(viz, class="animint")
+viz.prob <- list(prob=prob.mass)
+structure(viz.prob, class="animint")
 ```
 
 You can click the viz above to change the mean of the Poisson
 distribution.
 
-## Add a panel for cumulative distribution function
+## Add a panel for the cumulative distribution function
 
+To add a panel for the cumulative distribution function, we will
+re-make the ggplot. When we specify the data sets we will use the
+"addColumn then facet" idiom (REF: appendix).
 
+```{r}
+addColumn <- function(dt, panel){
+  data.table(dt, panel=factor(panel, c("probability", "cum prob")))
+}
+quantile.max.dt <- data.table(quantile.max)
+viz.cum.prob <- list(
+  prob=ggplot()+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "cm"))+
+    facet_grid(panel ~ ., scales="free")+
+    geom_hline(aes(yintercept=quantile.max),
+               color="grey",
+               data=addColumn(quantile.max.dt, "cum prob"))+
+    geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+                  alpha=0.6,
+                  data=mean.tallrects)+
+    geom_point(aes(count, probability, showSelected=poisson.mean),
+               color="red",
+               data=addColumn(poisson.prob, "probability"))+
+    geom_point(aes(count, cum.prob, showSelected=poisson.mean),
+               color="red",
+               data=addColumn(poisson.prob, "cum prob"))
+)
+structure(viz.cum.prob, class="animint")
+```
+
+Note how we used `addColumn` to add a `panel` variable to all the data
+sets for each geom except `geom_tallrect`. Using `panel` as a facet
+variable has the effect of drawing each geom in only one panel, except
+the `geom_tallrect` which is drawn in each panel.
+
+Note that we also used a `geom_hline` to show 0.99, the cumulative
+distribution function threshold that was used to determine the set of
+points to plot for each Poisson distribution.
+
+## Add a plot of the Poisson loss and a selector for label value
+
+Next we will compute the Poisson loss for several values of the output
+label.
+
+```{r}
+## TODO
+```
+
+Next we make a data viz with two plots.
+
+```{r}
+addColumn <- function(dt, panel){
+  data.table(dt, panel=factor(panel, c("probability", "cum prob")))
+}
+quantile.max.dt <- data.table(quantile.max)
+viz.cum.prob <- list(
+  prob=ggplot()+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "cm"))+
+    facet_grid(panel ~ ., scales="free")+
+    geom_hline(aes(yintercept=quantile.max),
+               color="grey",
+               data=addColumn(quantile.max.dt, "cum prob"))+
+    geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+                  alpha=0.6,
+                  data=mean.tallrects)+
+    geom_point(aes(count, probability, showSelected=poisson.mean),
+               color="red",
+               data=addColumn(poisson.prob, "probability"))+
+    geom_point(aes(count, cum.prob, showSelected=poisson.mean),
+               color="red",
+               data=addColumn(poisson.prob, "cum prob"))
+)
+structure(viz.cum.prob, class="animint")
+```
+
+The data viz above should show the Poisson loss on the left and the
+probability on the right.
 
 ## Chapter summary and exercises

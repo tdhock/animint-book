@@ -1,0 +1,31 @@
+# Appendix, useful idioms
+
+This appendix describes several idioms which are useful for creating
+animints.
+
+## addColumn then facet
+
+This idiom is useful for creating multi-panel ggplots with aligned
+axes. First, define a function which takes as input a data table and
+one or more values which will be used to add factors to that data
+table.
+
+```{r}
+addColumn <- function(df, time.period){
+  data.frame(df, time.period=factor(time.period, c("1975", "1960-2010")))
+}
+viz.aligned <- list(
+  scatter=ggplot()+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+               data=addColumn(WorldBank1975, "1975"))+
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+                  group=country),
+              data=addColumn(WorldBankBefore1975, "1975"))+
+    geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
+              data=addColumn(WorldBank, "1960-2010"))+
+    facet_grid(. ~ time.period, scales="free")
+  )
+structure(viz.aligned, class="animint")
+```
+
+

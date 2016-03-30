@@ -213,7 +213,7 @@ than for only May and September, the yearly local minima that we
 wanted to emphasize. Since it lacks this emphasis, this static plot is
 not as informative as the previous plot. This is an example where it
 is not desirable to plot all of the data at once. We can solve this
-problem using the interactive plot
+problem using the following interactive plot.
 
 ```{r, echo=FALSE}
 viz <- list(
@@ -225,7 +225,26 @@ structure(viz, class="animint")
 ```
 
 In the plot above, the default emphasis is May and October, but the
-user can click the legend to update the emphasis.
+user can click the legend to update the emphasis. This simple example
+illustrates the main idea of interactive data visualization using
+animint. There are many choices that must be made to show details of
+big data sets. For example, the choice of which months to emphasize in
+the plot above. Rather than fixing such choices in a static plot, the
+goal of interactive data visualization is to allow the reader to see
+what the plot looks like when different choices are made. In the
+example above, we used an interactive legend which allows the user to
+select different months and see what the plot looks like after
+changing the selection.
+
+The example above also provides a good example of `clickSelects` and
+`showSelected`, the two keywords that animint introduces to allow
+interaction. Without going into too many details, the plot above uses
+`clickSelects=month` for the interactive legend, meaning that clicking
+the legend should change the selected months. Furthermore, we used
+`showSelected=month` for the points, meaning that we should only plot
+the set of points which corresponds to the currently selected
+months. In Chapters 3-4, we will explain how to design data
+visualizations by writing R code using these two new keywords.
 
 As another example, consider the more complicated data visualization
 below.
