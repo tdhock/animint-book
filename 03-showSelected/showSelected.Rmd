@@ -117,6 +117,17 @@ should see the points in the scatterplot immediately update to show
 the fertility rate and life expectancy of all the countries in the
 year that you selected.
 
+We use the terms "direct manipulation" and "indirect manipulation" to
+describe these different ways of changing the selection. Direct
+manipulation typically involves clicking on the objects that you want
+to change, and is usually easier to understand (TODO:ref infovis
+literature). In contrast, indirect manipulation techniques such as
+menus are typically more complicated to understand. In the animint
+above, you can change the value of the `region` variable using either
+the legend or the menu. Using the legend is a more direct manipulation
+technique, since the legend is drawn closer to the plotted data points
+that will be updated.
+
 ## Transitions: the duration option and key aesthetic
 
 You may have noticed that there are three buttons at the bottom of

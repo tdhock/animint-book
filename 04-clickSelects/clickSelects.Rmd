@@ -12,13 +12,14 @@ After reading this chapter, you will be able to
 * Understand how interactive legends implicitly use clickSelects.
 * Use the clickSelects keyword in your plot sketches.
 * Translate your plot sketches with clickSelects into R code.
+* Use the `selector.types` option to specify either single or multiple
+  selection.
   
-## Interactive legends and clickSelects
+## Interactive legends implicitly use clickSelects
 
 In this section, we will explain how the clickSelects keyword is
-implicitly used in interactive legends. 
-
-In fact, we have already implicitly used clickSelects, which was
+implicitly used in interactive legends. If you have read the previous
+chapters, you have already implicitly used clickSelects, which was
 automatically created for the interactive legends in the previous
 chapters. For example, consider the sketch of the World Bank data viz
 from the last chapter.
@@ -43,12 +44,12 @@ geom. In the next section we will give several examples of how
 clickSelects can be used in combination with showSelected to create
 interactive data visualizations.
 
-## clickSelects with single selection
+## Select a single point on a scatterplot
 
 The goal of this section is to create the following visualization of
 the World Bank data.
 
-TODO: sketch of 
+TODO: sketch of scatterplot with text labels.
 
 To start, consider the following R code which generates a
 scatterplot of the World Bank data:
@@ -65,10 +66,12 @@ scatter <- ggplot()+
 scatter
 ```
 
-Note that ggplot2 ignores the animint aesthetics (key, showSelected,
-and clickSelects), so the plot above is not interactive. In contrast,
-rendering the same ggplot using animint results in the following
-interactive plot:
+First, note that we use the `addColumn` function to add a factor
+variable to the `WorldBank` data set, which we will use later as a
+facet variable. Also note that ggplot2 ignores the animint aesthetics
+(key, showSelected, and clickSelects), so the plot above is not
+interactive. In contrast, rendering the same ggplot using animint
+results in the following interactive plot:
 
 ```{r}
 viz.scatter <- list(
@@ -102,10 +105,137 @@ viz.text$scatter <- scatter+
 structure(viz.text, class="animint")
 ```
 
-Note that the viz above, each point except the selected country is
-semi-transparent. Clicking another point changes the value of the
-`country` selection variable to the corresponding country.
+After clicking a data point in the scatterplot above, you should see a
+text label with the country name appear. Furthermore, try changing the
+year using the selection menu. You should see the text label move in a
+smooth transition along with the corresponding data point. Try
+clicking the legend entry that corresponds to the region for the
+currently selected country (e.g. if Canada is selected, try clicking
+the North America legend entry). You should see the text label
+disappear along with all of the points for that region.
+
+As explained in the last chapter, any aesthetic that contains the
+substring `showSelected` is treated as an interactive variable. In the
+example above, we specified three `showSelected` variables for the
+`geom_text`. This means to only draw a text label for the rows of the
+`WorldBank` data set that match the current values of all three of
+those selection variables. Since each combination of `country` and
+`year` has one row in these data, only one text label will be shown at
+a time.
+
+Finally, note that specifying `showSelected3=region` causes the text
+label to be hidden when changing the selected set of regions using the
+interactive legend. Since we specified `color=region` for the
+`geom_point`, it automatically gets a `showSelectedLegendColor=region`
+aesthetic, which has the effect of hiding points after clicking the
+region legend. However, since the `geom_text` does not have
+`color=region`, we have to manually specify `showSelected3=region` if
+we want to hide it after clicking the region legend.
+
+In the last chapter, we introduced the terms "direct manipulation" and
+"indirect manipulation" to describe interactions with legends and
+menus. In the data viz above, we can change the value of the `country`
+selection variable by either clicking a data point (direct
+manipulation) or using the selection menu (indirect
+manipulation). Both techniques are useful, but for different
+purposes:
+
+* Direct manipulation by clicking data points is useful to find the
+  names of countries with extreme values of fertility rate and life
+  expectancy. For example, for the year 1960, clicking the point at
+  the bottom left of the plot reveals the country name Gabon.
+* Indirect manipulation using menus is useful to see the plotted
+  position of a country of interest. For example, it would be
+  difficult to find France by clicking all the different points, but
+  it is simple to find France by typing its name in the selection
+  menu.
+  
+Note that in the data viz above, the year variable can only be changed
+via the selection menu. In the next section, we will add a facet with
+a geom that can be directly clicked to change the year variable.
+
+## Selecting a year on a time series facet
+
+The goal of this section is to create the following facetted
+interactive plot.
+
+TODO: sketch.
+
+The code below creates a new data set with one row for each unique
+year of the `WorldBank` data. We will use this to create a selector 
+
+```{r}
+(years <- data.frame(year=unique(WorldBank$year)))
+```
+
+Next, we add a time series.
+
+```{r}
+addColumn <- function(df, time.period){
+  data.frame(
+    df, time.period=factor(time.period, c("selected year", "all years")))
+}
+scatter <- ggplot()+
+  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
+                 key=country,
+                 showSelected=year,
+                 clickSelects=country),
+             data=addColumn(WorldBank, "selected year"))+
+  geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
+                showSelected=year,
+                showSelected2=country,
+                showSelected3=region),
+            data=addColumn(WorldBank, "selected year"))
+scatter
+```
+
+Note that the plot above is the same as the scatterplot from the
+previous section. the only difference is that we have added a
+column. Below we add an facet for a time series that is aligned on the
+fertility rate axis.
+
+```{r}
+scatter.ts <- scatter+
+  facet_grid(. ~ time.period, scales="free")+
+  geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5,
+                    clickSelects=year),
+                alpha=0.5,
+                data=addColumn(years, "all years"))+
+  geom_line(aes(x=year, y=fertility.rate, group=country, color=region,
+                clickSelects=country),
+            size=3,
+            alpha=0.6,
+            data=addColumn(WorldBank, "all years"))
+scatter.ts
+```
+
+The time series above has ...
+
+```{r}
+viz.aligned <- list(
+  aligned=scatter.ts,
+  duration=list(year=2000)
+  )
+structure(viz.aligned, class="animint")
+```
+
+The interactive data vis above...
 
 ## clickSelects with multiple selection
 
 ## Chapter summary and exercises
+
+This chapter explained `clickSelects`, one of the two main keywords
+that animint introduces for interactive data visualization design. We
+used the World Bank data set to show how `clickSelects` can be used to
+specify direct manipulations with plotted data points. We explained
+how the `selector.types` option can be used to specify either single
+or multiple selection variables.
+
+Exercises:
+
+* So far we have seen three different ways to change selection
+  variables: (1) interactive legends, (2) selection menus, and (3)
+  clicking data with `clickSelects`. Order these three techniques in
+  terms from most to least direct manipulation. Which technique is
+  preferable in what circumstances?
