@@ -260,19 +260,28 @@ a geom that can be directly clicked to change the year variable.
 
 ## Selecting a year on a time series facet
 
-The goal of this section is to create the following facetted
-interactive plot.
+The goal of this section is to add a facet with a time series plot
+that can be clicked to change the selected year.
 
 TODO: sketch.
 
-The code below creates a new data set with one row for each unique
-year of the `WorldBank` data. We will use this to create a selector 
+Note that the sketch above includes `geom_tallrect`, a new geom
+introduced in animint. It is "tall" because it occupies the entire
+vertical space of the plot, and thus only requires definition of its
+horizontal limits via the `xmin` and `xmax` aesthetics. Specifying
+`clickSelects=year` means that we want to be able to draw one tallrect
+for each year, and click a tallrect to change the selected year. Thus
+we need to create a new data set called `years` with one row for each
+unique year of the `WorldBank` data.
 
 ```{r}
-(years <- data.frame(year=unique(WorldBank$year)))
+years <- data.frame(year=unique(WorldBank$year))
+head(years)
 ```
 
-Next, we add a time series.
+Next, we re-create the scatterplot from the previous section using the
+"addColumn then facet" idiom, which is useful for creating ggplots
+with aligned axes (TODO: ref appendix).
 
 ```{r}
 addColumn <- function(df, time.period){
@@ -286,6 +295,8 @@ scatter <- ggplot()+
                  clickSelects=country),
              data=addColumn(WorldBank, "selected year"))+
   geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
+                key=country,
+                clickSelects=country,
                 showSelected=year,
                 showSelected2=country,
                 showSelected3=region),

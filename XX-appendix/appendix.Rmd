@@ -3,6 +3,49 @@
 This appendix describes several idioms which are useful for creating
 animints.
 
+## List of data tables
+
+The list of data tables idiom is very useful for creating interactive
+data visualizations of arbitrary complexity. The general form looks like
+
+```{r}
+outer.data.list <- list()
+inner.data.list <- list()
+for(outer in outer.vec){
+  outer.dt <- computeOuter(outer)
+  outer.data.list[[paste(outer)]] <- data.table(outer, outer.dt)
+  for(inner in inner.vec){
+    inner.dt <- computeInner(outer.dt, inner)
+    inner.data.list[[paste(outer, inner)]] <-
+      data.table(outer, inner, inner.dt)
+  }
+}
+outer.data <- do.call(rbind, outer.data.list)
+inner.data <- do.call(rbind, inner.data.list)
+```
+
+Some comments:
+
+* The first part of the idiom involves initializing empty lists. Here
+  there are two, `outer.data.list` and `inner.data.list`. However
+  there can be as many as necessary.
+* The second part of the idiom is a bunch of nested for loops that
+  assign data tables to elements of those lists.
+  * Functions like `computeOuter` and `computeInner` can be used, or
+    you can just do the computations directly inside the for loop.
+  * To ensure that your code will run as fast as possible, use
+    matrix-vector or vector-scalar operations in the innermost for
+    loop. If you only do scalar-scalar operations in your innermost
+    for loop, then you can definitely improve the performance of your
+    code by removing that for loop and re-writing the computation in
+    terms of vector-scalar operations.
+  * The `paste` function is used to assign a `data.table` to a named
+    list element. Although in principle one could use either
+    `data.frame` or `data.table`, in practice `data.table` is often
+    much faster during the last combination step.
+* The last part of the idiom uses `do.call` with `rbind` to combine
+  the data tables stored during the for loops. 
+
 ## addColumn then facet
 
 This idiom is useful for creating multi-panel ggplots with aligned
