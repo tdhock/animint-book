@@ -28,10 +28,10 @@ TODO: sketch.
 
 Since the legend has `clickSelects=region`, clicking an entry of that
 legend updates the `region` selection variable. Note that animint
-automatically generates interactive legends, so you do not need to
-explicitly specify `clickSelects=region` for the legend. In fact, when
-we specified `color=region` for the `geom_point`, animint does two
-things automatically:
+automatically makes every discrete legend interactive, so you do not
+need to explicitly specify `clickSelects=region` for the legend. In
+fact, when we specified `color=region` for the `geom_point`, animint
+does two things automatically:
 
 * `showSelectedLegendColor=region` is assigned to the same
   `geom_point`.
@@ -44,12 +44,12 @@ geom. In the next section we will give several examples of how
 clickSelects can be used in combination with showSelected to create
 interactive data visualizations.
 
-## Select a single point on a scatterplot
+## Use the clickSelects aesthetic to identify points on a scatterplot
 
 The goal of this section is to create the following visualization of
 the World Bank data.
 
-TODO: sketch of scatterplot with text labels.
+TODO: sketch of scatterplot with one text label.
 
 To start, consider the following R code which generates a
 scatterplot of the World Bank data:
@@ -150,6 +150,110 @@ purposes:
   it is simple to find France by typing its name in the selection
   menu.
   
+Note that in the data viz above, there is only one country selected at
+a time. In the next section, we will explain how the `selector.types`
+option can be used to change `country` to a multiple selection
+variable.
+
+## The selector.types and first options
+
+In this section our goal is to produce a slightly more complicated
+version of the scatterplot in the last section. The sketch below has
+only one difference with respect to the sketch from the last section:
+text labels are shown for more than one country.
+
+TODO: sketch with 2 or 3 countries selected.
+
+In animint, each selection variable has a type, either single or
+multiple. Single selection means that only one value can be selected
+at a time. Multiple selection means that any number of values can be
+selected at a time. In the plots in the last section, multiple
+selection was used for the `region` variable but not for the `year`
+and `country` variables. Why is that?
+
+By default, animint assigns multiple selection to all variables that
+appear in interactive discrete legends, and single selection to other
+variables. However, single or multiple selection can be specified by
+using the `selector.types` option. In the R code below, we use the
+`selector.types` option to specify that `country` should be treated as
+a multiple selection variable.
+
+```{r}
+viz.multiple <- viz.text
+viz.multiple$selector.types <- list(country="multiple")
+structure(viz.multiple, class="animint")
+```
+
+The first thing you probably noticed in the data viz above is that
+there is now a text label for each country. For each multiple
+selection variable, animint selects all possible values at first, by
+default. To change the set of values which is selected at first, we
+can specify the `first` option as in the R code below.
+
+```{r}
+viz.first <- viz.multiple
+viz.first$first <- list(
+  year=1970,
+  country=c("Canada", "India", "Pakistan", "Japan"),
+  region=c("North America", "South Asia"))
+structure(viz.first, class="animint")
+```
+
+When the data viz above is first rendered, it shows data points from
+the year 1970, for each country in North America and South Asia. It
+also shows text labels for Canada, India, and Pakistan. It does not
+render a text label or a data point for Japan, because the East Asia
+region is not selected at first. Try selecting the East Asia region,
+and you should see the text label for Japan appear, along with all of
+the other data points for that region.
+
+You may have noticed that it is easy to add countries to the current
+selection, by clicking data points. Normally, clicking a selected data
+point will remove that country from the current selection. However, in
+this particular data viz, it is not so easy to remove them, since the
+text labels are rendered on top of the data points. To fix that
+problem, we specify `clickSelects=country` for the `geom_text` in the
+R code below.
+
+```{r}
+viz.text.click <- list(
+  scatter=ggplot()+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
+                   key=country,
+                   showSelected=year,
+                   clickSelects=country),
+               data=WorldBank)+
+    geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
+                  showSelected=year,
+                  showSelected2=country,
+                  showSelected3=region,
+                  ## The next two lines are the only additions:
+                  key=country,
+                  clickSelects=country),
+              data=WorldBank),
+  first=list(
+    year=1970,
+    country=c("Canada", "India", "Pakistan", "Japan"),
+    region=c("North America", "South Asia")),
+  selector.types=list(country="multiple"),
+  duration=list(year=2000)
+  )
+structure(viz.text.click, class="animint")
+```
+
+Since we used `clickSelects=country` for the `geom_text` in the data
+viz above, clicking a text label de-selects that country, making that
+text label disappear. We also added `key=country` to make sure that
+the text labels always use the correct country for their smooth
+transitions between years.
+
+In general the `key` aesthetic should be specified for all geoms that
+use `showSelected` with a variable that appears in the `duration`
+option. In this example, we used the `duration` option to specify a
+smooth transition for the `year` variable. Since we use
+`showSelected=year` in both the `geom_point` and the `geom_text`, we
+also specified the `key` aesthetic for these geoms.
+
 Note that in the data viz above, the year variable can only be changed
 via the selection menu. In the next section, we will add a facet with
 a geom that can be directly clicked to change the year variable.
@@ -221,16 +325,16 @@ structure(viz.aligned, class="animint")
 
 The interactive data vis above...
 
-## clickSelects with multiple selection
-
 ## Chapter summary and exercises
 
 This chapter explained `clickSelects`, one of the two main keywords
 that animint introduces for interactive data visualization design. We
 used the World Bank data set to show how `clickSelects` can be used to
-specify direct manipulations with plotted data points. We explained
-how the `selector.types` option can be used to specify either single
-or multiple selection variables.
+specify different interactions for each of the plotted geoms. We
+explained how the `selector.types` option can be used to specify
+either single or multiple selection variables. We also explained how
+the `first` option can be used to specify the selected values that are
+used when the animint is first rendered.
 
 Exercises:
 
@@ -239,3 +343,5 @@ Exercises:
   clicking data with `clickSelects`. Order these three techniques in
   terms from most to least direct manipulation. Which technique is
   preferable in what circumstances?
+* Add `aes(size=population)` to the World Bank scatterplot. Is the
+  size legend interactive? Why?

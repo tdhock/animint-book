@@ -154,75 +154,49 @@ system automatically shows a `region` color legend.
 ## Rendering ggplots on web pages using animint
 
 This section explains how the `animint` package can be used to render
-ggplots as web pages. This ggplot can be rendered with animint, by
-first assigning the ggplot to a named element of a list, and then
-giving that list the class `"animint"`.
+ggplots on web pages. The first step is to load the `animint` package:
 
 ```{r}
 library(animint)
+```
+
+The ggplot from the previous section can be rendered with animint, by
+first assigning it to a named element of a list. The R code below
+assigns the ggplot `scatter` to a named element of the `scatter.viz`
+list.
+
+```{r}
 scatter.viz <- list(scatter=scatter)
+```
+
+In this book we use `viz` (short for data visualization) to indicate
+variables that are lists that contain ggplots. The `animint` package
+implements a compiler that takes a `viz` list as input, and outputs a
+web page with a data visualization. To activate the `animint`
+compiler, we give that list the class `"animint"` in the R code below.
+
+```{r}
 structure(scatter.viz, class="animint")
 ```
 
-The first line loads the animint package, the second line assigns the
-ggplot `scatter` to a named element of the `scatter.viz` list, and the
-third line gives the list the class `"animint"`. When executing this
-code on the R command line, R will run the `print.animint` function
-via the S3 object system
+When executing this code on the R command line, R will run the
+`print.animint` function via the S3 object system
 [http://adv-r.had.co.nz/OO-essentials.html#s3]. That will run the
-`animint2dir` function, which converts the animint `scatter.viz` list to
-a directory of data and code files that can be rendered in a web
+`animint2dir` function, which compiles the animint `scatter.viz` list
+to a directory of data and code files that can be rendered in a web
 browser.
 
 When viewed in a web browser, the plot should look mostly the same as
-the version in R. One difference is that the region legend is
-interactive: clicking a legend entry will hide or show the points of
-that color.
-
-## Manual color legends
-
-The colors that are used in the legend can be manually specified via
-`scale_color_manual`. Typically we will choose one of the ColorBrewer
-palettes:
-
-```{r, fig.height=8}
-RColorBrewer::display.brewer.all()
-```
-
-For example to get the R code for the Set1 palette, we can write
-
-```{r}
-dput(RColorBrewer::brewer.pal(Inf, "Set1"))
-```
-
-We can then copy that R code from the terminal and paste it into our
-text editor
-
-```{r}
-region.colors <- 
-  c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
-    "#A65628", "#F781BF", "#999999")
-names(region.colors) <- levels(WorldBank$region)
-region.colors
-```
-
-Then we can use it with `scale_color_manual` 
-
-```{r}
-ggplot()+
-  scale_color_manual(values=region.colors)+
-  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
-             data=WorldBank1975)
-```
-
-TODO: move this to an appendix.
+static versions produced by standard R graphics devices. One
+difference is that the region legend is interactive: clicking a legend
+entry will hide or show the points of that color.
 
 ## Multi-layer data visualization (multiple geoms)
 
 Multi-layer data visualization is useful when you want to display
-several different data sets in the same plot. For example, consider
-the following R code which adds a `geom_path` to the previous data
-visualization.
+several different geoms or data sets in the same plot. For example,
+consider the following R code which adds a `geom_path` to the previous
+data visualization.
 
 ```{r}
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)

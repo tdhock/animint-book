@@ -187,11 +187,11 @@ scatter.key <- ggplot()+
 ```
 
 Like `showSelected`, the `key` aesthetic is only meaningful for
-interactive data visualization, so ggplot2 will ignore it. However, if
-we render this ggplot using animint, the `country` variable will be
-used to make sure transtion durations are meaningful. To specify a
-default transition duration for the `year` variable, we use the
-`duration` option in the data viz below.
+interactive data visualization, so ggplot2 ignores it. However, if we
+render this ggplot using animint, the `country` variable will be used
+to make sure transtion durations are meaningful. To specify a default
+transition duration for the `year` variable, we use the `duration`
+option in the data viz below.
 
 ```{r}
 viz.duration <- list(

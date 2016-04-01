@@ -28,4 +28,40 @@ viz.aligned <- list(
 structure(viz.aligned, class="animint")
 ```
 
+## Manual color legends
+
+Color and fill legends in `ggplot2` can be manually specified via
+`scale_color_manual` and `scale_fill_manual`. Typically we will choose
+one of the ColorBrewer palettes:
+
+```{r, fig.height=8}
+RColorBrewer::display.brewer.all()
+```
+
+For example to get the R code for the Set1 palette, we can write
+
+```{r}
+dput(RColorBrewer::brewer.pal(Inf, "Set1"))
+```
+
+We can then copy that R code from the terminal and paste it into our
+text editor
+
+```{r}
+region.colors <- 
+  c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
+    "#A65628", "#F781BF", "#999999")
+names(region.colors) <- levels(WorldBank$region)
+region.colors
+```
+
+Then we can use it with `scale_color_manual` 
+
+```{r}
+ggplot()+
+  scale_color_manual(values=region.colors)+
+  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+             data=WorldBank1975)
+```
+
 
