@@ -736,8 +736,12 @@ Exercises:
   continuous or discrete (not both). You could use a continuous fill
   scale, but then you would have to use a different scale to show the
   prediction variable.
+* Add a new plot that shows the relative sizes of the train,
+  validation, and test sets. Make sure that the plotted size of the
+  validation and train sets change based on the selected value of
+  `n.folds`.
 * So far, the feature space plots only showed model predictions and
   errors for the entire train data set (validation.fold==0). Create a
   re-design which includes a new plot or facet for selecting
   validation.fold, and a facetted feature space plot (one facet for
-  train set, one facet for validation set).
+  train set, one facet for validation set). 

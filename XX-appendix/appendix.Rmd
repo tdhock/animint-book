@@ -3,6 +3,41 @@
 This appendix describes several idioms which are useful for creating
 animints.
 
+## Hide all but the selected object
+
+alpha=0.5
+
+## Select any x axis value
+
+geom_tallrect
+
+## Space saving facets
+
+To emphasize the plotted data in facetted ggplots, eliminate the space
+between facets using the following idiom.
+
+```{r}
+ggplot()+
+  geom_point(aes(Petal.Width, Sepal.Width), iris)+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ Species)
+```
+
+There are three parts of this idiom:
+
+* `panel.margin=0` eliminates space between panels.
+* `theme_bw` activates a black and white theme (black panel borders
+  and white panel backgrounds). This is necessary in order to see the
+  boundaries between panels, since the ggplot default `theme_grey`
+  uses grey panel backgrounds and no panel borders.
+* `facet_*` creates a multi-panel ggplot.
+
+Note that we use the grid unit `lines`, which equals the height of one
+line of text at the default size. This is the only grid unit which
+animint knows how to translate. It is not recommended to use other
+units such as `cm`.
+
 ## List of data tables
 
 The list of data tables idiom is very useful for creating interactive

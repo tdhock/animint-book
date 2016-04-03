@@ -286,19 +286,21 @@ same amount of fertility rate. To achieve that effect, we use facets
 in the data visualization below.
 
 ```{r}
-addColumn <- function(df, time.period){
+add.time.period <- function(df, time.period){
   data.frame(df, time.period=factor(time.period, c("1975", "1960-2010")))
 }
 viz.aligned <- list(
   scatter=ggplot()+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
-               data=addColumn(WorldBank1975, "1975"))+
+               data=add.time.period(WorldBank1975, "1975"))+
     geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                   group=country),
-              data=addColumn(WorldBankBefore1975, "1975"))+
+              data=add.time.period(WorldBankBefore1975, "1975"))+
     geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
-              data=addColumn(WorldBank, "1960-2010"))+
-    facet_grid(. ~ time.period, scales="free")
+              data=add.time.period(WorldBank, "1960-2010"))+
+    facet_grid(. ~ time.period, scales="free")+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))
   )
 structure(viz.aligned, class="animint")
 ```
@@ -307,16 +309,23 @@ The data visualization above contains a single ggplot with two panels
 and three layers. The left panel shows the `geom_point` and
 `geom_path`, and the right panel shows the `geom_line`. The panels
 have a shared axis for fertility rate, which ensures that the time
-series can be directly compared with the scatterplot.
+series can be directly compared with the scatterplot. 
 
-Note that we used the `addColumn` function to add a `time.period`
-variable to each data set, and then we used that variable in
-`facet_grid(scales="free")`. We call this the "addColumn-then-facet"
-idiom, which is useful in general for creating a multi-panel data
-visualization with aligned axes (TODO:ref appendix). In particular, if
-we wanted to change the order of the panels in the data visualization,
-we would only need to edit the order of the factor levels in the
-definition of `addColumn`.
+Note that we used the `add.time.period` function to add a
+`time.period` variable to each data set, and then we used that
+variable in `facet_grid(scales="free")`. We call this the "addColumn
+then facet" idiom, which is generally useful for creating a
+multi-panel data visualization with aligned axes (TODO:ref
+appendix). In particular, if we wanted to change the order of the
+panels in the data visualization, we would only need to edit the order
+of the factor levels in the definition of `add.time.period`.
+
+Also note that `theme_bw` means to use black panel borders and white
+panel backgrounds, and `panel.margin=0` means to use no space between
+panels. Eliminating the space between panels means that more space
+will be used for the panels, which serves to emphasize the data. We
+call this the "Space saving facets" idiom, which is generally useful
+in any ggplot with facets (TODO: ref appendix).
 
 ### Same geoms in each panel (compare data subsets)
 
@@ -366,7 +375,9 @@ viz.panels <- list(
     geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                   group=country),
               data=show.path)+
-    facet_grid(. ~ show.year)
+    facet_grid(. ~ show.year)+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))
   )
 structure(viz.panels, class="animint")
 ```

@@ -12,8 +12,8 @@ After reading this chapter, you will be able to
 * Understand how interactive legends implicitly use clickSelects.
 * Use the clickSelects keyword in your plot sketches.
 * Translate your plot sketches with clickSelects into R code.
-* Use the `selector.types` option to specify either single or multiple
-  selection.
+* Use the `selector.types` option to specify multiple selection
+  variables.
   
 ## Interactive legends implicitly use clickSelects
 
@@ -216,8 +216,8 @@ problem, we specify `clickSelects=country` for the `geom_text` in the
 R code below.
 
 ```{r}
-viz.text.click <- list(
-  scatter=ggplot()+
+viz.text.click <- viz.first
+viz.text.click$scatter <- ggplot()+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
                    key=country,
                    showSelected=year,
@@ -230,14 +230,7 @@ viz.text.click <- list(
                   ## The next two lines are the only additions:
                   key=country,
                   clickSelects=country),
-              data=WorldBank),
-  first=list(
-    year=1970,
-    country=c("Canada", "India", "Pakistan", "Japan"),
-    region=c("North America", "South Asia")),
-  selector.types=list(country="multiple"),
-  duration=list(year=2000)
-  )
+              data=WorldBank)
 structure(viz.text.click, class="animint")
 ```
 
@@ -284,57 +277,84 @@ Next, we re-create the scatterplot from the previous section using the
 with aligned axes (TODO: ref appendix).
 
 ```{r}
-addColumn <- function(df, time.period){
+add.time.period <- function(df, time.period){
   data.frame(
     df, time.period=factor(time.period, c("selected year", "all years")))
 }
-scatter <- ggplot()+
+scatterFacet <- ggplot()+
   geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
                  key=country,
                  showSelected=year,
                  clickSelects=country),
-             data=addColumn(WorldBank, "selected year"))+
+             data=add.time.period(WorldBank, "selected year"))+
   geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
                 key=country,
                 clickSelects=country,
                 showSelected=year,
                 showSelected2=country,
                 showSelected3=region),
-            data=addColumn(WorldBank, "selected year"))
-scatter
+            data=add.time.period(WorldBank, "selected year"))+
+  facet_grid(. ~ time.period, scales="free")+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))
+scatterFacet
 ```
 
-Note that the plot above is the same as the scatterplot from the
-previous section. the only difference is that we have added a
-column. Below we add an facet for a time series that is aligned on the
-fertility rate axis.
+Note that the ggplot above uses the same `aes` definitions as the
+scatterplot from the previous section. The only difference is that we
+have used an augmented `WorldBank` data set with an additional
+`time.period` variable that we use with `facet_grid`. Below, we add
+geoms for a time series plot that is aligned on the fertility rate
+axis.
 
 ```{r}
-scatter.ts <- scatter+
-  facet_grid(. ~ time.period, scales="free")+
+scatterTS <- scatterFacet+
   geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5,
                     clickSelects=year),
                 alpha=0.5,
-                data=addColumn(years, "all years"))+
+                data=add.time.period(years, "all years"))+
   geom_line(aes(x=year, y=fertility.rate, group=country, color=region,
                 clickSelects=country),
             size=3,
             alpha=0.6,
-            data=addColumn(WorldBank, "all years"))
-scatter.ts
+            data=add.time.period(WorldBank, "all years"))
+scatterTS
 ```
 
-The time series above has ...
+The two geoms defined above occupy a new facet for the `"all years"`
+value of the `time.period` variable (defined by the `add.time.period`
+function). Since these two geoms have different definitions of
+`clickSelects`, clicking each geom will update the plot in a different
+way. Note that for the `geom_line` we specify `size=3`, which means a
+line stroke width of 3 pixels. In general it is a good idea to
+increase the size of geoms with `clickSelects`, to make them easier to
+click.
+
+Also note that we specified `alpha=0.5` for the `geom_tallrect` and
+`alpha=0.6` for the `geom_line`. Since both of these geoms define
+`clickSelects`, some plotted lines and tallrect will be selected, and
+others will not be selected. The alpha values in R code specify the
+opacity of the selected objects, and other objects will have an
+`alpha` opacity which is 0.5 less than that value. In the example
+above, the un-selected lines will have `alpha=0.1`un-selected
+tallrects will have `alpha=0` (completely transparent), and the
+un-selected tallrects will have `alpha=0` (completely transparent).
+
+Finally, we use the R code below to render the new aligned scatterplot
+and time series using animint.
 
 ```{r}
-viz.aligned <- list(
-  aligned=scatter.ts,
-  duration=list(year=2000)
-  )
-structure(viz.aligned, class="animint")
+viz.facets <- viz.text.click
+viz.facets$scatter <- scatterTS
+structure(viz.facets, class="animint")
 ```
 
-The interactive data vis above...
+The interactive data viz above contains a new panel with lines that
+show a fertility rate time series over all years. Since we specified
+`clickSelects=country` for the `geom_line`, clicking a line updates
+the set of selected countries. Since we specified `clickSelects=year`
+for the `geom_tallrect`, clicking on a tallrect updates the selected
+year. 
 
 ## Chapter summary and exercises
 
@@ -343,9 +363,9 @@ that animint introduces for interactive data visualization design. We
 used the World Bank data set to show how `clickSelects` can be used to
 specify different interactions for each of the plotted geoms. We
 explained how the `selector.types` option can be used to specify
-either single or multiple selection variables. We also explained how
-the `first` option can be used to specify the selected values that are
-used when the animint is first rendered.
+multiple selection variables. We also explained how the `first` option
+can be used to specify the selected values that are used when the
+animint is first rendered.
 
 Exercises:
 
@@ -354,5 +374,18 @@ Exercises:
   clicking data with `clickSelects`. Order these three techniques in
   terms from most to least direct manipulation. Which technique is
   preferable in what circumstances?
-* Add `aes(size=population)` to the World Bank scatterplot. Is the
-  size legend interactive? Why?
+* When `geom_point(aes(clickSelects=something), alpha=0.75)` is
+  rendered with ggplot2, how much opacity/transparency is present for
+  all data points? When animint renders the same geom, some points
+  will be selected and others not. What is the opacity/transparency of
+  selected points? What is the opacity/transparency of points which
+  are not selected?
+* Add `aes(size=population)` to the points in the World Bank
+  scatterplot. Is the size legend interactive? Why?
+* Add a `geom_text` to the World Bank scatterplot that shows the
+  selected year.
+* Add a `geom_text` to the World Bank time series to show the names of
+  the selected countries.
+* Add a `geom_path` to the World Bank scatterplot to show data for the
+  last 5 years.
+* Use the `time` option to make an animated version of `viz.facets`.
