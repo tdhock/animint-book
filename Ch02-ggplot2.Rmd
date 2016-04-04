@@ -1,10 +1,14 @@
 ---
-title: ggplot2 basics
+title: Grammar of graphics
 layout: default
 output: bookdown::html_chapter
 ---
 
-# Chapter 2, data visualization using the grammar of graphics
+# Chapter 2, data visualization using the grammar of graphics {#chapter-2}
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch02-figures/")
+```
 
 This chapter explains the grammar of graphics, which is a powerful
 model for describing a large class of data visualizations. After
@@ -19,7 +23,7 @@ reading this chapter, you will be able to
 * Create multi-layer ggplots
 * Create multi-panel ggplots
 
-## History and purpose of the grammar of graphics
+## History and purpose of the grammar of graphics {#history}
 
 Most computer systems for data analysis provide functions for creating
 plots to visualize patterns in data. The oldest systems provide very
@@ -76,7 +80,7 @@ extension of `ggplot2`. In this chapter we will introduce the main
 features of `ggplot2` which will also be useful for interactive plot
 design in later chapters.
 
-## Installing animint
+## Installing animint {#installing}
 
 The `animint` R package is hosted on GitHub, so you can install
 `animint` by using the `devtools` package. To make sure that `animint`
@@ -89,7 +93,7 @@ if(!require(animint)){
 }
 ```
 
-## Translating plot sketches into ggplots
+## Translating plot sketches into ggplots {#sketching}
 
 This section explains how to translate a plot sketch into R `ggplot2`
 code. We use a data set from the World Bank as an example, and we
@@ -151,7 +155,7 @@ saved as the `scatter` object, which when printed on the R command
 line shows the plot on a graphics device. Note that the `ggplot2`
 system automatically shows a `region` color legend.
 
-## Rendering ggplots on web pages using animint
+## Rendering ggplots on web pages using animint {#rendering-with-animint}
 
 This section explains how the `animint` package can be used to render
 ggplots on web pages. The first step is to load the `animint` package:
@@ -175,30 +179,30 @@ implements a compiler that takes a `viz` list as input, and outputs a
 web page with a data visualization. To activate the `animint`
 compiler, we give that list the class `"animint"` in the R code below.
 
-```{r}
+```{r Ch02-scatter-viz}
 structure(scatter.viz, class="animint")
 ```
 
 When executing this code on the R command line, R will run the
-`print.animint` function via the S3 object system
-[http://adv-r.had.co.nz/OO-essentials.html#s3]. That will run the
-`animint2dir` function, which compiles the animint `scatter.viz` list
-to a directory of data and code files that can be rendered in a web
-browser.
+`print.animint` function via the
+[S3 object system](http://adv-r.had.co.nz/OO-essentials.html#s3). That
+will run the `animint2dir` function, which compiles the animint
+`scatter.viz` list to a directory of data and code files that can be
+rendered in a web browser.
 
 When viewed in a web browser, the plot should look mostly the same as
 static versions produced by standard R graphics devices. One
 difference is that the region legend is interactive: clicking a legend
 entry will hide or show the points of that color.
 
-## Multi-layer data visualization (multiple geoms)
+## Multi-layer data visualization (multiple geoms) {#multi-layer}
 
 Multi-layer data visualization is useful when you want to display
 several different geoms or data sets in the same plot. For example,
 consider the following R code which adds a `geom_path` to the previous
 data visualization.
 
-```{r}
+```{r Ch02-two-layer-viz}
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
 two.layers <- scatter+
   geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
@@ -224,7 +228,7 @@ an increased fertility rate. Can we add the names of these countries
 to this data viz? Below, we add another layer with a text label for
 each country's name.
 
-```{r}
+```{r Ch02-three-layer-viz}
 three.layers <- two.layers+
   geom_text(aes(x=life.expectancy, y=fertility.rate, color=region,
                 label=country),
@@ -244,7 +248,7 @@ Chapters 3-4.
 For now, we move on to discuss the other main advantage of ggplot2:
 facets.
 
-## Multi-panel data visualization (facets)
+## Multi-panel data visualization (facets) {#multi-panel}
 
 Panels or facets are sub-plots that show related data
 visualizations. One of the main strengths of ggplot2 is that different
@@ -261,14 +265,14 @@ data visualization is used in two different ways:
   instead, to achieve the same effect of comparing data subsets).
 
   
-### Different geoms in each panel (aligned axes)
+### Different geoms in each panel (aligned axes) {#aligned-axes}
   
 Facets are useful to align the axes of related plots. For example,
 consider the following data visualization which consists of two plots:
 a scatterplot with data from 1975, and a time series with data from
 1960-2010.
   
-```{r}
+```{r Ch02-viz-two-plots}
 viz.two.plots <- two.layer.viz
 viz.two.plots$timeSeries <- ggplot()+
   geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
@@ -285,7 +289,7 @@ data visualization if each unit of vertical space was used to show the
 same amount of fertility rate. To achieve that effect, we use facets
 in the data visualization below.
 
-```{r}
+```{r Ch02-viz-aligned}
 add.time.period <- function(df, time.period){
   data.frame(df, time.period=factor(time.period, c("1975", "1960-2010")))
 }
@@ -327,7 +331,7 @@ will be used for the panels, which serves to emphasize the data. We
 call this the "Space saving facets" idiom, which is generally useful
 in any ggplot with facets (TODO: ref appendix).
 
-### Same geoms in each panel (compare data subsets)
+### Same geoms in each panel (compare data subsets) {#compare-data-subsets}
 
 The second reason for using plots with multiple panels in a data
 visualization is to compare subsets of observations. This facilitates
@@ -367,7 +371,7 @@ appendix).
 Below, we facet on the `show.year` variable to create a data
 visualization with three panels.
 
-```{r}
+```{r Ch02-viz-panels}
 viz.panels <- list(
   scatter=ggplot()+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
@@ -398,7 +402,7 @@ meaningful comparisons.
 In the next chapter, we will show how the new `showSelected` keyword
 can be used to achieve animation, and show more of this data set.
 
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
 This chapter presented the basics of static data visualization using
 ggplot2. We showed how animint can be used to render a list of ggplots

@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="../www/bootstrap.min.css" rel="stylesheet">
-    <link href="../www/highlight.css" rel="stylesheet">
+    <link href="www/bootstrap.min.css" rel="stylesheet">
+    <link href="www/highlight.css" rel="stylesheet">
 
     <link href='http://fonts.googleapis.com/css?family=Inconsolata:400,700'
       rel='stylesheet' type='text/css'>
@@ -23,13 +23,21 @@
               Table of contents<b class="caret"></b>
             </a>
             <ul class="dropdown-menu pull-right" role="menu">
-              {% include programming-nav.html %}
+	      <li><a href="Ch00-preface.html">Preface</a></li>
+	      <li class="dropdown-header">Animint basics</li>
+	      <li><a href="Ch01-motivation.html">Motivation</a></li>
+	      <li><a href="Ch02-ggplot2.html">Grammar of graphics</a></li>
+	      <li><a href="Ch03-showSelected.html">showSelected</a></li>
+	      <li><a href="Ch04-clickSelects.html">clickSelects</a></li>
+	      <li class="dropdown-header">Advanced data visualization examples</li>
+	      <li><a href="Ch10-nearest-neighbors.html">K Nearest Neighbors</a></li>
             </ul>
           </li>
         </ul>
 
-        <h3 class="muted"><a href="/">Animint</a> <small>by Toby
-        Dylan Hocking</small></h3>
+        <h3 class="muted"><a href="Ch00-preface.html">Animint</a> <small>by
+            <a href="https://tdhock.github.io">Toby Dylan
+            Hocking</a></small></h3>
         <hr>
       </div>
 
@@ -45,16 +53,15 @@
         <div class="well">
           Did you learn something from reading this? Since there is
           not yet a printed version of the book that you can buy,
-          please
-          consider <a href="https://www.paypal.me/tdhock/25">donating
-          me some money via PayPal</a>.
+          please <a href="https://www.paypal.me/tdhock/25">send me a
+          donation via PayPal</a>.
         </div>
 
         <h4>Contents</h4>
           <ul class="list-unstyled" id="toc"></ul>
 
           <hr>
-          <p><a href="../contribute/contribute.html">How to contribute</a></p>
+          <p><a href="contribute.html">How to contribute</a></p>
 
           <p><a class="btn btn-primary" href="https://github.com/tdhock/animint-book/edit/master/{{page.path}}">Edit this page</a></p>
         </div>
@@ -77,8 +84,8 @@
 
     </div> <!-- /container -->
 
-  <script src="../www/jquery.min.js"></script>
-  <script src="../www/bootstrap.min.js"></script>
-  <script src="../www/toc.js"></script>
+  <script src="www/jquery.min.js"></script>
+  <script src="www/bootstrap.min.js"></script>
+  <script src="www/toc.js"></script>
   </body>
 </html>

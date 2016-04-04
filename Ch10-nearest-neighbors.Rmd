@@ -1,5 +1,17 @@
+---
+title: K-Nearest-Neighbors example
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 10, K-Nearest-Neighbors example
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch10-figures/")
+```
+
 In this chapter we will explore several data visualizations of the
-K-Nearest Neighbors (KNN) classifier.
+K-Nearest-Neighbors (KNN) classifier.
 
 Chapter outline:
 
@@ -12,7 +24,7 @@ Chapter outline:
 * We propose a second re-design that allows selecting the number of
   folds used to compute the cross-validation error.
 
-# Original static figure
+## Original static figure {#static}
 
 We start by reproducing a static version of Figure 13.4 from Elements
 of Statistical Learning by Hastie et al. That Figure consists of two
@@ -34,7 +46,7 @@ plots (TODO SKETCH):
   * `geom_path` for the decision boundaries.
   * `geom_text` for the train/test/Bayes error rates.
 
-## Plot of mis-classification error curves
+### Plot of mis-classification error curves {#static-error}
 
 We begin by loading the data set.
 
@@ -240,7 +252,7 @@ errorPlot <- ggplot()+
 errorPlot
 ```
 
-## Plot of decision boundaries in the input feature space
+### Plot of decision boundaries in the input feature space {#static-features}
 
 For the static data visualization of the feature space, we show only
 the model with 7 neighbors.
@@ -351,11 +363,11 @@ scatterPlot <- ggplot()+
 scatterPlot
 ```
 
-## Combined plots
+### Combined plots {#static-combined}
 
 Finally, we combine the two ggplots and render them as an animint.
 
-```{r}
+```{r Ch10-viz-static}
 viz.static <- list(
   error=errorPlot,
   data=scatterPlot
@@ -368,7 +380,7 @@ This data viz does have three interactive legends, but it is static in
 the sense that it displays only the model predictions for 7-Nearest
 Neighbors.
 
-# Select the number of neighbors using interactivity
+## Select the number of neighbors using interactivity {#neighbors}
 
 In this section we propose an interactive re-design which allows the
 user to select K, the number of neighbors in the K-Nearest-Neighbors
@@ -376,7 +388,7 @@ classifier.
 
 TODO:SKETCH
 
-## Clickable error curves plot
+### Clickable error curves plot {#neighbors-error}
 
 We begin with a re-design of the error curves plot.
 
@@ -466,7 +478,7 @@ errorPlot <- ggplot()+
 errorPlot
 ```
 
-## Feature space plot that shows the selected number of neighbors 
+### Feature space plot that shows the selected number of neighbors {#neighbors-features}
 
 Next, we focus on a re-design of the feature space plot. In the
 previous section we considered only the subset of data from the model
@@ -585,12 +597,12 @@ scatterPlot+
   theme(panel.margin=grid::unit(0, "lines"))
 ```
 
-## Combined interactive data viz
+### Combined interactive data viz {#neighbors-combined}
 
 Finally, we combine the two plots in a single data viz with neighbors
 as a selector variable.
 
-```{r}
+```{r Ch10-viz-neighbors}
 viz.neighbors <- list(
   error=errorPlot,
   data=scatterPlot,
@@ -603,7 +615,7 @@ structure(viz.neighbors, class="animint")
 Note that neighbors is used as a time variable, so animation shows the
 predictions of the different models.
 
-# Select the number of cross-validation folds using interactivity
+## Select the number of cross-validation folds using interactivity {#folds}
 
 In this section we discuss a second re-design which allows the user to
 select the number of folds used to compute the validation error curve.
@@ -707,7 +719,7 @@ errorPlot+facet_grid(facet ~ n.folds, scales="free")
 The code below creates an interactive data viz using the new error
 curve plot.
 
-```{r}
+```{r Ch10-viz-folds}
 viz.folds <- list(
   error=errorPlot,
   data=scatterPlot,
@@ -716,7 +728,7 @@ viz.folds <- list(
 structure(viz.folds, class="animint")
 ```
 
-# Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
 We showed how to add two interactive features to a data visualization
 of predictions of the K-Nearest-Neighbors model. We started with a

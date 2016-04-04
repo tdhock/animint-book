@@ -23,6 +23,7 @@ module Jekyll
       # http://rubyquicktips.com/post/5862861056/execute-shell-commands
       #system("~/bin/Rscript _plugins/knit.R temp.Rmd")
       content = `~/bin/Rscript _plugins/knit.R temp.Rmd`
+      #content = `~/bin/R --no-save --args temp.Rmd < _plugins/knit.R`
       
       if $?.exitstatus != 0
         raise "Knitting failed" 

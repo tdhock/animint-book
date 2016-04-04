@@ -1,4 +1,14 @@
+---
+title: showSelected
+layout: default
+output: bookdown::html_chapter
+---
+
 # Chapter 3, the showSelected keyword
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch03-figures/")
+```
 
 This chapter explains showSelected, one of the two main keywords that
 animint introduces for interactive data visualization. After reading
@@ -93,7 +103,7 @@ point for every country and year.
 In constrast, rendering the same ggplot using animint yields the
 interactive data visualization below.
 
-```{r}
+```{r Ch03-viz-scatter}
 library(animint)
 viz.scatter <- list(scatter=scatter)
 structure(viz.scatter, class="animint")
@@ -193,7 +203,7 @@ to make sure transtion durations are meaningful. To specify a default
 transition duration for the `year` variable, we use the `duration`
 option in the data viz below.
 
-```{r}
+```{r Ch03-viz-duration}
 viz.duration <- list(
   scatter=scatter.key,
   duration=list(year=2000))
@@ -214,7 +224,7 @@ see a proper transition.
 
 The `time` option is used to specify a variable to use for animation.
 
-```{r}
+```{r Ch03-viz-duration-time}
 viz.duration.time <- viz.duration
 viz.duration.time$time <- list(variable="year", ms=2000)
 structure(viz.duration.time, class="animint")

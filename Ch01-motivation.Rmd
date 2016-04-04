@@ -1,4 +1,14 @@
+---
+title: Motivation
+layout: default
+output: bookdown::html_chapter
+---
+
 # Chapter 1, Motivation
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch01-figures/")
+```
 
 The purpose of this book is to explain the usage of animint, an R
 package for interactive data visualization. This introductory chapter
@@ -17,7 +27,7 @@ This introductory chapter uses the following outline:
 
 TODO: Figure comparing small, medium, large data.
 
-## What is data?
+## What is data? {#data}
 
 Data are any pieces of information that are systematically recorded,
 either on paper or on a computer. Anybody can create data, just by
@@ -65,7 +75,7 @@ of different sizes should be analyzed using different techniques. We
 begin by discussing small data sets, for which data visualization is
 not necessary.
 
-## Small data analysis without visualization
+## Small data analysis without visualization {#small-data}
 
 In this section, we will discuss "small data," which are small enough
 such that data analysis can be done by simply looking at the entire
@@ -112,7 +122,7 @@ necessary for such small data sets. Instead, we will focus on data
 sets that are too big to be analyzed by manual visual inspection of
 the data table.
 
-## Medium data analysis with static data visualizations
+## Medium data analysis with static data visualizations {#medium-data}
 
 For medium sized data sets, simply inspecting the data table is no
 longer sufficient to answer the questions posed during data
@@ -178,14 +188,14 @@ year. When the leaves come back each year, they perform photosynthesis
 throughout Spring and Summer, which causes the atmospheric CO2
 concentration to drop until it reaches its yearly minimum in October.
 
-We say that this data visualization is "static" because the reader can
-view it but can not change what is displayed. That is fine for medium
-sized data sets, in which we can see all the details of the data set.
-However, as we discuss in the following section, static data
-visualization is not sufficient to show all the details in larger data
-sets.
+We say that this data visualization is "static" or "non-interactive"
+because the reader can view it but can not change what is
+displayed. That is fine for medium sized data sets, in which we can
+see all the details of the data set.  However, as we discuss in the
+following section, static data visualization is not sufficient to show
+all the details in larger data sets.
 
-## Large data analysis with interactive data visualization
+## Large data analysis with interactive data visualization {#large-data}
 
 Some data sets are so large that it is not possible or desirable to
 plot all of the data at once in a static data visualization. For such
@@ -215,7 +225,7 @@ not as informative as the previous plot. This is an example where it
 is not desirable to plot all of the data at once. We can solve this
 problem using the following interactive plot.
 
-```{r, echo=FALSE}
+```{r viz, echo=FALSE}
 viz <- list(
   TimeSeries=TimeSeries,
   first=list(month=c("May", "October"))

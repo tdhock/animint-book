@@ -15,7 +15,12 @@ if (file.access(path, 4) != 0) {
   stop("Can't read path ", path, call. = FALSE)
 }
 
-html_path <- render(path, html_chapter(raw = TRUE, toc = "toc.rds"),
+path.dir <- dirname(path)
+setwd(path.dir)
+path.base <- basename(path)
+html_path <- render(
+  path.base,
+  html_chapter(raw = TRUE, toc = "toc.rds"),
   quiet = TRUE)
 
 read_file <- function(path) {

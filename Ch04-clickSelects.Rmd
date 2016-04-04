@@ -1,4 +1,14 @@
+---
+title: clickSelects
+layout: default
+output: bookdown::html_chapter
+---
+
 # Chapter 4, clickSelects
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch04-figures/")
+```
 
 This chapter explains clickSelects, one of the two main keywords that
 animint introduces for interactive data visualization. The
@@ -54,7 +64,7 @@ TODO: sketch of scatterplot with one text label.
 To start, consider the following R code which generates a
 scatterplot of the World Bank data:
 
-```{r}
+```{r Ch04-ggplot-scatter}
 data(WorldBank, package="animint")
 library(animint)
 scatter <- ggplot()+
@@ -73,7 +83,7 @@ facet variable. Also note that ggplot2 ignores the animint aesthetics
 interactive. In contrast, rendering the same ggplot using animint
 results in the following interactive plot:
 
-```{r}
+```{r Ch04-viz-scatter}
 viz.scatter <- list(
   scatter=scatter,
   duration=list(year=2000))
@@ -94,7 +104,7 @@ the selection menu, but it would be better to show it as a text label
 on the scatterplot. We can do that by adding a `geom_text` layer with
 several showSelected aesthetics:
 
-```{r}
+```{r Ch04-viz-text}
 viz.text <- viz.scatter
 viz.text$scatter <- scatter+
   geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
@@ -178,7 +188,7 @@ using the `selector.types` option. In the R code below, we use the
 `selector.types` option to specify that `country` should be treated as
 a multiple selection variable.
 
-```{r}
+```{r Ch04-viz-multiple}
 viz.multiple <- viz.text
 viz.multiple$selector.types <- list(country="multiple")
 structure(viz.multiple, class="animint")
@@ -190,7 +200,7 @@ selection variable, animint selects all possible values at first, by
 default. To change the set of values which is selected at first, we
 can specify the `first` option as in the R code below.
 
-```{r}
+```{r Ch04-viz-first}
 viz.first <- viz.multiple
 viz.first$first <- list(
   year=1970,
@@ -215,7 +225,7 @@ text labels are rendered on top of the data points. To fix that
 problem, we specify `clickSelects=country` for the `geom_text` in the
 R code below.
 
-```{r}
+```{r Ch04-viz-text-click}
 viz.text.click <- viz.first
 viz.text.click$scatter <- ggplot()+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
@@ -276,7 +286,7 @@ Next, we re-create the scatterplot from the previous section using the
 "addColumn then facet" idiom, which is useful for creating ggplots
 with aligned axes (TODO: ref appendix).
 
-```{r}
+```{r Ch04-ggplot-scatterFacet}
 add.time.period <- function(df, time.period){
   data.frame(
     df, time.period=factor(time.period, c("selected year", "all years")))
@@ -307,7 +317,7 @@ have used an augmented `WorldBank` data set with an additional
 geoms for a time series plot that is aligned on the fertility rate
 axis.
 
-```{r}
+```{r Ch04-ggplot-scatterTS}
 scatterTS <- scatterFacet+
   geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5,
                     clickSelects=year),
@@ -343,7 +353,7 @@ un-selected tallrects will have `alpha=0` (completely transparent).
 Finally, we use the R code below to render the new aligned scatterplot
 and time series using animint.
 
-```{r}
+```{r Ch04-viz-facets}
 viz.facets <- viz.text.click
 viz.facets$scatter <- scatterTS
 structure(viz.facets, class="animint")

@@ -42,17 +42,16 @@ animint: a grammar for animated and interactive data visualization
     model selection curves?
 - Ch 4, the clickSelects keyword
   - WorldBank scatterplot with time series.
-- Ch 5, other features
-  - aes(href)
-  - aes(tooltip)
-  - .variable and .value aesthetics
-  - shiny
-- Ch 6, sharing animints
+- Ch 5, sharing animints
   - animint2dir
   - any web server
   - animint2gist
   - rmarkdown
   - github pages
+- Ch 6, other features
+  - aes(href)
+  - aes(tooltip)
+  - .variable and .value aesthetics
 - Ch 7, limitations of animint
   - shiny. WorldBank-facets, changing aesthetic mappings.
   - updating axes. workaround: normalize data to a common scale.
