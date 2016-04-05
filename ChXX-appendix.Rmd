@@ -34,7 +34,7 @@ geom_tallrect
 To emphasize the plotted data in facetted ggplots, eliminate the space
 between facets using the following idiom.
 
-```{r}
+```{r, eval=FALSE}
 library(ggplot2)
 ggplot()+
   geom_point(aes(Petal.Width, Sepal.Width), iris)+
@@ -62,7 +62,7 @@ units such as `cm`.
 The list of data tables idiom is very useful for creating interactive
 data visualizations of arbitrary complexity. The general form looks like
 
-```{r}
+```{r, eval=FALSE}
 library(data.table)
 outer.data.list <- list()
 inner.data.list <- list()
@@ -108,7 +108,7 @@ axes. First, define a function which takes as input a data table and
 one or more values which will be used to add factors to that data
 table.
 
-```{r}
+```{r, eval=FALSE}
 addColumn <- function(df, time.period){
   data.frame(df, time.period=factor(time.period, c("1975", "1960-2010")))
 }

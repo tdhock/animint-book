@@ -225,7 +225,7 @@ not as informative as the previous plot. This is an example where it
 is not desirable to plot all of the data at once. We can solve this
 problem using the following interactive plot.
 
-```{r viz, echo=FALSE}
+```{r Ch01-viz, echo=FALSE}
 viz <- list(
   TimeSeries=TimeSeries,
   first=list(month=c("May", "October"))
