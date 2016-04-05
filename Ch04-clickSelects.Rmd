@@ -283,8 +283,9 @@ head(years)
 ```
 
 Next, we re-create the scatterplot from the previous section using the
-"addColumn then facet" idiom, which is useful for creating ggplots
-with aligned axes (TODO: ref appendix).
+[addColumn then facet idiom](ChXX-appendix.html#addColumn-then-facet), 
+which is useful for creating ggplots
+with aligned axes.
 
 ```{r Ch04-ggplot-scatterFacet}
 add.time.period <- function(df, time.period){

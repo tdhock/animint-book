@@ -317,19 +317,21 @@ series can be directly compared with the scatterplot.
 
 Note that we used the `add.time.period` function to add a
 `time.period` variable to each data set, and then we used that
-variable in `facet_grid(scales="free")`. We call this the "addColumn
-then facet" idiom, which is generally useful for creating a
-multi-panel data visualization with aligned axes (TODO:ref
-appendix). In particular, if we wanted to change the order of the
-panels in the data visualization, we would only need to edit the order
-of the factor levels in the definition of `add.time.period`.
+variable in `facet_grid(scales="free")`. We call this the
+[addColumn then facet idiom](ChXX-appendix.html#addColumn-then-facet),
+which is generally useful for creating a multi-panel data
+visualization with aligned axes. In particular, if we wanted to change
+the order of the panels in the data visualization, we would only need
+to edit the order of the factor levels in the definition of
+`add.time.period`.
 
 Also note that `theme_bw` means to use black panel borders and white
 panel backgrounds, and `panel.margin=0` means to use no space between
 panels. Eliminating the space between panels means that more space
 will be used for the panels, which serves to emphasize the data. We
-call this the "Space saving facets" idiom, which is generally useful
-in any ggplot with facets (TODO: ref appendix).
+call this the
+[Space saving facets idiom](ChXX-appendix.html#space-saving-facets), 
+which is generally useful in any ggplot with facets.
 
 ### Same geoms in each panel (compare data subsets) {#compare-data-subsets}
 
@@ -364,9 +366,9 @@ We used a for loop over three values of `show.year`, the variable
 which we will use later in `facet_grid`. For each value of
 `show.year`, we store a data subset as a named element of a
 list. After the for loop, we use `do.call` with `rbind` to combine the
-data subsets. This is an example of the "list-of-data-tables" idiom,
-which is also useful for interactive data visualization (TODO: ref
-appendix).
+data subsets. This is an example of the
+[list of data tables idiom](ChXX-appendix.html#list-of-data-tables),
+which is also useful for interactive data visualization.
 
 Below, we facet on the `show.year` variable to create a data
 visualization with three panels.

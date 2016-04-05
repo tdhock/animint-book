@@ -1,0 +1,235 @@
+---
+title: K-Nearest-Neighbors example
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 13, Poisson regression
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch13-figures/")
+```
+
+This goal of this chapter is to create an interactive data
+visualization that explains
+[Poisson regression](https://en.wikipedia.org/wiki/Poisson_regression),
+a machine learning model for predicting an integer-valued output from
+inputs that are real-valued vectors. This is a "linear regression"
+model since it learns a linear function from the inputs to the
+output. Like least squares regression, Poisson regression can be
+formulated as a maximum likelihood problem. However, it differs from
+least squares linear regression since it uses a Poisson distribution
+to model the output labels, instead of a Gaussian distribution. This
+modeling choice is appropriate when output labels are non-negative
+integers. 
+
+## Plot the probability mass function and select the Poisson mean parameter
+
+The goal of this section is to create a data visualization that shows
+the probability mass function for a selected Poisson mean parameter.
+
+TODO: sketch point(prob versus count), tallrect mean.
+
+```{r}
+library(data.table)
+poisson.mean.diff <- 0.5
+poisson.mean.vec <- seq(0, 10, by=poisson.mean.diff)
+quantile.max <- 0.99
+poisson.prob.list <- list()
+for(poisson.mean in poisson.mean.vec){
+  count.max <- qpois(quantile.max, poisson.mean)
+  count <- 0:count.max
+  probability <- dpois(count, poisson.mean)
+  cum.prob <- cumsum(probability)
+  poisson.prob.list[[paste(poisson.mean)]] <- data.table(
+    poisson.mean,
+    count,
+    probability,
+    cum.prob)
+}
+poisson.prob <- do.call(rbind, poisson.prob.list)
+poisson.prob
+```
+
+The static data viz below shows one facet for each Poisson
+distribution.
+
+```{r}
+mean.tallrects <- data.table(
+  poisson.mean=poisson.mean.vec,
+  min=poisson.mean.vec - poisson.mean.diff/2,
+  max=poisson.mean.vec + poisson.mean.diff/2)
+library(animint)
+prob.mass <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "cm"))+
+  geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+                alpha=0.6,
+                data=mean.tallrects)+
+  geom_point(aes(count, probability, showSelected=poisson.mean,
+                 tooltip=sprintf("prob(count = %d) = %f", count, probability)),
+             color="red",
+             size=5,
+             data=poisson.prob)
+prob.mass+
+  facet_wrap("poisson.mean")
+```
+
+Note that we used `alpha=0.6` with `geom_tallrect`, which means that
+the tallrect for the selected mean has 0.6 opacity, and the other
+tallrects have 0.1 opacity. Note also that we use `color="red"` and
+`size=5` with `geom_point` so that it is easier to see the points on a
+grey background, and to hover the cursor over the points to see the
+tooltip. We next create an interactive version with animint.
+
+```{r Ch13-viz-prob}
+viz.prob <- list(prob=prob.mass)
+structure(viz.prob, class="animint")
+```
+
+You can click the viz above to change the mean of the Poisson
+distribution. You can also hover the cursor over a data point to see
+its probability. Note that for integer values of the Poisson mean,
+there are two counts that are the most probable (the mode of the
+Poisson distribution). For example the Poisson distribution with a
+mean of 7 attains its maximum probability of about 0.149 at count
+values of 6 and 7.
+
+## Add a panel for the cumulative distribution function
+
+To add a panel for the cumulative distribution function, we will
+re-make the ggplot below. When we specify the data sets, we will use
+the [addColumn then facet](ChXX-appendix.html#addColumn-then-facet)
+idiom to add a `panel` variable.
+
+```{r Ch13-viz-cum-prob}
+addPanel <- function(dt, panel){
+  data.table(dt, panel=factor(panel, c("probability", "cum prob")))
+}
+quantile.max.dt <- data.table(quantile.max)
+viz.cum.prob <- list(
+  prob=ggplot()+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "cm"))+
+    facet_grid(panel ~ ., scales="free")+
+    geom_hline(aes(yintercept=quantile.max),
+               color="grey",
+               data=addPanel(quantile.max.dt, "cum prob"))+
+    geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+                  alpha=0.6,
+                  data=mean.tallrects)+
+    geom_point(aes(count, probability, showSelected=poisson.mean,
+                   tooltip=sprintf(
+                     "prob(count = %d) = %f", count, probability)),
+               color="red",
+               size=5,
+               data=addPanel(poisson.prob, "probability"))+
+    geom_point(aes(count, cum.prob, showSelected=poisson.mean,
+                   tooltip=sprintf(
+                     "prob(count <= %d) = %f", count, cum.prob)),
+               color="red",
+               size=5,
+               data=addPanel(poisson.prob, "cum prob"))
+)
+structure(viz.cum.prob, class="animint")
+```
+
+Note how we used `addPanel` to add a `panel` variable to all the data
+sets for each geom except `geom_tallrect`. Using `panel` as a facet
+variable has the effect of drawing each geom in only one panel, except
+the `geom_tallrect` which is drawn in each panel.
+
+Note that we also used a `geom_hline` to show 0.99, the cumulative
+distribution function threshold that was used to determine the set of
+points to plot for each Poisson distribution. This is an example of
+"show your arbitrary choices," one of the general principles of
+designing good interactive data visualizations.
+
+## Add a plot of the Poisson loss and a selector for label value
+
+Next we will compute the Poisson loss for several values of the output
+label.
+
+```{r}
+PoissonLoss <- function(count, seg.mean){
+  stopifnot(is.numeric(count))
+  stopifnot(is.numeric(seg.mean))
+  if(any(seg.mean < 0)){
+    stop("PoissonLoss undefined for negative segment mean")
+  }
+  if(length(seg.mean)==1)seg.mean <- rep(seg.mean, length(count))
+  if(length(count)==1)count <- rep(count, length(seg.mean))
+  stopifnot(length(seg.mean) == length(count))
+  not.integer <- round(count) != count
+  is.negative <- count < 0
+  loss <- ifelse(
+    not.integer | is.negative, Inf,
+    ifelse(seg.mean == 0, ifelse(count == 0, 0, Inf),
+           seg.mean - count * log(seg.mean)
+           ## This term makes all the minima zero.
+           -ifelse(count == 0, 0, count - count*log(count))))
+  loss
+}
+```
+
+Below we compute the loss for several values of count, using the
+[list of data tables idiom](ChXX-appendix.html#list-of-data-tables).
+
+```{r}
+count.vec <- unique(poisson.prob$count)
+count.range <- range(count.vec)
+mean.vec <- seq(count.range[1], count.range[2], l=100)
+loss.min.list <- list()
+loss.fun.list <- list()
+for(count in count.vec){
+  loss <- PoissonLoss(count, mean.vec)
+  loss.fun.list[[paste(count)]] <- data.table(
+    count, poisson.mean=mean.vec, loss)
+  loss.min.list[[paste(count)]] <- data.table(count, loss=0)
+}
+loss.fun <- do.call(rbind, loss.fun.list)
+loss.min <- do.call(rbind, loss.min.list)
+```
+
+Next we make a data viz with an additional panel.
+
+```{r Ch13-viz-loss}
+viz.loss <- list(
+  prob=ggplot()+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "cm"))+
+    facet_grid(panel ~ ., scales="free")+
+    geom_hline(aes(yintercept=quantile.max),
+               color="grey",
+               data=addPanel(quantile.max.dt, "cum prob"))+
+    geom_point(aes(count, probability, showSelected=poisson.mean,
+                   clickSelects=count,
+                   tooltip=sprintf(
+                     "prob(count = %d) = %f", count, probability)),
+               color="red",
+               size=5,
+               alpha=0.7,
+               data=addPanel(poisson.prob, "probability"))+
+    geom_point(aes(count, cum.prob, showSelected=poisson.mean,
+                   clickSelects=count,
+                   tooltip=sprintf(
+                     "prob(count <= %d) = %f", count, cum.prob)),
+               color="red",
+               size=5,
+               alpha=0.7,
+               data=addPanel(poisson.prob, "cum prob")),
+  loss=ggplot()+
+    geom_line(aes(poisson.mean, loss, showSelected=count),
+              data=loss.fun)+
+    geom_point(aes(count, loss, showSelected=count),
+               data=loss.min)+
+    geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+                  alpha=0.6,
+                  data=mean.tallrects))
+structure(viz.loss, class="animint")
+```
+
+The data viz above shows the probability on the left and the Poisson
+loss on the right.
+
+## Chapter summary and exercises

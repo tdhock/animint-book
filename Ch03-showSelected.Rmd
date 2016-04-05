@@ -246,7 +246,8 @@ Exercises:
   [animation package examples](http://vis.supstat.com/categories.html#animation-ref)
   to an animint. Hint: in the code for the animation package there is
   always a for loop over the time variable. Instead of calling a
-  plotting function inside the for loop, use the list-of-data-tables
-  idiom to store the data that should be plotted (TODO:ref
-  appendix). Then use those data along with `showSelected` aesthetics
-  to create ggplots, and render them using animint.
+  plotting function inside the for loop, use the
+  [list of data tables idiom](ChXX-appendix.html#list-of-data-tables)
+  to store the data that should be plotted. Then use those data along
+  with `showSelected` aesthetics to create ggplots, and render them
+  using animint.
