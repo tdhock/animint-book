@@ -26,9 +26,9 @@ Chapter outline:
 
 ## Original static figure {#static}
 
-We start by reproducing a static version of Figure 13.4 from Elements
-of Statistical Learning by Hastie et al. That Figure consists of two
-plots (TODO SKETCH):
+We start by reproducing a static version of Figure 13.4 from
+[Elements of Statistical Learning by Hastie et al](http://statweb.stanford.edu/~tibs/ElemStatLearn/). That
+Figure consists of two plots (TODO SKETCH):
 
 * mis-classification error curves, as a function of the number of
   neighbors:
