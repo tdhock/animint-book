@@ -49,8 +49,14 @@ animint: a grammar for animated and interactive data visualization
   - rmarkdown
   - github pages
 - Ch 6, other features
+  - review: aes(key), selector.types, first
+  - scale_size_animint
+  - chunk_vars
   - aes(href)
   - aes(tooltip)
+  - aes(id)
+  - selectize option
+  - theme_animint height width
   - .variable and .value aesthetics
 - Ch 7, limitations of animint
   - shiny. WorldBank-facets, changing aesthetic mappings.

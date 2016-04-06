@@ -41,8 +41,8 @@ visualization design. The clickSelects keyword makes it possible for
 the user to change a selection variable by directly clicking on a plot
 element.
 
-Chapter 5 explains several different ways to share your interactive
-data visualizations on the web.
+[Chapter 5](Ch05-sharing.html) explains several different ways to
+share your interactive data visualizations on the web.
 
 Chapter 6 covers some other features of animint, including how to
 specify hyperlinks, tooltips, data-driven selector variable names. 
@@ -59,9 +59,16 @@ set.
 Chapters 8-XX each explain in detail how to create informative
 visualizations for a particular data set.
 
+[Chapter 10](Ch10-nearest-neighbors.html) explains how to create an
+interactive re-design of the nearest neighbors data visualization from
+the Elements of Statistical Learning book by Hastie et al.
+
+[Chapter 13](Ch13-poisson-regression.html) explains how to create an
+interactive visualization that explains the Poisson regression model.
+
 ## Appendix {#appendix}
 
-Several useful R code idioms are explained in detail in an
-appendix.
+[The appendix](ChXX-appendix.html) contains detailed explanations of
+several R code idioms that are used throughout this book.
 
 

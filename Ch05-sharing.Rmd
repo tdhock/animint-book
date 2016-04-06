@@ -1,0 +1,116 @@
+---
+title: Sharing
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 5, Sharing animints
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch05-figures/")
+```
+
+This chapter explains several methods for sharing your interactive
+data visualizations on the web. After reading this chapter, you will
+be able to share and publish animints
+
+* on your personal computer.
+* on [gist.github.com](https://gist.github.com/) and view them on
+  [bl.ocks.org](http://bl.ocks.org/).
+* in [R Markdown](http://rmarkdown.rstudio.com/) documents.
+* using any web server, including
+  [GitHub pages](https://pages.github.com/).
+
+## Compile to a local directory {#animint2dir}
+
+When experimenting with different interactive data visualization
+designs, it is useful to preview them on your personal computer before
+publishing on the web. This section discusses two methods for
+compiling animints to a local directory.
+
+So far in previous chapters we have only discussed one method for
+creating interactive data visualizations. If `viz` is an animint (list
+of ggplots and options), then running `structure(viz,
+class="animint")` on the R command line compiles that animint to a
+temporary directory. After `structure` attaches the `"animint"` class
+to the `viz` list, R calls the `print.animint` S3 method, which
+compiles the animint to a new temporary directory on your personal
+computer.
+
+Rather than saving each animint to a separate temporary directory, you
+can specify an output directory using the `animint2dir` function. If
+you want to save `viz` in the `"path/to/figure-2"` directory, use
+`animint2dir(viz, "path/to/figure-2")`. If that directory does not
+exist, then it will be created. If that directory does exist, then any
+files in that directory will be overwritten. To view the data viz,
+navigate to `path/to/figure-2/index.html` in a web browser.
+
+## Publish on GitHub Gist {#animint2gist}
+
+This section explains how to publish an animint on the web via
+[GitHub Gist](https://gist.github.com/). Gist was originally meant for
+sharing code, but it also works for sharing animints.
+
+To publish an animint on Gist, you need two things: (1) a GitHub
+account, and (2) the `gistr` package. First, if you don't have a
+GitHub account, you can
+[sign up for free](https://github.com/join). Second, install the
+`gistr` package:
+
+```{r}
+if(!require(gistr))install.packages("gistr")
+```
+
+Now you should be able to use `animint2gist(viz)` to publish `viz` as
+a new gist. That command will post the files to a new gist, for
+example https://gist.github.com/tdhock/2b029fe9abc8eb300f9f/. It will
+then open a new web browser window at the corresponding bl.ocks.org
+URL, for example http://bl.ocks.org/tdhock/raw/2b029fe9abc8eb300f9f/
+
+You can use the bl.ocks.org URL to share your data visualization with
+others.
+
+Beware that Gist imposes some limits. In March 2016 Gist imposed a
+maximum of 300 files per gist, and a maximum of 1 megabyte per
+file. The animint2gist function should stop with an error if your
+animint exceeds either of these limits. If you run into this problem,
+you may be able to use the [chunk_vars](Ch06-other.html#chunk_vars)
+option to edit the number and size files produced by
+animint. Otherwise, try publishing your animint using one of the other
+methods below.
+
+## Publish in R Markdown {#Rmd}
+
+To include an animint in an R Markdown document, use `structure(viz,
+class="animint")` inside of an R code chunk. R will run the
+`knit_print.animint` S3 method, which compiles the animint to a local
+directory, named based on the name of the R code chunk. For example a
+code chunk named `viz-facets` will be saved in the directory
+`vizfacets`.
+
+## Publish on a web server {#web-server}
+
+Since animints are just directories with HTML, TSV, and JavaScript
+files, you can publish them on any web server by simply copying the
+directory to that server.
+
+For example I executed the code in
+https://github.com/tdhock/animint/blob/master/inst/examples/WorldBank-facets.R
+to create the `WorldBank-facets` directory on my personal computer. I
+copied that directory to my lab web server using `rsync -r
+WorldBank-facets/ cbio.ensmp.fr:public_html/WorldBank-facets/` and so
+I can view it on http://cbio.ensmp.fr/~thocking/WorldBank-facets/
+
+If you don't have access to a personal web server, try using
+[GitHub pages](https://pages.github.com/).
+
+## Chapter summary and exercises
+
+This chapter explain how to share animints on the web.
+
+Exercises:
+
+* Use `animint2gist` to publish a visualization of a data set from
+  your domain of expertise. Post a link to the data viz (and your
+  source code) on the
+  [Animint Gallery wiki page](https://github.com/tdhock/animint/wiki/Gallery).
