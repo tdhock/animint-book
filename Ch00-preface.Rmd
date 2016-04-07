@@ -44,8 +44,9 @@ element.
 [Chapter 5](Ch05-sharing.html) explains several different ways to
 share your interactive data visualizations on the web.
 
-Chapter 6 covers some other features of animint, including how to
-specify hyperlinks, tooltips, data-driven selector variable names. 
+[Chapter 6](Ch06-other.html) covers some other features of animint,
+including how to specify hyperlinks, tooltips, data-driven selector
+variable names.
 
 Chapter 7 covers the limitations of the animint R package, and
 explains workarounds for some common issues.

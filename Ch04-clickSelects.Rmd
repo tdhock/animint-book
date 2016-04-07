@@ -165,7 +165,7 @@ a time. In the next section, we will explain how the `selector.types`
 option can be used to change `country` to a multiple selection
 variable.
 
-## The selector.types and first options
+## The selector.types and first options {#selector-types-first}
 
 In this section our goal is to produce a slightly more complicated
 version of the scatterplot in the last section. The sketch below has

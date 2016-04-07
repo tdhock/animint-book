@@ -49,7 +49,7 @@ animint: a grammar for animated and interactive data visualization
   - rmarkdown
   - github pages
 - Ch 6, other features
-  - review: aes(key), selector.types, first
+  - review: aes(key), selector.types, first, duration, time.
   - scale_size_animint
   - chunk_vars
   - aes(href)

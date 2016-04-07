@@ -1,0 +1,138 @@
+---
+title: Other features
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 6, Other animint features
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch06-figures/")
+```
+
+This chapter explains several new features that animint introduces to
+the grammar of graphics. After reading this chapter, you will
+understand how to customize your animint graphics via
+
+* the `href`, `tooltip`, `id`, `clickSelects.variable`,
+  `clickSelects.value`, `showSelected.variable`, and
+  `showSelected.value` aesthetics for observation-specific
+  characteristics;
+* the `chunk_vars` geom-specific option;
+* plot-specific height and width options; and
+* 
+
+## Observation-specific options (new aesthetics)
+
+### Review of previously introduced aesthetics
+
+`aes(key)`
+
+`aes(showSelected)`
+
+`aes(clickSelects)`
+
+### Hyperlinks using `aes(href)`
+
+### Tooltips using `aes(tooltip)`
+
+### CSS id using `aes(id)`
+
+### Data-driven selector names using *.variable and *.value aesthetics
+
+## The `chunk_vars` geom-specific compilation option
+
+So far there is only one option for customization at the geom
+level. The `chunk_vars` option should be specified as an argument to a
+`geom_*` function, and its value should be a character vector of
+selection variable names. When the data viz is compiled, these
+selection variables will be used to break this geom's data table into
+separate TSV files.
+
+```{r}
+data(breakpoints)
+only.error <- subset(breakpoints$error,type=="E")
+only.segments <- subset(only.error,bases.per.probe==bases.per.probe[1])
+signal.colors <- c(estimate="#0adb0a",
+                   latent="#0098ef")
+tsvSizes <- function(segment.chunk.vars){
+  viz <- 
+    list(signal=ggplot()+
+           geom_point(aes(position, signal, showSelected=bases.per.probe),
+                      data=breakpoints$signals)+
+           geom_line(aes(position, signal), colour=signal.colors[["latent"]],
+                     data=breakpoints$imprecision)+
+           geom_segment(aes(first.base, mean, xend=last.base, yend=mean,
+                            showSelected=segments,
+                            showSelected2=bases.per.probe),
+                        colour=signal.colors[["estimate"]],
+                        chunk_vars=segment.chunk.vars,
+                        data=breakpoints$segments)+
+           geom_vline(aes(xintercept=base,
+                          showSelected=segments,
+                          showSelected2=bases.per.probe),
+                      colour=signal.colors[["estimate"]],
+                      linetype="dashed",
+                      data=breakpoints$breaks),
+         error=ggplot()+
+           geom_vline(aes(xintercept=segments, clickSelects=segments),
+                      data=only.segments, lwd=17, alpha=1/2)+
+           geom_line(aes(segments, error, group=bases.per.probe,
+                         clickSelects=bases.per.probe),
+                     data=only.error, lwd=4))
+  info <- animint2dir(viz, open.browser=FALSE)
+  cmd <- paste("du -ks", info$out.dir)
+  kb.dt <- fread(cmd)
+  setnames(kb.dt, c("kb", "dir"))
+  tsv.vec <- Sys.glob(paste0(info$out.dir, "/*.tsv"))
+  is.geom3 <- grepl("geom3", tsv.vec)
+  data.frame(kb=kb.dt$kb, geom3.tsv=sum(is.geom3), other.tsv=sum(!is.geom3))
+}
+
+chunk_vars_list <- list(
+  neither=c(),
+  bases.per.probe=c("bases.per.probe"),
+  segments=c("segments"),
+  both=c("segments", "bases.per.probe"))
+
+sizes.list <- lapply(chunk_vars_list, tsvSizes)
+do.call(rbind, sizes.list)
+```
+
+## Plot-specific options
+
+### Plot height and width
+
+The `theme_animint` function is used to attach animint-specific
+options to ggplot objects. There are options for specifying width and
+height of the plot in pixels.
+
+TODO example.
+
+### Size scale in pixels
+
+`scale_size_animint`
+
+## Global data viz options
+
+Global data viz options any named elements of the `viz` list that are
+not ggplots.
+
+### Review of previously introduced global options
+
+duration, time, selector.types, first
+
+### Web page title with the title option
+
+### Show or hide selection menus with the selectize option
+
+## Chapter summary and exercises
+
+This chapter explain how to share animints on the web.
+
+Exercises:
+
+* Use `animint2gist` to publish a visualization of a data set from
+  your domain of expertise. Post a link to the data viz (and your
+  source code) on the
+  [Animint Gallery wiki page](https://github.com/tdhock/animint/wiki/Gallery).
