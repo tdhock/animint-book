@@ -80,7 +80,7 @@ selection variables. In the next section, we will explore a
 visualization of the World Bank data that has selection variables for
 `region` and `year`.
 
-## Selecting data subsets using menus 
+## Selecting data subsets using menus {#selecting-with-menus}
 
 The R code below produces a scatterplot of life expectancy and
 fertility rate for each country in the WorldBank data set. 

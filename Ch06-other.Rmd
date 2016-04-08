@@ -19,20 +19,47 @@ understand how to customize your animint graphics via
   `showSelected.value` aesthetics for observation-specific
   characteristics;
 * the `chunk_vars` geom-specific option;
-* plot-specific height and width options; and
-* 
+* plot-specific legends and height/width options; and
+* global data viz options.
 
 ## Observation-specific options (new aesthetics)
 
+This section explains the new aesthetics that are recognized by
+animint but not ggplot2.
+
 ### Review of previously introduced aesthetics
 
-`aes(key)`
+First we discuss the new aesthetics that we have already introduced in
+previous chapters.
 
-`aes(showSelected)`
+[Chapter 3](Ch03-showSelected.html#selecting-with-menus) introduced
+`aes(showSelected)` for designating a geom which shows only
+the selected subset of its data.
 
-`aes(clickSelects)`
+[Chapter 3](Ch03-showSelected.html#duration-key) also introduced
+`aes(key)` to designate a variable to use for smooth transitions that
+are interpretable.
+
+[Chapter 4](Ch04-clickSelects.html#clickSelects-aes) introduced
+`aes(clickSelects)` to designate a geom which can be clicked to change
+a selection variable.
 
 ### Hyperlinks using `aes(href)`
+
+```{r Ch06-viz-href}
+library(animint)
+USpolygons <- map_data("state")
+viz.href <- list(
+  map=ggplot()+
+    ggtitle("click a state to read its Wikipedia page")+
+    coord_equal()+
+    geom_polygon(
+      aes(x=long, y=lat, group=group,
+          href=paste0("http://en.wikipedia.org/wiki/", region)),
+      data=USpolygons, fill="black", colour="grey")
+  )
+structure(viz.href, class="animint")
+```
 
 ### Tooltips using `aes(tooltip)`
 
@@ -124,15 +151,19 @@ duration, time, selector.types, first
 
 ### Web page title with the title option
 
+There is no 
+
 ### Show or hide selection menus with the selectize option
 
 ## Chapter summary and exercises
 
-This chapter explain how to share animints on the web.
+This chapter explained several options for customizing animints at the
+observation, geom, plot, and global level.
 
 Exercises:
 
 * Use `animint2gist` to publish a visualization of a data set from
-  your domain of expertise. Post a link to the data viz (and your
-  source code) on the
+  your domain of expertise. Post the source code for your data viz in
+  a GitHub repository. Post links to your data viz and its source code
+  on the
   [Animint Gallery wiki page](https://github.com/tdhock/animint/wiki/Gallery).
