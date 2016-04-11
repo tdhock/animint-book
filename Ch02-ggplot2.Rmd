@@ -290,19 +290,19 @@ same amount of fertility rate. To achieve that effect, we use facets
 in the data visualization below.
 
 ```{r Ch02-viz-aligned}
-add.time.period <- function(df, time.period){
-  data.frame(df, time.period=factor(time.period, c("1975", "1960-2010")))
+add.x.var <- function(df, x.var){
+  data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
 }
 viz.aligned <- list(
   scatter=ggplot()+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
-               data=add.time.period(WorldBank1975, "1975"))+
+               data=add.x.var(WorldBank1975, "life expectancy"))+
     geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                   group=country),
-              data=add.time.period(WorldBankBefore1975, "1975"))+
+              data=add.x.var(WorldBankBefore1975, "life expectancy"))+
     geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
-              data=add.time.period(WorldBank, "1960-2010"))+
-    facet_grid(. ~ time.period, scales="free")+
+              data=add.x.var(WorldBank, "year"))+
+    facet_grid(. ~ x.var, scales="free")+
     theme_bw()+
     theme(panel.margin=grid::unit(0, "lines"))
   )
@@ -315,15 +315,15 @@ and three layers. The left panel shows the `geom_point` and
 have a shared axis for fertility rate, which ensures that the time
 series can be directly compared with the scatterplot. 
 
-Note that we used the `add.time.period` function to add a
-`time.period` variable to each data set, and then we used that
+Note that we used the `add.x.var` function to add a
+`x.var` variable to each data set, and then we used that
 variable in `facet_grid(scales="free")`. We call this the
 [addColumn then facet idiom](ChXX-appendix.html#addColumn-then-facet),
 which is generally useful for creating a multi-panel data
 visualization with aligned axes. In particular, if we wanted to change
 the order of the panels in the data visualization, we would only need
 to edit the order of the factor levels in the definition of
-`add.time.period`.
+`add.x.var`.
 
 Also note that `theme_bw` means to use black panel borders and white
 panel backgrounds, and `panel.margin=0` means to use no space between
