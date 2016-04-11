@@ -49,7 +49,7 @@ animint: a grammar for animated and interactive data visualization
   - rmarkdown
   - github pages
 - Ch 6, other features
-  - review: aes(key), selector.types, first
+  - review: aes(key), selector.types, first, duration, time.
   - scale_size_animint
   - chunk_vars
   - aes(href)
@@ -62,9 +62,12 @@ animint: a grammar for animated and interactive data visualization
   - shiny. WorldBank-facets, changing aesthetic mappings.
   - updating axes. workaround: normalize data to a common scale.
   - brush / lasso. workaround: click individual data points.
+  - ggplot2 stats/positions/exotic geoms. compute it yourself.
+  - ggplot2 theme options.
 - Ch 8, the WorldBank-facets example
 - Ch 9, montreal bike data?
 - Ch 10, knn example
 - Ch 11, lasso example
 - Ch 12, SVM example
 - Ch 13, Poisson regression
+- Ch 14, PSJ

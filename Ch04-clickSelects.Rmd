@@ -54,7 +54,7 @@ geom. In the next section we will give several examples of how
 clickSelects can be used in combination with showSelected to create
 interactive data visualizations.
 
-## Use the clickSelects aesthetic to identify points on a scatterplot
+## Use the clickSelects aesthetic to identify points on a scatterplot {#clickSelects-aes}
 
 The goal of this section is to create the following visualization of
 the World Bank data.
@@ -165,7 +165,7 @@ a time. In the next section, we will explain how the `selector.types`
 option can be used to change `country` to a multiple selection
 variable.
 
-## The selector.types and first options
+## The selector.types and first options {#selector-types-first}
 
 In this section our goal is to produce a slightly more complicated
 version of the scatterplot in the last section. The sketch below has

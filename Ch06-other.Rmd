@@ -1,0 +1,285 @@
+---
+title: Other features
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 6, Other animint features
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch06-figures/")
+```
+
+This chapter explains several new features that animint introduces to
+the grammar of graphics. After reading this chapter, you will
+understand how to customize your animint graphics via
+
+* the `href`, `tooltip`, `id`, `clickSelects.variable`,
+  `clickSelects.value`, `showSelected.variable`, and
+  `showSelected.value` aesthetics for observation-specific
+  characteristics;
+* the `chunk_vars` geom-specific option;
+* plot-specific legends and height/width options; and
+* global data viz options.
+
+## Observation-specific options (new aesthetics) 
+
+This section explains the new aesthetics that are recognized by
+animint but not ggplot2.
+
+### Review of previously introduced aesthetics
+
+First we discuss the new aesthetics that we have already introduced in
+previous chapters.
+
+[Chapter 3](Ch03-showSelected.html#selecting-with-menus) introduced
+`aes(showSelected)` for designating a geom which shows only
+the selected subset of its data.
+
+[Chapter 3](Ch03-showSelected.html#duration-key) also introduced
+`aes(key)` to designate a variable to use for smooth transitions that
+are interpretable.
+
+[Chapter 4](Ch04-clickSelects.html#clickSelects-aes) introduced
+`aes(clickSelects)` to designate a geom which can be clicked to change
+a selection variable.
+
+### Hyperlinks using `aes(href)` {#aes-href}
+
+The code below uses animint to draw a map of the United States. 
+
+```{r Ch06-viz-href}
+library(animint)
+USpolygons <- map_data("state")
+viz.href <- list(
+  map=ggplot()+
+    ggtitle("click a state to read its Wikipedia page")+
+    coord_equal()+
+    geom_polygon(
+      aes(x=long, y=lat, group=group,
+          href=paste0("http://en.wikipedia.org/wiki/", region)),
+      data=USpolygons, fill="black", colour="grey")
+  )
+structure(viz.href, class="animint")
+```
+
+Try clicking a state in the data viz above. You should see the
+corresponding wikipedia page open in a new tab.
+
+### Tooltips using `aes(tooltip)` {#aes-tooltip}
+
+Tooltips are little windows of text information that appear when you
+hover the cursor over something on the screen. In animint you can use
+`aes(tooltip)` to designate the observation-specific message that will
+appear. For example we use it to display the population and country
+name in the scatterplot of the World Bank data below.
+
+```{r Ch06-viz-tooltip}
+data(WorldBank, package="animint")
+WorldBank1975 <- subset(WorldBank, year == 1975)
+viz.tooltip <- list(
+  scatter=ggplot()+
+  geom_point(
+    aes(x=life.expectancy, y=fertility.rate,
+        tooltip=paste(country, "population =", population)),
+    WorldBank1975))
+structure(viz.tooltip, class="animint")
+```
+
+Try hovering the cursor over one of the data points. You should see a
+small box appear with the country name and population for that data
+point.
+
+Note that a tooltip of the form "variable value" is specified by
+default for each geom with `aes(clickSelects)`. For example a geom
+with `aes(clickSelects=year)` will show the default tooltip "year
+1984" for an observation with year 1984. You can change this
+default by explicitly specifying `aes(tooltip)`.
+
+### HTML id attribute using `aes(id)` {#aes-id}
+
+Since everything plotted by animint is rendered as an
+[SVG](http://www.w3schools.com/html/html5_svg.asp) element in a web
+page, you may want to specify a
+[HTML id attribute](http://www.w3schools.com/tags/att_global_id.asp)
+using `aes(id)` as below.
+
+```{r Ch06-viz-id}
+viz.id <- list(
+  map=ggplot()+
+    ggtitle("click a state to read its Wikipedia page")+
+    coord_equal()+
+    geom_polygon(
+      aes(x=long, y=lat, group=group,
+          id=gsub(" ", "_", paste(region, group))),
+      data=USpolygons, fill="black", colour="grey")
+  )
+structure(viz.id, class="animint")
+```
+
+Note how `gsub` is used to convert spaces to underscores, since a
+well-defined id must not include spaces. Note also that `paste` is
+used to add a group number, since there may be more than one polygon
+per state/region, and each id must be unique on a web page. The
+animint developers use this feature
+[for testing the animint JavaScript renderer code](https://github.com/tdhock/animint/wiki/Testing).
+
+### Data-driven selector names using *.variable and *.value aesthetics {#variable-value}
+
+Usually selector names are defined in `aes`, but that becomes
+inconvenient if you have many selectors in your data viz. For example
+say you have 20 different selector variable names, `selector1value`
+... `selector20value`. The usual way to define your data viz would be
+
+```{r, eval=FALSE}
+viz <- list(
+  points=ggplot()+
+    geom_point(aes(clickSelects=selector1value), data=data1)+
+    ...
+    geom_point(aes(clickSelects=selector20value),data=data20)
+)
+```
+
+However that method is bad since it violates the DRY principle (Don't
+Repeat Yourself). Another way to do that would be to use a for loop:
+
+```{r, eval=FALSE}
+viz <- list(points=ggplot())
+for(selector.name in selector.name.vec){
+  data.for.selector <- all.data.list[[selector.name]]
+  viz$points <- viz$points +
+    geom_point(aes_string(clickSelects=selector.name),
+               data=data.for.selector)
+}
+```
+
+That method is bad since it is slow to construct `viz`, and the
+compiled viz potentially takes up a lot of disk space since there will
+be a small tsv file for each `geom_point`. The preferable method is to
+use `clickSelects.variable` and `clickSelects.value` aesthetics:
+
+```r
+viz <- list(
+  points=ggplot()+
+    geom_point(aes(clickSelects.variable=selector.name,
+                   clickSelects.value=selector.value),
+               data=all.data)
+)
+```
+
+The animint compiler will look through the data.frame `all.data` and
+create selectors for each of the distinct values of
+`all.data$selector.name`. Clicking one of the data points will update
+the corresponding selector with the value indicated in
+`all.data$selector.value`.
+
+You can similarly use one geom with `showSelected.variable` and
+`showSelected.value` instead of a bunch of different geoms with
+`showSelected`.
+
+The `*.variable` and `*.value` aesthetics are useful not only to avoid
+repetition in the definition of the data viz, but also because they
+are more efficient in practice. For a detailed example with timings
+and disk space measurements, see
+[Chapter 14](Ch14-variable-value.html).
+
+## The `chunk_vars` geom-specific compilation option {#chunk-vars}
+
+So far there is only one option for customization at the geom
+level. The `chunk_vars` option should be specified as an argument to a
+`geom_*` function, and its value should be a character vector of
+selection variable names. When the data viz is compiled, these
+selection variables will be used to break this geom's data table into
+separate TSV files.
+
+```{r}
+data(breakpoints)
+only.error <- subset(breakpoints$error,type=="E")
+only.segments <- subset(only.error,bases.per.probe==bases.per.probe[1])
+signal.colors <- c(estimate="#0adb0a",
+                   latent="#0098ef")
+tsvSizes <- function(segment.chunk.vars){
+  viz <- 
+    list(signal=ggplot()+
+           geom_point(aes(position, signal, showSelected=bases.per.probe),
+                      data=breakpoints$signals)+
+           geom_line(aes(position, signal), colour=signal.colors[["latent"]],
+                     data=breakpoints$imprecision)+
+           geom_segment(aes(first.base, mean, xend=last.base, yend=mean,
+                            showSelected=segments,
+                            showSelected2=bases.per.probe),
+                        colour=signal.colors[["estimate"]],
+                        chunk_vars=segment.chunk.vars,
+                        data=breakpoints$segments)+
+           geom_vline(aes(xintercept=base,
+                          showSelected=segments,
+                          showSelected2=bases.per.probe),
+                      colour=signal.colors[["estimate"]],
+                      linetype="dashed",
+                      data=breakpoints$breaks),
+         error=ggplot()+
+           geom_vline(aes(xintercept=segments, clickSelects=segments),
+                      data=only.segments, lwd=17, alpha=1/2)+
+           geom_line(aes(segments, error, group=bases.per.probe,
+                         clickSelects=bases.per.probe),
+                     data=only.error, lwd=4))
+  info <- animint2dir(viz, open.browser=FALSE)
+  cmd <- paste("du -ks", info$out.dir)
+  kb.dt <- fread(cmd)
+  setnames(kb.dt, c("kb", "dir"))
+  tsv.vec <- Sys.glob(paste0(info$out.dir, "/*.tsv"))
+  is.geom3 <- grepl("geom3", tsv.vec)
+  data.frame(kb=kb.dt$kb, geom3.tsv=sum(is.geom3), other.tsv=sum(!is.geom3))
+}
+
+chunk_vars_list <- list(
+  neither=c(),
+  bases.per.probe=c("bases.per.probe"),
+  segments=c("segments"),
+  both=c("segments", "bases.per.probe"))
+
+sizes.list <- lapply(chunk_vars_list, tsvSizes)
+do.call(rbind, sizes.list)
+```
+
+## Plot-specific options
+
+### Plot height and width
+
+The `theme_animint` function is used to attach animint-specific
+options to ggplot objects. There are options for specifying width and
+height of the plot in pixels.
+
+TODO example.
+
+### Size scale in pixels
+
+`scale_size_animint`
+
+## Global data viz options
+
+Global data viz options any named elements of the `viz` list that are
+not ggplots.
+
+### Review of previously introduced global options
+
+duration, time, selector.types, first
+
+### Web page title with the title option
+
+There is no 
+
+### Show or hide selection menus with the selectize option
+
+## Chapter summary and exercises
+
+This chapter explained several options for customizing animints at the
+observation, geom, plot, and global level.
+
+Exercises:
+
+* Use `animint2gist` to publish a visualization of a data set from
+  your domain of expertise. Post the source code for your data viz in
+  a GitHub repository. Post links to your data viz and its source code
+  on the
+  [Animint Gallery wiki page](https://github.com/tdhock/animint/wiki/Gallery).

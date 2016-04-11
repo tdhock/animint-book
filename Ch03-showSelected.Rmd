@@ -80,7 +80,7 @@ selection variables. In the next section, we will explore a
 visualization of the World Bank data that has selection variables for
 `region` and `year`.
 
-## Selecting data subsets using menus 
+## Selecting data subsets using menus {#selecting-with-menus}
 
 The R code below produces a scatterplot of life expectancy and
 fertility rate for each country in the WorldBank data set. 
@@ -138,7 +138,7 @@ the legend or the menu. Using the legend is a more direct manipulation
 technique, since the legend is drawn closer to the plotted data points
 that will be updated.
 
-## Transitions: the duration option and key aesthetic
+## Transitions: the duration option and key aesthetic {#duration-key}
 
 You may have noticed that there are three buttons at the bottom of
 each data visualization created by animint. Try clicking the "Show
@@ -220,7 +220,7 @@ see that the text box for the year variable is 2000, as specified in
 the R code. If you change the selection from 1980 to 1981, you should
 see a proper transition.
 
-## Animation: the time option
+## Animation: the time option {#animation-time}
 
 The `time` option is used to specify a variable to use for animation.
 
