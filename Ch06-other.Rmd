@@ -70,8 +70,8 @@ corresponding wikipedia page open in a new tab.
 
 Tooltips are little windows of text information that appear when you
 hover the cursor over something on the screen. In animint you can use
-`aes(tooltip)` to designate the observation-specific message that will
-appear. For example we use it to display the population and country
+`aes(tooltip)` to designate the observation-specific message that 
+appears. For example we use it to display the population and country
 name in the scatterplot of the World Bank data below.
 
 ```{r Ch06-viz-tooltip}
@@ -92,7 +92,7 @@ point.
 
 Note that a tooltip of the form "variable value" is specified by
 default for each geom with `aes(clickSelects)`. For example a geom
-with `aes(clickSelects=year)` will show the default tooltip "year
+with `aes(clickSelects=year)` shows the default tooltip "year
 1984" for an observation with year 1984. You can change this
 default by explicitly specifying `aes(tooltip)`.
 
@@ -127,9 +127,11 @@ animint developers use this feature
 ### Data-driven selector names using *.variable and *.value aesthetics {#variable-value}
 
 Usually selector names are defined in `aes`, but that becomes
-inconvenient if you have many selectors in your data viz. For example
-say you have 20 different selector variable names, `selector1value`
-... `selector20value`. The usual way to define your data viz would be
+inconvenient if you have many selectors in your data viz. To
+illustrate we consider a theoretical example (the code in this section
+is not directly executable). Say you want to use 20 different selector
+variable names, `selector1value` ... `selector20value`. The usual way
+to define your data viz would be
 
 ```{r, eval=FALSE}
 viz <- list(
@@ -145,7 +147,7 @@ Repeat Yourself). Another way to do that would be to use a for loop:
 
 ```{r, eval=FALSE}
 viz <- list(points=ggplot())
-for(selector.name in selector.name.vec){
+for(selector.name in paste0("selector", 1:20, "value")){
   data.for.selector <- all.data.list[[selector.name]]
   viz$points <- viz$points +
     geom_point(aes_string(clickSelects=selector.name),
@@ -154,11 +156,12 @@ for(selector.name in selector.name.vec){
 ```
 
 That method is bad since it is slow to construct `viz`, and the
-compiled viz potentially takes up a lot of disk space since there will
-be a small tsv file for each `geom_point`. The preferable method is to
-use `clickSelects.variable` and `clickSelects.value` aesthetics:
+compiled viz potentially takes up a lot of disk space since there 
+is at least one TSV file created for each `geom_point`. The preferable
+method is to use `clickSelects.variable` and `clickSelects.value`
+aesthetics:
 
-```r
+```{r, eval=FALSE}
 viz <- list(
   points=ggplot()+
     geom_point(aes(clickSelects.variable=selector.name,
@@ -167,10 +170,10 @@ viz <- list(
 )
 ```
 
-The animint compiler will look through the data.frame `all.data` and
+The animint compiler looks through the data.frame `all.data` and
 create selectors for each of the distinct values of
-`all.data$selector.name`. Clicking one of the data points will update
-the corresponding selector with the value indicated in
+`all.data$selector.name`. Clicking one of the data points updates the
+corresponding selector with the value indicated in
 `all.data$selector.value`.
 
 You can similarly use one geom with `showSelected.variable` and
@@ -179,69 +182,184 @@ You can similarly use one geom with `showSelected.variable` and
 
 The `*.variable` and `*.value` aesthetics are useful not only to avoid
 repetition in the definition of the data viz, but also because they
-are more efficient in practice. For a detailed example with timings
-and disk space measurements, see
+are more computationally efficient. For a detailed example with
+timings and disk space measurements, see
 [Chapter 14](Ch14-variable-value.html).
 
-## The `chunk_vars` geom-specific compilation option {#chunk-vars}
+## Geom options
 
-So far there is only one option for customization at the geom
-level. The `chunk_vars` option should be specified as an argument to a
+In animint there is only one option for customization at the geom
+level: `chunk_vars`. 
+
+### The `chunk_vars` geom-specific compilation option {#chunk-vars}
+
+The `chunk_vars` option defines the selection variables that are used
+to split the data set into separate chunks (TSV files) to
+download. There is one TSV file created for each combination of values
+of the `chunk_vars` variables. Fewer selection variables specified in
+`chunk_vars` means to split the data set into more TSV files, each of
+a smaller size.
+
+The `chunk_vars` option should be specified as an argument to a
 `geom_*` function, and its value should be a character vector of
-selection variable names. When the data viz is compiled, these
-selection variables will be used to break this geom's data table into
-separate TSV files.
+selection variable names. When `chunk_vars=character(0)`, a character
+vector of length zero, all of the data is stored in a single TSV
+file. When `chunk_vars` is set to all of the `showSelected` variable
+names, then a TSV file is created for each combination of values of
+those variables.
 
-```{r}
-data(breakpoints)
-only.error <- subset(breakpoints$error,type=="E")
+In general the animint compiler chooses a sensible default for
+`chunk_vars`, but you may want to specify `chunk_vars` if the data viz
+is loading slowly, or taking up too much space on disk. If the data
+viz is loading slowly, you should add selection variables to
+`chunk_vars` to reduce the size of the first TSV file to download. If
+the data viz takes up too much space on disk, you should remove
+selection variables from `chunk_vars` to decrease the number of TSV
+files. Lots of small TSV files can take more disk space than a single
+TSV file because the filesystem stores a constant amount of metadata
+for every file.
+
+To illustrate the usage of `chunk_vars`, consider the following
+visualization of the `breakpoints` data set.
+
+TODO: sketch.
+
+The sketch above consists of two plots. We begin by creating the plot
+of error curves on the left.
+
+```{r Ch06-errorPlot}
+data(breakpoints, package="animint")
+only.error <- subset(breakpoints$error, type=="E")
 only.segments <- subset(only.error,bases.per.probe==bases.per.probe[1])
-signal.colors <- c(estimate="#0adb0a",
-                   latent="#0098ef")
+library(data.table)
+fp.fn.names <- rbind(
+  data.table(error.type="false positives", type="FP"),
+  data.table(error.type="false negatives", type=c("I", "FN")))
+setkey(fp.fn.names, type)
+error.dt <- data.table(breakpoints$error)
+setkey(error.dt, type)
+error.type.dt <- error.dt[fp.fn.names]
+fp.fn.dt <- error.type.dt[, list(
+  error.value=sum(error)
+), by=.(error.type, segments, bases.per.probe)]
+errorPlot <- ggplot()+
+  ggtitle("select data and segments")+
+  theme_bw()+
+  geom_tallrect(aes(xmin=segments-0.5, xmax=segments+0.5,
+                    clickSelects=segments),
+                data=only.segments,
+                alpha=1/2)+
+  geom_line(aes(segments, error.value, color=error.type,
+                group=paste(bases.per.probe, error.type),
+                showSelected=bases.per.probe),
+            data=fp.fn.dt,
+            size=5)+
+  scale_color_manual(values=c(
+    "false positives"="red", "false negatives"="blue"))+
+  geom_line(aes(segments, error, group=bases.per.probe,
+                clickSelects=bases.per.probe),
+            data=only.error,
+            size=4)+
+  scale_x_continuous(breaks=c(1, 6, 10, 20))
+errorPlot
+```
+
+The plot above includes a `geom_tallrect` with `clickSelects=segments`
+and a `geom_line` with `clickSelects=bases.per.probe`. It will be used
+to select the data and model in the plot below.
+
+```{r Ch06-signalPlot}
+signalPlot <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  geom_point(aes(position/1e5, signal,
+                 showSelected=bases.per.probe),
+             shape=1,
+             data=breakpoints$signals)+
+  geom_segment(aes(first.base/1e5, mean, xend=last.base/1e5, yend=mean,
+                   showSelected=segments,
+                   showSelected2=bases.per.probe),
+               color="green",
+               data=breakpoints$segments)
+signalPlot+facet_grid(segments ~ bases.per.probe)
+```
+
+The non-interactive plot above has 80 facets, one for each combination
+of the two `showSelected` variables, `bases.per.probe`, and
+`segments`. Below we make an interactive version in which only one of
+these facets will be shown.
+
+```{r Ch06-viz-chunk-vars}
+viz.chunk.vars <- list(
+  error=errorPlot,
+  signal=signalPlot+
+  geom_vline(aes(xintercept=base/1e5,
+                 showSelected=segments,
+                 showSelected2=bases.per.probe),
+             color="green",
+             chunk_vars=character(),
+             linetype="dashed",
+             data=breakpoints$breaks)
+)
+structure(viz.chunk.vars, class="animint")
+```
+
+Click the "Show download status table" button, and you should see
+counts of chunks (TSV files). Note that `geom6_vline_signal` has only
+1 chunk, since `chunk_vars=character()` is specified for the
+`geom_vline` in the R code above. If another value of `chunk_vars` was
+specified, it would create a different number of TSV files, but the
+appearance of the data viz should be the same.
+
+Below we use the `du` command line program to determine the disk usage
+of the data viz for different choices of `chunk_vars`.
+
+```{r tsvSizes}
 tsvSizes <- function(segment.chunk.vars){
-  require(data.table)
-  viz <- 
-    list(signal=ggplot()+
-           geom_point(aes(position, signal, showSelected=bases.per.probe),
-                      data=breakpoints$signals)+
-           geom_line(aes(position, signal), colour=signal.colors[["latent"]],
-                     data=breakpoints$imprecision)+
-           geom_segment(aes(first.base, mean, xend=last.base, yend=mean,
-                            showSelected=segments,
-                            showSelected2=bases.per.probe),
-                        colour=signal.colors[["estimate"]],
-                        chunk_vars=segment.chunk.vars,
-                        data=breakpoints$segments)+
-           geom_vline(aes(xintercept=base,
-                          showSelected=segments,
-                          showSelected2=bases.per.probe),
-                      colour=signal.colors[["estimate"]],
-                      linetype="dashed",
-                      data=breakpoints$breaks),
-         error=ggplot()+
-           geom_vline(aes(xintercept=segments, clickSelects=segments),
-                      data=only.segments, lwd=17, alpha=1/2)+
-           geom_line(aes(segments, error, group=bases.per.probe,
-                         clickSelects=bases.per.probe),
-                     data=only.error, lwd=4))
+  viz <- list(
+    error=errorPlot,
+    signal=signalPlot+
+      geom_vline(aes(xintercept=base/1e5,
+                     showSelected=segments,
+                     showSelected2=bases.per.probe),
+                 color="green",
+                 chunk_vars=segment.chunk.vars,
+                 linetype="dashed",
+                 data=breakpoints$breaks)
+  )
   info <- animint2dir(viz, open.browser=FALSE)
   cmd <- paste("du -ks", info$out.dir)
   kb.dt <- fread(cmd)
   setnames(kb.dt, c("kb", "dir"))
   tsv.vec <- Sys.glob(paste0(info$out.dir, "/*.tsv"))
-  is.geom3 <- grepl("geom3", tsv.vec)
-  data.frame(kb=kb.dt$kb, geom3.tsv=sum(is.geom3), other.tsv=sum(!is.geom3))
+  is.geom6 <- grepl("geom6", tsv.vec)
+  data.frame(kb=kb.dt$kb, geom6.tsv=sum(is.geom6), other.tsv=sum(!is.geom6))
 }
-
 chunk_vars_list <- list(
   neither=c(),
   bases.per.probe=c("bases.per.probe"),
   segments=c("segments"),
   both=c("segments", "bases.per.probe"))
-
 sizes.list <- lapply(chunk_vars_list, tsvSizes)
 do.call(rbind, sizes.list)
 ```
+
+The table above includes counts of kilobytes for the data viz, along
+with counts of TSV files for `geom6_vline_signal` and the other
+geoms. Note how the choice of `chunk_vars` affects the number of TSV
+files and the disk space usage. Since `chunk_vars` was only specified
+for `geom6_vline_signal`, the number of TSV files for the other geoms
+does not change. When both `segments` and `bases.per.probe` are
+specified for `chunk_vars`, there are 76 TSV files for
+`geom6_vline_signal`, and the data viz takes up 1084 kilobytes. In
+contrast, `chunk_vars=character()` produces only one TSV file for
+`geom6_vline_signal`, and the data viz takes only 820 kilobytes.
+
+In conclusion, the geom-specific `chunk_vars` option defines the
+number of TSV files created for each geom. When deciding the value of
+`chunk_vars`, you should consider both disk usage and loading time. A
+few large files take up less disk space but are slower to download
+than many small files.
 
 ## Plot-specific options
 
@@ -284,3 +402,7 @@ Exercises:
   a GitHub repository. Post links to your data viz and its source code
   on the
   [Animint Gallery wiki page](https://github.com/tdhock/animint/wiki/Gallery).
+* Create other versions of `viz.chunk.vars` with different values of
+  `chunk_vars` for the `geom_point` and `geom_segment`. How does the
+  choice of `chunk_vars` affect the appearance of the visualization?
+  The disk space? The loading time?

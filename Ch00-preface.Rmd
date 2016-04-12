@@ -67,6 +67,10 @@ the Elements of Statistical Learning book by Hastie et al.
 [Chapter 13](Ch13-poisson-regression.html) explains how to create an
 interactive visualization that explains the Poisson regression model.
 
+[Chapter 14](Ch14-PeakSegJoint.html) explains how to use the
+`.variable` and `.value` aesthetics to create an interactive
+visualization of a peak detection model.
+
 ## Appendix {#appendix}
 
 [The appendix](ChXX-appendix.html) contains detailed explanations of

@@ -11,9 +11,9 @@ knitr::opts_chunk$set(fig.path="Ch14-figures/")
 ```
 
 This chapter explains how to use
-[*.variable and *.value](Ch06-other.html#variable-value) aesthetics
-for creating data-driven selector names. The example data come from
-the [PeakSegJoint package](https://github.com/tdhock/PeakSegJoint).
+[.variable and .value](Ch06-other.html#variable-value) aesthetics for
+creating data-driven selector names. The example data come from the
+[PeakSegJoint package](https://github.com/tdhock/PeakSegJoint).
 
 ```{r download-PSJ}
 library(animint)
@@ -399,13 +399,13 @@ kb.dt
 ```
 
 The table above shows that the data viz defined using for loops takes
-about twice as much disk space as the data viz that used `*.variable`
-and `*.value` aesthetics.
+about twice as much disk space as the data viz that used `.variable`
+and `.value` aesthetics.
 
 ## Chapter summary and exercises
 
 The table below summarizes the disk usage and timings presented in
-this chapter. It is clear that `*.variable` and `*.value` aesthetics
+this chapter. It is clear that `.variable` and `.value` aesthetics
 are more efficient in both respects, and should be used instead of for
 loops, when possible.
 
@@ -423,5 +423,5 @@ data.frame(
 
 Exercises:
 
-* Use `*.variable` and `*.value` aesthetics to create a visualization
+* Use `.variable` and `.value` aesthetics to create a visualization
   of some data from your domain of expertise.
