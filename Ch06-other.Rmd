@@ -22,12 +22,12 @@ understand how to customize your animint graphics via
 * plot-specific legends and height/width options; and
 * global data viz options.
 
-## Observation-specific options (new aesthetics) 
+## Observation-specific options (new aesthetics) {#new-aesthetics}
 
 This section explains the new aesthetics that are recognized by
 animint but not ggplot2.
 
-### Review of previously introduced aesthetics
+### Review of previously introduced aesthetics {#review-aesthetics}
 
 First we discuss the new aesthetics that we have already introduced in
 previous chapters.
@@ -186,7 +186,7 @@ are more computationally efficient. For a detailed example with
 timings and disk space measurements, see
 [Chapter 14](Ch14-variable-value.html).
 
-## Geom options
+## Geom options {#geom-options}
 
 In animint there is only one option for customization at the geom
 level: `chunk_vars`. 
@@ -196,7 +196,7 @@ level: `chunk_vars`.
 The `chunk_vars` option defines the selection variables that are used
 to split the data set into separate chunks (TSV files) to
 download. There is one TSV file created for each combination of values
-of the `chunk_vars` variables. Fewer selection variables specified in
+of the `chunk_vars` variables. More selection variables specified in
 `chunk_vars` means to split the data set into more TSV files, each of
 a smaller size.
 
@@ -216,7 +216,7 @@ viz is loading slowly, you should add selection variables to
 the data viz takes up too much space on disk, you should remove
 selection variables from `chunk_vars` to decrease the number of TSV
 files. Lots of small TSV files can take more disk space than a single
-TSV file because the filesystem stores a constant amount of metadata
+TSV file because some filesystems store a constant amount of metadata
 for every file.
 
 To illustrate the usage of `chunk_vars`, consider the following
@@ -351,7 +351,7 @@ files and the disk space usage. Since `chunk_vars` was only specified
 for `geom6_vline_signal`, the number of TSV files for the other geoms
 does not change. When both `segments` and `bases.per.probe` are
 specified for `chunk_vars`, there are 76 TSV files for
-`geom6_vline_signal`, and the data viz takes up 1084 kilobytes. In
+`geom6_vline_signal`, and the data viz takes 1084 kilobytes. In
 contrast, `chunk_vars=character()` produces only one TSV file for
 `geom6_vline_signal`, and the data viz takes only 820 kilobytes.
 
@@ -361,36 +361,121 @@ number of TSV files created for each geom. When deciding the value of
 few large files take up less disk space but are slower to download
 than many small files.
 
-## Plot-specific options
+## Plot-specific options {#plot-options}
 
-### Plot height and width
+This section discusses options which are specific to one ggplot of a
+data viz. The `theme_animint` function is used to attach animint
+options to ggplot objects.
 
-The `theme_animint` function is used to attach animint-specific
-options to ggplot objects. There are options for specifying width and
-height of the plot in pixels.
+### Plot height and width {#plot-height-width}
 
-TODO example.
+The `width` and `height` options are for specifying the dimensions (in
+pixels) of a ggplot rendered by animint. For example, consider the
+following re-design of the plot of the United States:
 
-### Size scale in pixels
+```{r Ch06-viz-width-height}
+viz.width.height <- list(
+  map=ggplot()+
+    theme_animint(width=750, height=500)+
+    theme(axis.line=element_blank(),
+          axis.text=element_blank(), 
+          axis.ticks=element_blank(),
+          axis.title=element_blank(),
+          panel.border=element_blank(),
+          panel.background=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank())+
+    geom_polygon(
+      aes(x=long, y=lat, group=group),
+      data=USpolygons, fill="black", colour="grey")
+)
+structure(viz.width.height, class="animint")
+```
 
-`scale_size_animint`
+Note that the plot above was rendered with a width of 750 pixels and a
+height of 500 pixels, due to the `theme_animint` options. If either of
+these options is not specified for any ggplot, then animint uses a
+default of 400 pixels.
 
-## Global data viz options
+Also note that `theme` was used to specify several blank
+elements. This has the effect of removing the axes and background, and
+is generally useful for rendering maps.
+
+### Size scale in pixels {#scale-size-animint}
+
+The `scale_size_animint` scale should be used in all ggplots where you
+specify `aes(size)`. To see why, consider the following examples.
+
+```{r Ch06-viz-scale-size}
+scatter1975 <- ggplot()+
+  geom_point(
+    aes(x=life.expectancy, y=fertility.rate, size=population),
+    WorldBank1975,
+    shape=21,
+    color="red",
+    fill="black")
+viz.scale.size <- list(
+  ggplotDefault=scatter1975+
+    ggtitle("no scale specified"),
+  animintDefault=scatter1975+
+    ggtitle("scale_size_animint()")+
+    scale_size_animint(),
+  animintOptions=scatter1975+
+    ggtitle("scale_size_animint(pixel.range, breaks)")+
+    scale_size_animint(pixel.range=c(5, 15), breaks=10^(10:1)))
+structure(viz.scale.size, class="animint")
+```
+
+The first ggplot above has no scale specified, so it uses the default
+ggplot2 scale, which has two problems. The first problem is that it
+seems that all countries have about the same size except the two
+really big countries. That problem can be fixed by simply adding
+`scale_size_animint()` to the ggplot, which results in the second plot
+above. However, a second problem is that the legend entries do not
+show the full range of the data. That problem is fixed in the third
+plot above, by manually specifying the `breaks` to use for legend
+entries. Note that the `pixel.range` argument can also be used to
+specify the radius of the largest and smallest circles.
+
+## Global data viz options {#global-options}
 
 Global data viz options any named elements of the `viz` list that are
 not ggplots.
 
-### Review of previously introduced global options
+### Review of previously introduced global options {#review-global}
 
-duration, time, selector.types, first
+[Chapter 3](Ch03-showSelected.html#duration-key) introduced the
+`duration` option for specifying the duration of smooth transitions.
 
-### Web page title with the title option
+[Chapter 3](Ch03-showSelected.html#animation-time) introduced the
+`time` option for specifying a selection variable which is
+automatically updated (animation).
 
-There is no 
+[Chapter 4](Ch04-clickSelects.html#selector-types-first) introduced
+the `selector.types` option for specifying multiple selection
+variables, and the `first` option for specifying the selection when
+the data viz is first rendered.
 
-### Show or hide selection menus with the selectize option
+### Web page title with the title option {#title-option}
 
-## Chapter summary and exercises
+The `title` option should be a character string, and will be used to
+set the `<title>` element of the web page.
+
+### Show or hide selection menus with the selectize option {#selectize-option}
+
+The selectize option should be a named list of logical values. Names
+should be selector variables, and values should indicate whether or
+not you would like to render a selection menu via
+[selectize.js](http://selectize.github.io/selectize.js/). By default,
+animint will render a selection menu for every selection variable,
+with two exceptions:
+
+* selection variables that are defined using
+  [.variable and .value aesthetics](#variable-value).
+* selection variables that have a lot of values (they are slow to
+  render).
+  
+## Chapter summary and exercises {#exercises}
 
 This chapter explained several options for customizing animints at the
 observation, geom, plot, and global level.
