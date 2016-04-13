@@ -3,10 +3,12 @@ https://github.com/tdhock/dotfiles/blob/master/.emacs
 
 ** TODOs
 
-- setup travis
-- convert to Rmd with one animint (otherwise loading probably too
-  slow).
-- use http://rstudio.github.io/tufte/ ?
+- setup travis?
+- what to do about slow loading? split Rmd files so that there is only
+  one animint in each? or recode the renderer so that it only loads
+  when you scroll down and the animint div becomes visible?
+- use http://rstudio.github.io/tufte/ or https://bookdown.org/ ?
+- https://bitpay.com for accepting donations? or just create a bitcoin wallet?
 
 ** Overview
 

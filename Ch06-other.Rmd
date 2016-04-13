@@ -471,7 +471,7 @@ animint will render a selection menu for every selection variable,
 with two exceptions:
 
 * selection variables that are defined using
-  [.variable and .value aesthetics](#variable-value).
+  [.variable and .value aesthetics](Ch06-other.html#variable-value).
 * selection variables that have a lot of values (they are slow to
   render).
   
