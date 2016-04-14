@@ -48,8 +48,8 @@ share your interactive data visualizations on the web.
 including how to specify hyperlinks, tooltips, data-driven selector
 variable names.
 
-Chapter 7 covers the limitations of the animint R package, and
-explains workarounds for some common issues.
+[Chapter 7](Ch07-limitations.html) covers the limitations of the
+animint R package, and explains workarounds for some common issues.
 
 ## Examples {#examples}
 

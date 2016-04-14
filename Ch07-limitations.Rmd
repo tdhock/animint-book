@@ -1,0 +1,30 @@
+---
+title: Limitations
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 7, Limitations of animint, and workarounds
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch07-figures/")
+```
+
+This chapter explains several known limitations of animint for some
+interactive data visualization tasks. It also explains some
+workarounds that you can use in these situations. After reading this
+chapter, you will understand how to 
+
+* Use shiny to interactively change the aesthetic mapping of an
+  animint.
+* Use a normalized variable when different `showSelected` subsets have
+  very different values of a variable you want to display.
+* Compute statistics for each `showSelected` subset, rather than
+  relying on the `stat_` functions in `ggplot2`.
+* Add data one at a time to a multiple selection variable set, rather
+  than using a rectangular selection brush.
+* Avoid using `vjust` and some `theme` options.
+
+## Interactive definition of aesthetic mappings using shiny {#shiny}
+
+

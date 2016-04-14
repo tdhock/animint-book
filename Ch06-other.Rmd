@@ -459,7 +459,20 @@ the data viz is first rendered.
 ### Web page title with the title option {#title-option}
 
 The `title` option should be a character string, and will be used to
-set the `<title>` element of the web page.
+set the `<title>` element of the web page. It does not make sense to
+use the `title` option in an Rmd document such as this page. You can
+and should use it with `animint2dir` or `animint2gist`, as in the code
+below.
+
+```{r Ch06-viz-title}
+viz.title <- viz.scale.size
+viz.title$title <- "Several size scales"
+animint2dir(viz.title, "Ch06-title")
+```
+
+Note that `viz.scale.size` already has three ggplots, each with a
+`ggtitle`. Adding the global `title` option has the effect of defining
+a title for [the web page](Ch06-title/index.html).
 
 ### Show or hide selection menus with the selectize option {#selectize-option}
 
@@ -474,6 +487,11 @@ with two exceptions:
   [.variable and .value aesthetics](Ch06-other.html#variable-value).
 * selection variables that have a lot of values (they are slow to
   render).
+  
+These defaults should work well for the vast majority of animints. For
+those who are interested to see an example of how the `selectize`
+option works, please see the
+[PredictedPeaks test in the animint source code](https://github.com/tdhock/animint/blob/master/tests/testthat/test-renderer2-PredictedPeaks.R).
   
 ## Chapter summary and exercises {#exercises}
 

@@ -66,6 +66,7 @@ animint: a grammar for animated and interactive data visualization
   - brush / lasso. workaround: click individual data points.
   - ggplot2 stats/positions/exotic geoms. compute it yourself.
   - ggplot2 theme options.
+  - vjust!
 - Ch 8, the WorldBank-facets example
 - Ch 9, montreal bike data?
 - Ch 10, knn example
