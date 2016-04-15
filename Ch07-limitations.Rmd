@@ -24,7 +24,40 @@ chapter, you will understand how to
 * Add data one at a time to a multiple selection variable set, rather
   than using a rectangular selection brush.
 * Avoid using `vjust` and some `theme` options.
+* Order the plots on the page.
+
+If you have an idea for improving animint so that it overcomes one of
+these limitations, the animint developers would be more than happy to
+accept your [Pull Request](https://github.com/tdhock/animint/compare).
 
 ## Interactive definition of aesthetic mappings using shiny {#shiny}
 
+## Supported ggplot theme options
 
+* `panel.margin` designates the distance between panels, and is used
+  in the
+  [space saving facets idiom](ChXX-appendix.html#space-saving-facets)
+  to eliminate the distance between panels.
+* `panel.grid.major` is used to draw the the grid lines which are
+  designated by the `breaks` argument to the scale.
+* `panel.grid.minor` is used to draw the grid lines between the major
+  grid lines.
+* `panel.background` is used for the `<rect>` in background of each
+  panel.
+* `panel.border` is used for the border `<rect>` of each panel (on top
+  of the background `<rect>`).
+* `legend.position="none"` works for hiding all of the legends, but
+  none of the other legend positions are supported (the legends always
+  appear on the right of the plot). 
+
+The following theme options can be set to `element_blank` to hide the
+axes.
+
+* `axis.title`, `axis.title.x`, `axis.title.y` designate the axis title.
+* `axis.ticks`, `axis.ticks.x`, `axis.ticks.y` designate teh axis ticks.
+* `axis.line`, `axis.line.x`, `axis.line.y` designate the axis line.
+* `axis.text`, `axis.text.x`, `axis.text.y` designate the axis tick
+  label text, and support the `angle` and `hjust` arguments of
+  `element_text`.
+
+## Order the plots on the page
