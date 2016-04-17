@@ -15,8 +15,6 @@ interactive data visualization tasks. It also explains some
 workarounds that you can use in these situations. After reading this
 chapter, you will understand how to 
 
-* Use the `shiny` web server package to interactively change the
-  aesthetic mapping of an animint.
 * Use a normalized variable when different `showSelected` subsets have
   very different values of a variable you want to display.
 * Compute statistics for each `showSelected` subset, rather than
@@ -27,16 +25,14 @@ chapter, you will understand how to
 * Order the plots on the page.
 * Avoid using some unsupported `theme` options.
 * Use facets with multiple variables per axis.
+* Use the `shiny` web server package to interactively change the
+  aesthetic mapping of an animint.
 
 If you have an idea for improving animint so that it overcomes one of
 these limitations, the animint developers would be more than happy to
 accept your [Pull Request](https://github.com/tdhock/animint/compare).
 
-## Interactive definition of aesthetic mappings using shiny {#shiny}
-
-TODO explain shiny
-
-## Normalized variables {#normalized-variables}
+## Use normalized variables to work with fixed axes {#normalized-variables}
 
 ## Compute statistics for each showSeleted subset {#stats}
 
@@ -97,8 +93,10 @@ would be more than happy to accept a Pull Request. We already have an
 ## Order the plots on the page {#order-plots}
 
 Currently the only way to organize a multi-plot data viz is using the
-order of the ggplots in the animint `viz` list. For example, compare
-the data viz below with the data viz from the previous section.
+order of the ggplots in the animint `viz` list. The plots will appear
+on the web page in the same order as they occur in the animint `viz`
+list. For example, compare the data viz below with the data viz from
+the previous section.
 
 ```{r Ch07-viz-order}
 viz.order <- list(
@@ -106,6 +104,13 @@ viz.order <- list(
   second=viz.just$vjust)
 structure(viz.order, class="animint")
 ```
+
+Note how the order of plots is reversed with respect to the data viz
+from the previous section. The main limitation of this method for plot
+layout is that only the order can be controlled. For example,
+depending on the width of the web page element in which the data viz
+above is rendered, the second plot will appear either below the first
+plot, or to the right of it.
 
 If you have an idea for a better way to define the layout of plots in
 an animint,
@@ -206,3 +211,19 @@ It would be nice to support multiple strip labels per axis, but we
 have not yet had time to implement it. If you would like to implement
 this feature, we would be happy to accept your Pull Request.
 
+## Interactive definition of aesthetic mappings using shiny {#shiny}
+
+Normally, aesthetic mappings are defined once in R code, and can not
+be changed after rendering an animint. One way to overcome this
+limitation is by defining `shiny` inputs that are used as animint
+aesthetics, as in the following example.
+
+```{r, eval=FALSE}
+shiny::runApp(system.file("examples", "shiny-WorldBank", package="animint"))
+```
+
+## Chapter summary and exercises
+
+Exercises:
+
+* 
