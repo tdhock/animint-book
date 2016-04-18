@@ -64,6 +64,7 @@ random.counts <- data.table(
   stack = rep(rep(1:2, each = 5), 2),
   facet = rep(1:2, each = 10)
   )
+library(ggplot2)
 ggstat <- ggplot() +
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
@@ -84,7 +85,8 @@ viz.stat <- list(
   plot = ggstat,
   time = list(variable = "facet", ms = 1000),
   duration = list(facet = 1000)
-)
+  )
+library(animint)
 structure(viz.stat, class="animint")
 ```
 

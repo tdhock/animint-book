@@ -4,7 +4,7 @@ layout: default
 output: bookdown::html_chapter
 ---
 
-# Chapter 0, Preface
+# Chapter 0, Preface and contents
 
 The chapters of this book are organized as follows. 
 

@@ -1,18 +1,18 @@
 ---
-title: Other features
+title: Options
 layout: default
 output: bookdown::html_chapter
 ---
 
-# Chapter 6, Other animint features
+# Chapter 6, Animint options
 
 ```{r setup, echo=FALSE}
 knitr::opts_chunk$set(fig.path="Ch06-figures/")
 ```
 
-This chapter explains several new features that animint introduces to
-the grammar of graphics. After reading this chapter, you will
-understand how to customize your animint graphics via
+This chapter gives a complete list of new features that animint
+introduces to the grammar of graphics. After reading this chapter, you
+will understand how to customize your animint graphics via
 
 * the `href`, `tooltip`, `id`, `clickSelects.variable`,
   `clickSelects.value`, `showSelected.variable`, and
