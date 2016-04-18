@@ -32,11 +32,106 @@ If you have an idea for improving animint so that it overcomes one of
 these limitations, the animint developers would be more than happy to
 accept your [Pull Request](https://github.com/tdhock/animint/compare).
 
-## Use normalized variables to work with fixed axes {#normalized-variables}
+## Use normalized variables to work with fixed scales {#normalized-variables}
+
+Animint implements axes and legends in the same way ggplot2 does, by
+computing them once when the plot is first rendered. As a consequence,
+the axes and legends in each animint plot are not interactive. For
+most
+[animated data visualizations](Ch03-showSelected.html#animation-time),
+fixed axes make it easy to understand how the data changes along with
+the `time` variable. 
+
+There are some situations where it would be useful to have axes that
+interactively update. One example is when different showSelected
+subsets have very different values for variables that are shown with
+an axis or legend. In this case it would be useful to have interactive
+axes that update and change along with the data. We had not yet had
+time to implement this feature in animint, but it is planned for
+Google Summer of Code 2016.
 
 ## Compute statistics for each showSeleted subset {#stats}
 
+Animint does not support ggplot2 statistics with `showSelected`. For
+example, consider the facetted ggplot below.
+
+```{r}
+set.seed(1)
+library(data.table)
+random.counts <- data.table(
+  letter = c(replicate(4, LETTERS[1:5])),
+  count = c(replicate(4, rbinom(5, 50, 0.5))),
+  stack = rep(rep(1:2, each = 5), 2),
+  facet = rep(1:2, each = 10)
+  )
+ggstat <- ggplot() +
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  geom_bar(
+    aes(letter, count, fill = stack, showSelected=facet),
+    data = random.counts,
+    stat = "identity",
+    position="stack"
+  )
+ggstat+facet_grid(facet ~ .)
+```
+
+Using `showSelected` instead of facets does not results in what you
+may expect.
+
+```{r Ch07-viz-stat}
+viz.stat <- list(
+  plot = ggstat,
+  time = list(variable = "facet", ms = 1000),
+  duration = list(facet = 1000)
+)
+structure(viz.stat, class="animint")
+```
+
+A workaround is to compute what you want to display, and use
+position=identity.
+
+```{r}
+random.cumsums <- random.counts[, list(
+  cumsum=cumsum(count),
+  count=count,
+  stack=stack),
+  by=.(letter, facet)]
+ggidentity <- ggplot() +
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  geom_segment(
+    aes(x=letter, xend=letter,
+        y=cumsum, yend=cumsum-count,
+        color=stack, showSelected=facet),
+    data = random.cumsums,
+    size=10,
+    stat = "identity",
+    position="identity"
+  )
+ggidentity+facet_grid(facet ~ .)
+```
+
+Note how we used `geom_segment` instead of `geom_bar`, but their
+appearance is similar.
+
+```{r Ch07-viz-identity}
+viz.identity <- list(
+  plot = ggidentity,
+  time = list(variable = "facet", ms = 1000),
+  duration = list(facet = 1000)
+)
+structure(viz.identity, class="animint")
+```
+
 ## Add values to a multiple selection set one at a time {#multiple-selection}
+
+Animint does not support a rectangular brush or lasso for
+interactively defining a set of selected values. Instead, animint
+supports multiple selection by adding values one by one to the
+multiple selection set. Use the
+[selector.types](Ch04-clickSelects.html#selector-types-first) option
+to declare a multiple selection variable.
 
 ## Adjust y instead of using vjust {#vjust}
 
@@ -226,4 +321,11 @@ shiny::runApp(system.file("examples", "shiny-WorldBank", package="animint"))
 
 Exercises:
 
-* 
+* Make a facetted ggplot with `stat_bin` that will not work with
+  animint when the facet variable is instead used as a showSelected
+  variable. Compute the stat yourself for each facet, and use
+  `stat_identity` to make it work with animint.
+* Make a ggplot which displays fine using `facet_grid(. ~ var, scales="free")` 
+  but does not display well in animint with `showSelected=var`. 
+  To fix the problem, compute a normalized version of `var` 
+  and use that for the `showSelected` variable.

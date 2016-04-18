@@ -49,7 +49,9 @@ including how to specify hyperlinks, tooltips, data-driven selector
 variable names.
 
 [Chapter 7](Ch07-limitations.html) covers the limitations of the
-animint R package, and explains workarounds for some common issues.
+current implementation of the animint R package, and explains
+workarounds for some common issues. It also includes some ideas for
+improvements, for those who would like to contribute to animint.
 
 ## Examples {#examples}
 
@@ -57,12 +59,20 @@ The remaining chapters can be read in any order, since each
 chapter explains how to make data visualizations for a particular data
 set. 
 
-Chapters 8-XX each explain in detail how to create informative
-visualizations for a particular data set.
+Chapter 8 explains how to create a multi-panel interactive World Bank
+data visualization.
+
+Chapter 9 shows a visualization of data from cyclists in Montreal.
 
 [Chapter 10](Ch10-nearest-neighbors.html) explains how to create an
 interactive re-design of the nearest neighbors data visualization from
 the Elements of Statistical Learning book by Hastie et al.
+
+Chapter 11 shows a data visualization that explains the Lasso, a
+machine learning model for regularized regression.
+
+Chapter 12 shows a data visualization that explains support vector
+machines (SVM), a machine learning model for binary classification.
 
 [Chapter 13](Ch13-poisson-regression.html) explains how to create an
 interactive visualization that explains the Poisson regression model.
