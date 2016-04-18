@@ -1,3 +1,14 @@
+View this book online at http://cbio.ensmp.fr/~thocking/animint-book/Ch00-preface.html
+
+Compile this book by typing =jekyll build= on the command line. I use
+
+#+BEGIN_SRC shell
+thocking@silene:~/projects/animint-book(master)$ jekyll --version
+jekyll 3.1.2
+thocking@silene:~/projects/animint-book(master*)$ ruby --version
+ruby 2.1.1p76 (2014-02-24 revision 45161) [x86_64-linux]
+#+END_SRC
+
 To edit Rmd in emacs try https://github.com/vspinu/polymode via
 https://github.com/tdhock/dotfiles/blob/master/.emacs
 
