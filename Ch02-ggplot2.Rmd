@@ -19,7 +19,6 @@ reading this chapter, you will be able to
 * Install the animint R package from GitHub
 * Translate plot sketches into ggplot code in R
 * Render ggplots on web pages using animint
-* Specify manual scales for legends in ggplots
 * Create multi-layer ggplots
 * Create multi-panel ggplots
 
@@ -480,3 +479,7 @@ Exercises:
   `graphics` package in R (`plot`, `points`, `lines`, etc), or
   matplotlib in Python. What are some advantages of ggplot2 and
   animint?
+
+Next, [Chapter 3](Ch03-showSelected.html) explains the `showSelected`
+keyword, which indicates a variable to use for subsetting the data
+before plotting.

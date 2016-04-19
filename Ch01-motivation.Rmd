@@ -71,9 +71,12 @@ known as a plot, chart, figure, graph, graphic, or data viz), and the
 process of creating the picture.
 
 There are many different ways to perform data analysis, and data sets
-of different sizes should be analyzed using different techniques. We
-begin by discussing small data sets, for which data visualization is
-not necessary.
+of different sizes should be analyzed using different
+techniques. There are many different ways to characterize the size of
+data sets, and every author uses a slightly different definition. In
+this book we will use a classification of data sets into three sizes:
+small, medium, and large. We begin by discussing small data sets, for
+which data visualization is not necessary.
 
 ## Small data analysis without visualization {#small-data}
 
@@ -256,6 +259,8 @@ the set of points which corresponds to the currently selected
 months. In Chapters 3-4, we will explain how to design data
 visualizations by writing R code using these two new keywords.
 
+## Multi-plot data viz
+
 As another example, consider the more complicated data visualization
 below.
 
@@ -263,7 +268,12 @@ TODO worldwide temperature data viz?
 
 ## Chapter summary and exercises
 
+This chapter explained some basic facts about data, and gave
+definitions of different sizes of data: small, medium, and large.
+
 * Based on the definitions introduced in this chapter, what is the
   difference between small and medium data?
 * What is the difference between medium and large data?
 
+Next, [Chapter 2](Ch02-ggplot2.html) explains how the grammar of
+graphics can be used to create data visualizations.

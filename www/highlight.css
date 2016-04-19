@@ -102,7 +102,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; } /* ErrorTok */
 /* Tables */
 
 table {
-  width: 100%;
+    /* render animint plots next to each other TDH 19 April 2016 width: 100%; */
   margin-bottom: 20px;
 }
 

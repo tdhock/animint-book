@@ -233,3 +233,7 @@ The data viz above shows the probability on the left and the Poisson
 loss on the right.
 
 ## Chapter summary and exercises
+
+Next, [Chapter 14](Ch14-PeakSegJoint.html) explains how to use the
+`.variable` and `.value` aesthetics to visualize the PeakSegJoint
+machine learning model.

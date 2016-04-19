@@ -761,3 +761,6 @@ Exercises:
   re-design which includes a new plot or facet for selecting
   validation.fold, and a facetted feature space plot (one facet for
   train set, one facet for validation set). 
+
+Next, [Chapter 11](Ch11-lasso.html) explains how to visualize the
+Lasso, a machine learning model.

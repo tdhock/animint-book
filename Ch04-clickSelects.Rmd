@@ -400,3 +400,6 @@ Exercises:
 * Add a `geom_path` to the World Bank scatterplot to show data for the
   last 5 years.
 * Use the `time` option to make an animated version of `viz.facets`.
+
+Next, [Chapter 5](Ch05-sharing.html) explains several different
+methods for publishing and sharing animints on the web.

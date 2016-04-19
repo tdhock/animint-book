@@ -75,7 +75,7 @@ maximum of 300 files per gist, and a maximum of 1 megabyte per
 file. The animint2gist function should stop with an error if your
 animint exceeds either of these limits. If you run into this problem,
 you may be able to use the [chunk_vars](Ch06-other.html#chunk_vars)
-option to edit the number and size files produced by
+option to edit the number and size of files produced by
 animint. Otherwise, try publishing your animint using one of the other
 methods below.
 
@@ -86,7 +86,7 @@ class="animint")` inside of an R code chunk. R will run the
 `knit_print.animint` S3 method, which compiles the animint to a local
 directory, named based on the name of the R code chunk. For example a
 code chunk named `viz-facets` will be saved in the directory
-`vizfacets`.
+`vizfacets`. Make sure to put each animint in its own code chunk.
 
 ## Publish on a web server {#web-server}
 
@@ -106,7 +106,7 @@ If you don't have access to a personal web server, try using
 
 ## Chapter summary and exercises
 
-This chapter explain how to share animints on the web.
+This chapter explained how to share animints on the web.
 
 Exercises:
 
@@ -114,3 +114,6 @@ Exercises:
   your domain of expertise. Post a link to the data viz (and your
   source code) on the
   [Animint Gallery wiki page](https://github.com/tdhock/animint/wiki/Gallery).
+
+Next, [Chapter 6](Ch06-other.html) explains the different options that
+can be used to customize an animint.

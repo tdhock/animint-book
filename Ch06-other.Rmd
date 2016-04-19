@@ -124,14 +124,14 @@ per state/region, and each id must be unique on a web page. The
 animint developers use this feature
 [for testing the animint JavaScript renderer code](https://github.com/tdhock/animint/wiki/Testing).
 
-### Data-driven selector names using *.variable and *.value aesthetics {#variable-value}
+### Data-driven selector names using `.variable` and `.value` aesthetics {#variable-value}
 
 Usually selector names are defined in `aes`, but that becomes
 inconvenient if you have many selectors in your data viz. To
-illustrate we consider a theoretical example (the code in this section
-is not directly executable). Say you want to use 20 different selector
-variable names, `selector1value` ... `selector20value`. The usual way
-to define your data viz would be
+illustrate we consider the following theoretical example (the code in
+this section is not directly executable). Say you want to use 20
+different selector variable names, `selector1value`
+... `selector20value`. The usual way to define your data viz would be
 
 ```{r, eval=FALSE}
 viz <- list(
@@ -180,7 +180,7 @@ You can similarly use one geom with `showSelected.variable` and
 `showSelected.value` instead of a bunch of different geoms with
 `showSelected`.
 
-The `*.variable` and `*.value` aesthetics are useful not only to avoid
+The `.variable` and `.value` aesthetics are useful not only to avoid
 repetition in the definition of the data viz, but also because they
 are more computationally efficient. For a detailed example with
 timings and disk space measurements, see
@@ -285,7 +285,7 @@ signalPlot+facet_grid(segments ~ bases.per.probe)
 ```
 
 The non-interactive plot above has 80 facets, one for each combination
-of the two `showSelected` variables, `bases.per.probe`, and
+of the two `showSelected` variables, `bases.per.probe` and
 `segments`. Below we make an interactive version in which only one of
 these facets will be shown.
 
@@ -341,7 +341,7 @@ chunk_vars_list <- list(
   segments=c("segments"),
   both=c("segments", "bases.per.probe"))
 sizes.list <- lapply(chunk_vars_list, tsvSizes)
-do.call(rbind, sizes.list)
+(sizes <- do.call(rbind, sizes.list))
 ```
 
 The table above includes counts of kilobytes for the data viz, along
@@ -351,9 +351,10 @@ files and the disk space usage. Since `chunk_vars` was only specified
 for `geom6_vline_signal`, the number of TSV files for the other geoms
 does not change. When both `segments` and `bases.per.probe` are
 specified for `chunk_vars`, there are 76 TSV files for
-`geom6_vline_signal`, and the data viz takes 1084 kilobytes. In
-contrast, `chunk_vars=character()` produces only one TSV file for
-`geom6_vline_signal`, and the data viz takes only 820 kilobytes.
+`geom6_vline_signal`, and the data viz takes over `r
+sizes["both", "kb"]` kilobytes. In contrast, `chunk_vars=character()`
+produces only one TSV file for `geom6_vline_signal`, and the data viz
+uses under `r sizes["neither", "kb"]` kilobytes.
 
 In conclusion, the geom-specific `chunk_vars` option defines the
 number of TSV files created for each geom. When deciding the value of
@@ -509,3 +510,6 @@ Exercises:
   `chunk_vars` for the `geom_point` and `geom_segment`. How does the
   choice of `chunk_vars` affect the appearance of the visualization?
   The disk space? The loading time?
+
+Next, [Chapter 7](Ch07-limitations.html) explains the limitations of
+the current implementation of animint.

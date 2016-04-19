@@ -251,3 +251,7 @@ Exercises:
   to store the data that should be plotted. Then use those data along
   with `showSelected` aesthetics to create ggplots, and render them
   using animint.
+
+Next, [Chapter 4](Ch04-clickSelects.html) explains the `clickSelects`
+keyword, which indicates a geom that can be clicked to update a
+selection variable.
