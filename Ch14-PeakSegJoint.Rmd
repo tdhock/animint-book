@@ -1,10 +1,10 @@
 ---
-title: PeakSegJoint
+title: .variable and .value
 layout: default
 output: bookdown::html_chapter
 ---
 
-# Chapter 14, PeakSegJoint
+# Chapter 14, using .variable and .value aesthetics
 
 ```{r setup, echo=FALSE}
 knitr::opts_chunk$set(fig.path="Ch14-figures/")
@@ -231,7 +231,7 @@ print(timing.for.construct <- system.time({
 }))
 ```
 
-Note the timing of the code above. It takes over a minute just to
+Note the timing of the code above. It takes a long time just to
 evaluate the R code that defines this data viz, since it has so many
 geoms. Next, we compile the data visualization.
 
@@ -241,7 +241,7 @@ print(timing.for.compile <- system.time({
 }))
 ```
 
-Note that the compilation also takes over a minute, since there are so
+Note that the compilation also takes a long time, since there are so
 many geoms. The data viz can be viewed on
 [Ch14-for/index.html](Ch14-for/index.html). In the next section we
 will create the same data viz, but more efficiently.

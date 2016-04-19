@@ -28,8 +28,13 @@ module Jekyll
       if $?.exitstatus != 0
         raise "Knitting failed" 
       end
-      
-      content
+
+      # Use sub here to get rid of any jquery, so we don't load it
+      # twice (it is already included in _layouts/default.html). Some
+      # pages have animints so there will be a jquery script tag in
+      # the content, and some pages do not (for example Ch00-preface
+      # which does not have any animints).
+      content.sub %r{<script type="text/javascript" src="[^/]+/vendor/jquery-1.11.3.min.js"></script>}, ""
       # File.unlink f.path
     end
   end
