@@ -326,6 +326,7 @@ viz.aligned <- list(
               data=add.x.var(WorldBankBefore1975, "life expectancy"))+
     geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
               data=add.x.var(WorldBank, "year"))+
+    xlab("")+
     facet_grid(. ~ x.var, scales="free")+
     theme_bw()+
     theme(panel.margin=grid::unit(0, "lines"))
