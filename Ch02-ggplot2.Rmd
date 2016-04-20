@@ -115,7 +115,7 @@ then use those two data variables in a scatterplot. Consider the
 figure below which sketches the main components of that data
 visualization.
 
-TODO:SKETCH.
+![World Bank scatterplot](Ch02-viz-scatter.png)
 
 The sketch above shows life expectancy on the horizontal (x) axis,
 fertility rate on the vertical (y) axis, and a legend for the
@@ -198,8 +198,15 @@ entry will hide or show the points of that color.
 
 Multi-layer data visualization is useful when you want to display
 several different geoms or data sets in the same plot. For example,
-consider the following R code which adds a `geom_path` to the previous
+consider the following sketch adds a `geom_path` to the previous
 data visualization.
+
+![multi-layer WorldBank data viz](Ch02-two-layer-viz.png)
+
+Note how the sketch above includes two different geoms (point and
+path). The two geoms share a common definition of the `x`, `y`, and
+`color` aesthetics, but have different data sets. Below we translate
+this sketch into R code.
 
 ```{r Ch02-two-layer-viz}
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
@@ -253,9 +260,16 @@ Multi-plot data visualization is useful when you want to show some
 related data sets using more than one aesthetic mapping. In
 interactive data visualization, one plot is often used to display a
 summary, and another plot is used to display details. For example,
-consider the following data visualization which consists of two plots:
-a time series with World Bank data from 1960-2010 (summary), and a
-scatterplot with data from 1975 (details).
+consider a data visualization with two plots: a time series with World
+Bank data from 1960-2010 (summary), and a scatterplot with data from
+1975 (details). We sketch the time series plot below.
+
+![WorldBank data viz with two plots](Ch02-viz-two-plots.png)
+
+Note how the sketch above can be directly translated into the R code
+below, which assigns ggplot to the `viz.two.plots` list. Since
+`viz.two.plots` contains two ggplots, animint will render both of the
+plots.
   
 ```{r Ch02-viz-two-plots}
 viz.two.plots <- two.layer.viz
@@ -310,8 +324,17 @@ data visualization is useful for two different purposes:
 ### Different geoms in each panel (aligned axes) {#aligned-axes}
   
 We begin by explaining the how facets are useful to align the axes of
-related plots. Compare the multi-plot data viz above with the
-multi-panel data viz below.
+related plots. Consider the sketch below which contains a plot with
+two panels.
+
+![World Bank aligned plot](Ch02-viz-aligned.png)
+
+Note that the two panels plot different geoms using a panel-specific
+aesthetic mapping. The point and path in the left panel have
+`x=life.expectancy`, and the line in the right panel has
+`x=year`. Also note that we specified `facet=x.var`, so we need to add
+a variable called `x.var` to each of the three data sets. We translate
+this sketch to the R code below.
 
 ```{r Ch02-viz-aligned}
 add.x.var <- function(df, x.var){
@@ -371,8 +394,17 @@ different situations:
 * You want to compare different subsets of data that is plotted for
   one geom.
   
-For example, the code below creates two data sets based on three years
-of the WorldBank data set. 
+For example, consider the sketch below.
+
+![World Bank panels plot](Ch02-viz-panels.png)
+
+Note that the three panels plot the same two geoms (point and
+path). Since `facet=show.year`, and there are three panels shown, we
+will need to create data tables which have three values for the
+`show.year` variable. The `geom_point` has data for just 3 years, and
+the `geom_path` has data for 15 years (but 3 values of
+`show.year`). The code below creates these two data sets for three
+years of the WorldBank data set.
 
 ```{r}
 show.point.list <- list()
@@ -380,9 +412,8 @@ show.path.list <- list()
 for(show.year in c(1975, 1985, 1995)){
   show.point.list[[paste(show.year)]] <- data.frame(
     show.year, subset(WorldBank, year==show.year))
-  five.before <- show.year - 5
   show.path.list[[paste(show.year)]] <- data.frame(
-    show.year, subset(WorldBank, five.before <= year & year <= show.year))
+    show.year, subset(WorldBank, show.year - 5 <= year & year <= show.year))
 }
 show.point <- do.call(rbind, show.point.list)
 show.path <- do.call(rbind, show.path.list)
@@ -394,7 +425,7 @@ which we will use later in `facet_grid`. For each value of
 list. After the for loop, we use `do.call` with `rbind` to combine the
 data subsets. This is an example of the
 [list of data tables idiom](ChXX-appendix.html#list-of-data-tables),
-which is also useful for interactive data visualization.
+which is generally useful for interactive data visualization.
 
 Below, we facet on the `show.year` variable to create a data
 visualization with three panels.
