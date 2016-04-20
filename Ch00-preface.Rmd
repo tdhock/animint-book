@@ -4,9 +4,11 @@ layout: default
 output: bookdown::html_chapter
 ---
 
-# Chapter 0, Preface and contents
+# Welcome to the Animint book web site!
 
-The chapters of this book are organized as follows. 
+This book explains how to create interactive data visualizations using
+the R package `animint`. The chapters of this book are organized as
+follows.
 
 ## The animint extensions to the grammar of graphics {#animint}
 
