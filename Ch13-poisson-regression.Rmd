@@ -33,7 +33,7 @@ TODO: sketch point(prob versus count), tallrect mean.
 ```{r}
 library(data.table)
 poisson.mean.diff <- 0.5
-poisson.mean.vec <- seq(0, 10, by=poisson.mean.diff)
+poisson.mean.vec <- seq(0, 5, by=poisson.mean.diff)
 quantile.max <- 0.99
 poisson.prob.list <- list()
 for(poisson.mean in poisson.mean.vec){
@@ -231,6 +231,35 @@ structure(viz.loss, class="animint")
 
 The data viz above shows the probability on the left and the Poisson
 loss on the right.
+
+```{r Ch13-viz-log-loss}
+viz.log.loss <- viz.loss
+addX <- function(dt, x.var){
+  data.table(dt, x.var=factor(x.var, c("poisson mean", "log(poisson mean)")))
+}
+finite.loss <- loss.fun[is.finite(loss),]
+viz.log.loss$loss <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ x.var, scales="free")+
+  xlab("")+
+  geom_line(aes(poisson.mean, loss, showSelected=count),
+            data=addX(finite.loss, "poisson mean"))+
+  geom_point(aes(count, loss, showSelected=count),
+             data=addX(loss.min, "poisson mean"))+
+  geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+                alpha=0.6,
+                data=addX(mean.tallrects, "poisson mean"))+
+  geom_line(aes(log(poisson.mean), loss, showSelected=count),
+            data=addX(finite.loss, "log(poisson mean)"))+
+  geom_point(aes(log(count), loss, showSelected=count),
+             data=addX(loss.min, "log(poisson mean)"))+
+  geom_tallrect(aes(xmin=ifelse(min < 0, -Inf, log(min)), xmax=log(max),
+                    clickSelects=poisson.mean),
+                alpha=0.6,
+                data=addX(mean.tallrects, "log(poisson mean)"))
+structure(viz.log.loss, class="animint")
+```
 
 ## Chapter summary and exercises
 
