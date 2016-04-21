@@ -28,7 +28,7 @@ integers.
 The goal of this section is to create a data visualization that shows
 the probability mass function for a selected Poisson mean parameter.
 
-TODO: sketch point(prob versus label), tallrect mean.
+![Poisson regression viz prob](Ch13-viz-prob.png)
 
 ```{r}
 library(data.table)
@@ -97,9 +97,13 @@ values of 2 and 3.
 ## Add a panel for the cumulative distribution function
 
 To add a panel for the cumulative distribution function, we will
-re-make the ggplot below. When we specify the data sets, we will use
-the [addColumn then facet](ChXX-appendix.html#addColumn-then-facet)
-idiom to add a `panel` variable.
+re-make the ggplot based on the sketch below.
+
+![Poisson regression viz cum prob](Ch13-viz-cum-prob.png)
+
+When we specify the data sets, we will use the
+[addColumn then facet](ChXX-appendix.html#addColumn-then-facet) idiom
+to add a `panel` variable.
 
 ```{r Ch13-viz-cum-prob}
 addPanel <- function(dt, panel){

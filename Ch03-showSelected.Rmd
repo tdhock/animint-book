@@ -34,7 +34,8 @@ subsets.
 In fact, we have already used the showSelected keyword, which was
 automatically created by the interactive legends that we created in
 the previous two chapters. For example, consider the sketch below of
-the Keeling Curve data visualization from Chapter 1.
+the
+[Keeling Curve data visualization from Chapter 1](Ch01-motivation.html#large-data).
 
 ![CO2 data viz](Ch03-viz-co2.png)
 
@@ -85,7 +86,7 @@ visualization of the World Bank data that has selection variables for
 Consider the following sketch which adds a `showSelected` variable,
 and changes the data set. 
 
-![WorldBank data viz with showSelected](Ch03-viz-showSelectedColor.png)
+![WorldBank data viz with showSelected](Ch03-viz-scatter.png)
 
 Note that there are two `showSelected` variables, `region` and
 `year`. Also note that the data is specified as all years (but only

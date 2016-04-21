@@ -34,7 +34,7 @@ automatically created for the interactive legends in the previous
 chapters. For example, consider the sketch of the World Bank data viz
 from the last chapter.
 
-TODO: sketch.
+![legend clickSelects](Ch04-legend-clickSelects.png)
 
 Since the legend has `clickSelects=region`, clicking an entry of that
 legend updates the `region` selection variable. Note that animint
@@ -57,9 +57,9 @@ interactive data visualizations.
 ## Use the clickSelects aesthetic to identify points on a scatterplot {#clickSelects-aes}
 
 The goal of this section is to create the following visualization of
-the World Bank data.
+the World Bank data. (TODO: only one country selected)
 
-TODO: sketch of scatterplot with one text label.
+![World Bank viz text](Ch04-viz-text.png)
 
 To start, consider the following R code which generates a
 scatterplot of the World Bank data:
@@ -172,7 +172,7 @@ version of the scatterplot in the last section. The sketch below has
 only one difference with respect to the sketch from the last section:
 text labels are shown for more than one country.
 
-TODO: sketch with 2 or 3 countries selected.
+![World Bank viz text](Ch04-viz-text.png)
 
 In animint, each selection variable has a type, either single or
 multiple. Single selection means that only one value can be selected
@@ -266,7 +266,7 @@ a geom that can be directly clicked to change the year variable.
 The goal of this section is to add a facet with a time series plot
 that can be clicked to change the selected year.
 
-TODO: sketch.
+![World Bank scatter facet](Ch04-ggplot-scatterFacet.png)
 
 Note that the sketch above includes `geom_tallrect`, a new geom
 introduced in animint. It is "tall" because it occupies the entire
@@ -288,24 +288,24 @@ which is useful for creating ggplots
 with aligned axes.
 
 ```{r Ch04-ggplot-scatterFacet}
-add.time.period <- function(df, time.period){
-  data.frame(
-    df, time.period=factor(time.period, c("selected year", "all years")))
+add.x.var <- function(df, x.var){
+  data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
 }
 scatterFacet <- ggplot()+
   geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
                  key=country,
                  showSelected=year,
                  clickSelects=country),
-             data=add.time.period(WorldBank, "selected year"))+
+             data=add.x.var(WorldBank, "life expectancy"))+
   geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
                 key=country,
                 clickSelects=country,
                 showSelected=year,
                 showSelected2=country,
                 showSelected3=region),
-            data=add.time.period(WorldBank, "selected year"))+
-  facet_grid(. ~ time.period, scales="free")+
+            data=add.x.var(WorldBank, "life expectancy"))+
+  facet_grid(. ~ x.var, scales="free")+
+  xlab("")+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))
 scatterFacet
@@ -314,7 +314,7 @@ scatterFacet
 Note that the ggplot above uses the same `aes` definitions as the
 scatterplot from the previous section. The only difference is that we
 have used an augmented `WorldBank` data set with an additional
-`time.period` variable that we use with `facet_grid`. Below, we add
+`x.var` variable that we use with `facet_grid`. Below, we add
 geoms for a time series plot that is aligned on the fertility rate
 axis.
 
@@ -323,17 +323,17 @@ scatterTS <- scatterFacet+
   geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5,
                     clickSelects=year),
                 alpha=0.5,
-                data=add.time.period(years, "all years"))+
+                data=add.x.var(years, "year"))+
   geom_line(aes(x=year, y=fertility.rate, group=country, color=region,
                 clickSelects=country),
             size=3,
             alpha=0.6,
-            data=add.time.period(WorldBank, "all years"))
+            data=add.x.var(WorldBank, "year"))
 scatterTS
 ```
 
-The two geoms defined above occupy a new facet for the `"all years"`
-value of the `time.period` variable (defined by the `add.time.period`
+The two geoms defined above occupy a new facet for the `"year"`
+value of the `x.var` variable (defined by the `add.x.var`
 function). Since these two geoms have different definitions of
 `clickSelects`, clicking each geom will update the plot in a different
 way. Note that for the `geom_line` we specify `size=3`, which means a
