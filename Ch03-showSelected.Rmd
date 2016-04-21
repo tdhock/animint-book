@@ -36,7 +36,7 @@ automatically created by the interactive legends that we created in
 the previous two chapters. For example, consider the sketch below of
 the Keeling Curve data visualization from Chapter 1.
 
-TODO: SKETCH co2.
+![CO2 data viz](Ch03-viz-co2.png)
 
 The sketch above includes `showSelected=month` for the `geom_point`,
 meaning that it should show the subset of data for the selected
@@ -47,7 +47,7 @@ months. In contrast, since the `geom_line` does not include
 As another example, consider the sketch below of the first WorldBank
 data visualization from Chapter 2.
 
-TODO: SKETCH WorldBank.
+![WorldBank data viz with showSelected](Ch03-viz-showSelectedColor.png)
 
 The sketch above specifies `showSelected=region` for the `geom_point`,
 meaning that it should show the subset of data for the selected
@@ -82,8 +82,15 @@ visualization of the World Bank data that has selection variables for
 
 ## Selecting data subsets using menus {#selecting-with-menus}
 
-The R code below produces a scatterplot of life expectancy and
-fertility rate for each country in the WorldBank data set. 
+Consider the following sketch which adds a `showSelected` variable,
+and changes the data set. 
+
+![WorldBank data viz with showSelected](Ch03-viz-showSelectedColor.png)
+
+Note that there are two `showSelected` variables, `region` and
+`year`. Also note that the data is specified as all years (but only
+one will be shown at a time due to `showSelected=year`). Below, we
+translate this sketch into R code.
 
 ```{r}
 data(WorldBank, package="animint")
@@ -98,7 +105,9 @@ scatter
 Note that the ggplot above contains the `showSelected` aesthetic, one
 of the two main features introduced in animint. The `showSelected`
 aesthetic is ignored by ggplot2, which produced a scatterplot with one
-point for every country and year.
+point for every country and year. Note that since `color=region` was
+specified, animint automatically uses `region` as a `showSelected`
+variable.
 
 In constrast, rendering the same ggplot using animint yields the
 interactive data visualization below.

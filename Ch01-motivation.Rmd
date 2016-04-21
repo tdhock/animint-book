@@ -217,7 +217,9 @@ TimeSeries <- ggplot()+
             size=1,
             data=co2.details)+
   geom_point(aes(year.month.POSIXct, ppm, color=month),
-             data=co2.details)
+             data=co2.details)+
+  xlab("Time of measurement")+
+  ylab("Atmospheric carbon dioxide (parts per million)")
 TimeSeries
 ```
 
