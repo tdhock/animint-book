@@ -237,7 +237,21 @@ structure(viz.return, class="animint")
 It would be nice to support multiple lines in `geom_text` labels, but
 we have not yet had time to implement that. However, we have
 [an issue](https://github.com/tdhock/animint/issues/149), and would be
-willing to accept a Pull Request that implements that.
+willing to accept a Pull Request which implements that. 
+
+Until then, the workaround is to use one `geom_text` layer for each
+line of text that you want to display:
+
+```{r Ch07-viz-two-lines}
+gg.two.lines <- ggplot()+
+  geom_text(aes(hjust, vjust, label=sprintf("x=%.1f", hjust, vjust)),
+            data=text.df)+
+  geom_text(aes(hjust, vjust-0.05, label=sprintf("y=%.1f", hjust, vjust)),
+            data=text.df)
+gg.two.lines
+viz.two.lines <- list(text=gg.two.lines)
+structure(viz.two.lines, class="animint")
+```
 
 ## Avoid some ggplot theme options {#theme-options}
 
