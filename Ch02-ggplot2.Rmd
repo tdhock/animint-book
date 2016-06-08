@@ -206,7 +206,7 @@ variables like `lending` are best shown using point `color` or `fill`.
 
 Multi-layer data visualization is useful when you want to display
 several different geoms or data sets in the same plot. For example,
-consider the following sketch adds a `geom_path` to the previous
+consider the following sketch which adds a `geom_path` to the previous
 data visualization.
 
 ![multi-layer WorldBank data viz](Ch02-two-layer-viz.png)
