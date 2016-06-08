@@ -120,22 +120,18 @@ structure(viz.scatter, class="animint")
 ```
 
 Note that the data viz above has two selection variables: region and
-year. Each variable has a menu that can be used to change the current
-selection.
+year. Each variable has a menu at the bottom of the data viz that can
+be used to change the current selection. In this data viz, these
+selection menus are shown by default. They can be hidden by clicking
+the "Hide selection menus" button, and shown again by clicking the
+"Show selection menus" button.
 
 Discrete legend variables such as region default to multiple
-selection, so several values are selected and shown at once. Try
+selection, so several values are selected and shown at once. **Try**
 changing the selected region in the interactive legend and the
 selection menu. When you change the selection using either method,
 both the interactive legend and the selection menu should update to
-reflect the current selection. 
-
-Other selection variables such as year default to single selection, so
-only one value is selected and shown at any time. Try changing the
-selected value of the year variable using the selection menu. You
-should see the points in the scatterplot immediately update to show
-the fertility rate and life expectancy of all the countries in the
-year that you selected.
+reflect the current selection.
 
 We use the terms "direct manipulation" and "indirect manipulation" to
 describe these different ways of changing the selection. Direct
@@ -148,21 +144,42 @@ the legend or the menu. Using the legend is a more direct manipulation
 technique, since the legend is drawn closer to the plotted data points
 that will be updated.
 
+Other selection variables such as year default to single selection, so
+only one value is selected and shown at any time. **Try** changing the
+selected value of the year variable using the selection menu. You
+should see the points in the scatterplot immediately update to show
+the fertility rate and life expectancy of all the countries in the
+year that you selected.
+
+**Multi-layer exercise:** Add another geom to this interactive
+scatterplot. As in [Chapter 2](Ch02-ggplot2.html#multi-layer), you can
+use a `geom_text` to show the name of each country (easy), or a
+`geom_text` to show the selected year (medium), or a `geom_path` to
+show the previous 5 years of data (hard). Hint: make sure to specify
+`showSelected=year` for all geoms.
+
+**Multi-plot exercise:** Add a time series plot to the data viz
+above. As in [Chapter 2](Ch02-ggplot2.html#multi-plot), you can use a
+`geom_line` to show the fertility rate for each country over all
+years. Add a `geom_vline` with `showSelected=year` to highlight the
+currently selected year.
+
 ## Transitions: the duration option and key aesthetic {#duration-key}
 
-You may have noticed that there are three buttons at the bottom of
-each data visualization created by animint. Try clicking the "Show
-animation controls" button above. This table contains a row for each
-selection variable. The text boxes show the number of milliseconds
-that are used for transition durations after updating each selection
-variable. The default transition duration for each selection variable
-is 0, meaning data will be immediately placed at their new positions
-after updating each variable.
+You may have noticed that there are buttons at the bottom of each data
+visualization created by animint. Try clicking the "Show animation
+controls" button above. This table contains a row for each selection
+variable. The text boxes show the number of milliseconds that are used
+for transition durations after updating each selection variable. The
+default transition duration for each selection variable is 0, meaning
+data will be immediately placed at their new positions after updating
+each variable.
 
-To illustrate the significance of transition durations, try changing
-the transition duration of the year variable to 2000. Then, change the
-selected value of the year variable. You should see the data points
-move slowly to their new positions, over a duration of 2 seconds.
+To illustrate the significance of transition durations, **try**
+changing the transition duration of the year variable to 2000. Then,
+change the selected value of the year variable. You should see the
+data points move slowly to their new positions, over a duration of 2
+seconds.
 
 Some transitions result in points moving only a little bit, to nearby
 positions (e.g. 1979-1980). Other transitions result in points moving
@@ -239,6 +256,10 @@ viz.duration.time <- viz.duration
 viz.duration.time$time <- list(variable="year", ms=2000)
 structure(viz.duration.time, class="animint")
 ```
+
+**Exercise:** make an animated data visualization that does NOT use
+smooth transitions. Hint: make a list of ggplots that has the `time`
+option but no `duration` option.
 
 ## Chapter summary and exercises
 
