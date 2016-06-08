@@ -189,10 +189,15 @@ will run the `animint2dir` function, which compiles the animint
 `scatter.viz` list to a directory of data and code files that can be
 rendered in a web browser.
 
-When viewed in a web browser, the plot should look mostly the same as
-static versions produced by standard R graphics devices. One
+When viewed in a web browser, the animint plot should look mostly the
+same as static versions produced by standard R graphics devices. One
 difference is that the region legend is interactive: clicking a legend
 entry will hide or show the points of that color.
+
+**Exercise**: try changing the `aes` mapping of the ggplot, and then
+making a new animint. Quantitative variables like `population` are
+best shown using the `x`/`y` axes or point `size`. Qualitative
+variables like `income` are best shown using point `color` or `fill`.
 
 ## Multi-layer data visualization (multiple geoms) {#multi-layer}
 
@@ -214,8 +219,8 @@ two.layers <- scatter+
   geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                 group=country),
             data=WorldBankBefore1975)
-two.layer.viz <- list(scatter=two.layers)
-structure(two.layer.viz, class="animint")
+viz.two.layers <- list(scatter=two.layers)
+structure(viz.two.layers, class="animint")
 ```
 
 This plot shows a data visualization with 2 geoms/layers: 
@@ -230,9 +235,17 @@ and down, meaning higher life expectancy and lower fertility
 rate. However, there are some exceptions. For example, the two East
 Asian countries in the bottom left suffered a decrease in life
 expectancy over this period. And there are some countries which showed
-an increased fertility rate. Can we add the names of these countries
-to this data viz? Below, we add another layer with a text label for
-each country's name.
+an increased fertility rate.
+
+**Exercise**: try changing the `region` legend to an `income`
+  legend. Hint: you need to use the same `aes(color=income)`
+  specification for all geoms. You may want to use
+  `scale_color_manual` with a sequential color palette, see
+  `RColorBrewer::display.brewer.all(type="seq")` and
+  [read the appendix for more details](ChXX-appendix.html#manual-color-legends).
+  
+Can we add the names of the countries to the data viz? Below, we add
+another layer with a text label for each country's name.
 
 ```{r Ch02-three-layer-viz}
 three.layers <- two.layers+
@@ -267,26 +280,39 @@ Bank data from 1960-2010 (summary), and a scatterplot with data from
 ![WorldBank data viz with two plots](Ch02-viz-two-plots.png)
 
 Note how the sketch above can be directly translated into the R code
-below, which assigns ggplot to the `viz.two.plots` list. Since
-`viz.two.plots` contains two ggplots, animint will render both of the
-plots.
+below. First we copy the existing viz list (`viz.two.layers`),
+then we assign a ggplot to a new element named `timeSeries`. 
   
-```{r Ch02-viz-two-plots}
-viz.two.plots <- two.layer.viz
+```{r}
+viz.two.plots <- viz.two.layers
 viz.two.plots$timeSeries <- ggplot()+
   geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
             data=WorldBank)
+```
+
+That results in a named list of two elements (both elements are
+ggplots).
+
+```{r}
+summary(viz.two.plots)
+```
+
+Like usual, attaching the `"animint"` class to this list 
+renders the data viz. Since the list contains two ggplots, animint
+renders the data viz as two linked plots.
+
+```{r Ch02-viz-two-plots}
 structure(viz.two.plots, class="animint")
 ```
 
 The data visualization above contains two ggplots, which each map
 different data variables to the horizontal `x` axis. The time series
-on the right uses `aes(x=year)`, and shows a summary of fertility rate
-values over all years. The scatterplot on the left uses
-`aes(x=life.expectancy)`, and shows details of the relationship
-between fertility rate and life expectancy during 1975.
+uses `aes(x=year)`, and shows a summary of fertility rate values over
+all years. The scatterplot uses `aes(x=life.expectancy)`, and shows
+details of the relationship between fertility rate and life expectancy
+during 1975.
 
-Try clicking a legend entry in either the scatterplot or the time
+**Try** clicking a legend entry in either the scatterplot or the time
 series above. You should see the data and legends in both plots update
 simultaneously. Since `aes(color=region)` was specified in both plots,
 animint creates a single shared selector variable called
@@ -296,6 +322,11 @@ plots accordingly. This is the main mechanism that animint uses to
 create interactive data visualizations with linked plots, and will be
 discussed in more detail in the next two chapters.
 
+**Exercise**: make a data viz with three plots, by assigning a new
+  ggplot to a named element of the `viz` list. For example, you could
+  add a time series of another data variable such as `life.expectancy`
+  or `population`.
+  
 Note that both ggplots map the fertility rate variable to the y
 axis. However, since they are separate plots, the ranges of their y
 axes are computed separately. That means that even when the two plots

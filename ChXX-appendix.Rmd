@@ -1,5 +1,5 @@
 ---
-title: K-Nearest-Neighbors example
+title: Appendix, useful idioms
 layout: default
 output: bookdown::html_chapter
 ---
