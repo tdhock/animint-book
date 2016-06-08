@@ -452,10 +452,13 @@ not ggplots.
 `time` option for specifying a selection variable which is
 automatically updated (animation).
 
-[Chapter 4](Ch04-clickSelects.html#selector-types-first) introduced
+[Chapter 4](Ch04-clickSelects.html#first-option) introduced the
+`first` option for specifying the selection when the data viz is first
+rendered.
+
+[Chapter 4](Ch04-clickSelects.html#selector-types-option) introduced
 the `selector.types` option for specifying multiple selection
-variables, and the `first` option for specifying the selection when
-the data viz is first rendered.
+variables.
 
 ### Web page title with the title option {#title-option}
 

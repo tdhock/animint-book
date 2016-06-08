@@ -57,9 +57,9 @@ interactive data visualizations.
 ## Use the clickSelects aesthetic to identify points on a scatterplot {#clickSelects-aes}
 
 The goal of this section is to create the following visualization of
-the World Bank data. (TODO: only one country selected)
+the World Bank data.
 
-![World Bank viz text](Ch04-viz-text.png)
+![World Bank viz text](Ch04-viz-text-single.png)
 
 To start, consider the following R code which generates a
 scatterplot of the World Bank data:
@@ -76,12 +76,10 @@ scatter <- ggplot()+
 scatter
 ```
 
-First, note that we use the `addColumn` function to add a factor
-variable to the `WorldBank` data set, which we will use later as a
-facet variable. Also note that ggplot2 ignores the animint aesthetics
-(key, showSelected, and clickSelects), so the plot above is not
-interactive. In contrast, rendering the same ggplot using animint
-results in the following interactive plot:
+Note that ggplot2 ignores the animint aesthetics (key, showSelected,
+and clickSelects), so the plot above is not interactive. In contrast,
+rendering the same ggplot using animint results in the following
+interactive plot:
 
 ```{r Ch04-viz-scatter}
 viz.scatter <- list(
@@ -108,39 +106,34 @@ several showSelected aesthetics:
 viz.text <- viz.scatter
 viz.text$scatter <- scatter+
   geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
+                key=country,
                 showSelected=year,
-                showSelected2=country,
-                showSelected3=region),
+                showSelected2=country),
             data=WorldBank)
 structure(viz.text, class="animint")
 ```
 
 After clicking a data point in the scatterplot above, you should see a
-text label with the country name appear. Furthermore, try changing the
-year using the selection menu. You should see the text label move in a
-smooth transition along with the corresponding data point. Try
-clicking the legend entry that corresponds to the region for the
-currently selected country (e.g. if Canada is selected, try clicking
-the North America legend entry). You should see the text label
-disappear along with all of the points for that region.
+text label with the country name appear. Furthermore, **try** changing
+the year using the selection menu. You should see the text label move
+in a smooth transition along with the corresponding data
+point. 
 
 As explained in the last chapter, any aesthetic that contains the
 substring `showSelected` is treated as an interactive variable. In the
-example above, we specified three `showSelected` variables for the
+example above, we specified two `showSelected` variables for the
 `geom_text`. This means to only draw a text label for the rows of the
-`WorldBank` data set that match the current values of all three of
-those selection variables. Since each combination of `country` and
-`year` has one row in these data, only one text label will be shown at
-a time.
+`WorldBank` data set that match the current values of both selection
+variables. Since each combination of `country` and `year` has one row
+in these data, only one text label will be shown at a time.
 
-Finally, note that specifying `showSelected3=region` causes the text
-label to be hidden when changing the selected set of regions using the
-interactive legend. Since we specified `color=region` for the
-`geom_point`, it automatically gets a `showSelectedLegendColor=region`
-aesthetic, which has the effect of hiding points after clicking the
-region legend. However, since the `geom_text` does not have
-`color=region`, we have to manually specify `showSelected3=region` if
-we want to hide it after clicking the region legend.
+**Try** clicking the legend entry that corresponds to the region for
+the currently selected country (e.g. if Canada is selected, try
+clicking the North America legend entry). You should see the point
+disappear, but the text stay displayed. 
+
+**Exercise:** how can you get the text to disappear along with the
+point? Hint: you need to add an `aes` to the `geom_text`.
 
 In the last chapter, we introduced the terms "direct manipulation" and
 "indirect manipulation" to describe interactions with legends and
@@ -160,12 +153,35 @@ purposes:
   it is simple to find France by typing its name in the selection
   menu.
   
+Note that when the data viz above is first rendered, the selected
+country is Andorra and the selected year is 1960. Since the data for
+Andorra is missing in 1960, there is no text label drawn at first. To
+change the first selection, you can specify the `first` option, as
+explained in the next section.
+  
+## The first option {#first-option}
+
+To specify the selection that should be shown when the data viz is
+first rendered, use the `first` option. It should be a named list with
+entries for each selection variable. For example, the code below
+specifies 1970 as the first year, United States as the first country,
+and North America and South Asia as the first regions.
+
+```{r Ch04-viz-first}
+viz.first <- viz.text
+viz.first$first <- list(
+  year=1970,
+  country="United States",
+  region=c("North America", "South Asia"))
+structure(viz.first, class="animint")
+```
+
 Note that in the data viz above, there is only one country selected at
 a time. In the next section, we will explain how the `selector.types`
 option can be used to change `country` to a multiple selection
 variable.
 
-## The selector.types and first options {#selector-types-first}
+## The selector.types option {#selector-types-option}
 
 In this section our goal is to produce a slightly more complicated
 version of the scatterplot in the last section. The sketch below has
@@ -189,84 +205,38 @@ using the `selector.types` option. In the R code below, we use the
 a multiple selection variable.
 
 ```{r Ch04-viz-multiple}
-viz.multiple <- viz.text
+viz.multiple <- viz.first
 viz.multiple$selector.types <- list(country="multiple")
 structure(viz.multiple, class="animint")
 ```
 
-The first thing you probably noticed in the data viz above is that
-there is now a text label for each country. For each multiple
-selection variable, animint selects all possible values at first, by
-default. To change the set of values which is selected at first, we
-can specify the `first` option as in the R code below.
-
-```{r Ch04-viz-first}
-viz.first <- viz.multiple
-viz.first$first <- list(
-  year=1970,
-  country=c("Canada", "India", "Pakistan", "Japan"),
-  region=c("North America", "South Asia"))
-structure(viz.first, class="animint")
-```
-
 When the data viz above is first rendered, it shows data points from
 the year 1970, for each country in North America and South Asia. It
-also shows text labels for Canada, India, and Pakistan. It does not
-render a text label or a data point for Japan, because the East Asia
-region is not selected at first. Try selecting the East Asia region,
-and you should see the text label for Japan appear, along with all of
-the other data points for that region.
+also shows a text label for the United States.
 
 You may have noticed that it is easy to add countries to the current
 selection, by clicking data points. Normally, clicking a selected data
 point will remove that country from the current selection. However, in
 this particular data viz, it is not so easy to remove them, since the
-text labels are rendered on top of the data points. To fix that
-problem, we specify `clickSelects=country` for the `geom_text` in the
-R code below.
+text labels are rendered on top of the data points.
 
-```{r Ch04-viz-text-click}
-viz.text.click <- viz.first
-viz.text.click$scatter <- ggplot()+
-    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                   key=country,
-                   showSelected=year,
-                   clickSelects=country),
-               data=WorldBank)+
-    geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
-                  showSelected=year,
-                  showSelected2=country,
-                  showSelected3=region,
-                  ## The next two lines are the only additions:
-                  key=country,
-                  clickSelects=country),
-              data=WorldBank)
-structure(viz.text.click, class="animint")
-```
-
-Since we used `clickSelects=country` for the `geom_text` in the data
-viz above, clicking a text label de-selects that country, making that
-text label disappear. We also added `key=country` to make sure that
-the text labels always use the correct country for their smooth
-transitions between years.
-
-In general the `key` aesthetic should be specified for all geoms that
-use `showSelected` with a variable that appears in the `duration`
-option. In this example, we used the `duration` option to specify a
-smooth transition for the `year` variable. Since we use
-`showSelected=year` in both the `geom_point` and the `geom_text`, we
-also specified the `key` aesthetic for these geoms.
+**Exercise:** Re-make the data viz above so that clicking a text label
+  removes that country from the selection set. Hint: you just need to
+  add one `aes` to the `geom_text`.
 
 Note that in the data viz above, the year variable can only be changed
-via the selection menu. In the next section, we will add a facet with
-a geom that can be directly clicked to change the year variable.
+via the selection menu.
 
-## Selecting a year on a time series facet
 
-The goal of this section is to add a facet with a time series plot
-that can be clicked to change the selected year.
+In the next section, we will add a facet with a geom that can be
+directly clicked to change the year variable.
 
-![World Bank scatter facet](Ch04-ggplot-scatterFacet.png)
+## Selecting a year on a time series plot {#time-series-plot}
+
+The goal of this section is to add a time series plot that can be
+clicked to change the selected year.
+
+![World Bank time series](Ch04-ggplot-time-series-plot.png)
 
 Note that the sketch above includes `geom_tallrect`, a new geom
 introduced in animint. It is "tall" because it occupies the entire
@@ -282,7 +252,43 @@ years <- data.frame(year=unique(WorldBank$year))
 head(years)
 ```
 
-Next, we re-create the scatterplot from the previous section using the
+Next, we add the time series ggplot to the existing data viz.
+
+```{r Ch04-viz-timeSeries}
+viz.timeSeries <- viz.multiple
+viz.timeSeries$timeSeries <- ggplot()+
+  geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5,
+                    clickSelects=year),
+                alpha=0.5,
+                data=years)+
+  geom_line(aes(x=year, y=fertility.rate, group=country, color=region,
+                clickSelects=country),
+            size=3,
+            alpha=0.6,
+            data=WorldBank)
+structure(viz.timeSeries, class="animint")
+```
+
+**Try** clicking the background of the time series in the data viz
+  above. You should see the data points and text labels move in a
+  smooth transition to their places at the newly selected year.
+  
+**Animation exercise:** make the data viz animated by specifying the
+  `time` option,
+  [as explained in Chapter 3](Ch03-showSelected.html#animation-time).
+
+**Multi-layer exercise:** add a `geom_text` that shows the current
+  year on the scatterplot. Add a `geom_path` that shows data for the
+  previous 5 years.
+  
+## Selecting a year on a time series facet {#time-series-facet}
+
+The goal of this section is to add a facet with a time series plot
+that can be clicked to change the selected year.
+
+![World Bank scatter facet](Ch04-ggplot-scatterFacet.png)
+
+First, we re-create the scatterplot from the previous section using the
 [addColumn then facet idiom](ChXX-appendix.html#addColumn-then-facet), 
 which is useful for creating ggplots
 with aligned axes.
@@ -355,8 +361,7 @@ Finally, we use the R code below to render the new aligned scatterplot
 and time series using animint.
 
 ```{r Ch04-viz-facets}
-viz.facets <- viz.text.click
-viz.facets$scatter <- scatterTS
+viz.facets <- list(scatter=scatterTS)
 structure(viz.facets, class="animint")
 ```
 
@@ -367,16 +372,19 @@ the set of selected countries. Since we specified `clickSelects=year`
 for the `geom_tallrect`, clicking on a tallrect updates the selected
 year. 
 
+**Exercise:** add `time`, `duration`, `first`, and `selector.types`
+  options to the data viz above.
+
 ## Chapter summary and exercises
 
 This chapter explained `clickSelects`, one of the two main keywords
 that animint introduces for interactive data visualization design. We
 used the World Bank data set to show how `clickSelects` can be used to
 specify different interactions for each of the plotted geoms. We
+explained how the `first` option can be used to specify the selected
+values that are used when the animint is first rendered. We also
 explained how the `selector.types` option can be used to specify
-multiple selection variables. We also explained how the `first` option
-can be used to specify the selected values that are used when the
-animint is first rendered.
+multiple selection variables.
 
 Exercises:
 

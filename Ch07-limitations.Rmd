@@ -133,7 +133,7 @@ Animint does not support a rectangular brush or lasso for
 interactively defining a set of selected values. Instead, animint
 supports multiple selection by adding values one by one to the
 multiple selection set. Use the
-[selector.types](Ch04-clickSelects.html#selector-types-first) option
+[selector.types](Ch04-clickSelects.html#selector-types-option) option
 to declare a multiple selection variable.
 
 ## Adjust y instead of using vjust {#vjust}

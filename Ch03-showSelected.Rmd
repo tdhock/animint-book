@@ -247,6 +247,13 @@ see that the text box for the year variable is 2000, as specified in
 the R code. If you change the selection from 1980 to 1981, you should
 see a proper transition.
 
+In general the `key` aesthetic should be specified for all geoms that
+use `showSelected` with a variable that appears in the `duration`
+option. In this example, we used the `duration` option to specify a
+smooth transition for the `year` variable. Since we use
+`showSelected=year` in the `geom_point`, we also specified the `key`
+aesthetic for this geom.
+
 ## Animation: the time option {#animation-time}
 
 The `time` option is used to specify a variable to use for animation.

@@ -36,24 +36,27 @@ typically do not provide functions for automating common plotting
 tasks (axes, panels, legends).
 
 To overcome the disadvantages of these general plotting systems,
-charting packages such as `lattice` were developed (TODO: ref Sarkar
-book). Such packages have several pre-defined chart types, and provide
-a dedicated function for creating each chart type. For example,
-`lattice` provides the `bwplot` function for making box and whisker
-plots. The advantage of such systems is that they make it much easier
-to create entire plots, including a legend and panels. The
-disadvantage is the set of pre-defined chart types, which means that
-it is not easy to create more complex graphics.
+charting packages such as `lattice` were developed
+([Sarkar, 2008](http://lmdvr.r-forge.r-project.org/figures/figures.html)). Such
+packages have several pre-defined chart types, and provide a dedicated
+function for creating each chart type. For example, `lattice` provides
+the `bwplot` function for making box and whisker plots. The advantage
+of such systems is that they make it much easier to create entire
+plots, including a legend and panels. The disadvantage is the set of
+pre-defined chart types, which means that it is not easy to create
+more complex graphics.
 
 TODO: figure or table.
 
 Newer plotting systems based on the grammar of graphics are situated
 between these two extremes. Wilkinson proposed the grammar of graphics
-in order to describe and create a large class of plots (TODO: cite
-first edition of grammar of graphics book). Wickham later implemented
-several ideas from the grammar of graphics in the `ggplot2` R package
-(TODO: cite ggplot2 book). The `ggplot2` package has several
-advantages with respect to previous plotting systems.
+in order to describe and create a large class of plots
+([Wilkinson, 2005](http://www.springer.com/us/book/9780387245447?wt_mc=GoogleBooks.GoogleBooks.3.EN&token=gbgen#otherversion=9780387286952)). Wickham
+later implemented several ideas from the grammar of graphics in the
+`ggplot2` R package
+([Wickham, 2009](https://www.amazon.com/dp/0387981403/ref=cm_sw_su_dp?tag=ggplot2-20)). The
+`ggplot2` package has several advantages with respect to previous
+plotting systems.
 
 * Like general plotting systems, and unlike `lattice`, `ggplot2`
   imposes few limitations on the types of plots that can be created
@@ -197,7 +200,7 @@ entry will hide or show the points of that color.
 **Exercise**: try changing the `aes` mapping of the ggplot, and then
 making a new animint. Quantitative variables like `population` are
 best shown using the `x`/`y` axes or point `size`. Qualitative
-variables like `income` are best shown using point `color` or `fill`.
+variables like `lending` are best shown using point `color` or `fill`.
 
 ## Multi-layer data visualization (multiple geoms) {#multi-layer}
 
@@ -322,10 +325,10 @@ plots accordingly. This is the main mechanism that animint uses to
 create interactive data visualizations with linked plots, and will be
 discussed in more detail in the next two chapters.
 
-**Exercise**: make a data viz with three plots, by assigning a new
-  ggplot to a named element of the `viz` list. For example, you could
-  add a time series of another data variable such as `life.expectancy`
-  or `population`.
+**Exercise**: use animint to create a data viz with three plots, by
+  creating a list with three ggplots. For example, you could add a
+  time series of another data variable such as `life.expectancy` or
+  `population`.
   
 Note that both ggplots map the fertility rate variable to the y
 axis. However, since they are separate plots, the ranges of their y
