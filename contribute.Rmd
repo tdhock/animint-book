@@ -6,9 +6,9 @@ output: bookdown::html_chapter
 
 # Contributing
 
-This book has been developed in the open, and it wouldn't be nearly as good 
+This manual has been developed in the open, and it wouldn't be nearly as good 
 without your contributions. There are a number of ways you can help make the
-book even better:
+manual even better:
 
 * If you don't understand something, please 
   [let me know](mailto:tdhock5@gmail.com). Your feedback on what is confusing
@@ -26,4 +26,4 @@ book even better:
       
     * If you make significant changes, include the phrase "I assign the 
       copyright of this contribution to Toby Dylan Hocking" - 
-	  I need this so I can publish the printed book.
+	  I need this so I can publish the printed manual.

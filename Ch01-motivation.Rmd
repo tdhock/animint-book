@@ -10,7 +10,7 @@ output: bookdown::html_chapter
 knitr::opts_chunk$set(fig.path="Ch01-figures/")
 ```
 
-The purpose of this book is to explain the usage of animint, an R
+The purpose of this manual is to explain the usage of animint, an R
 package for interactive data visualization. This introductory chapter
 answers the following questions:
 
@@ -74,7 +74,7 @@ There are many different ways to perform data analysis, and data sets
 of different sizes should be analyzed using different
 techniques. There are many different ways to characterize the size of
 data sets, and every author uses a slightly different definition. In
-this book we will use a classification of data sets into three sizes:
+this manual we will use a classification of data sets into three sizes:
 small, medium, and large. We begin by discussing small data sets, for
 which data visualization is not necessary.
 
@@ -120,7 +120,7 @@ would have been a very convincing demonstration of her
 ability. However, she was apparently only able to correctly identify
 three out of the four cups, which is less convincing. 
 
-The main topic of this book is data visualization, which is not
+The main topic of this manual is data visualization, which is not
 necessary for such small data sets. Instead, we will focus on data
 sets that are too big to be analyzed by manual visual inspection of
 the data table.

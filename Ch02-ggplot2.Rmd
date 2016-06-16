@@ -71,7 +71,7 @@ plotting systems.
 
 Finally, all of the previously discussed plotting systems are intended
 for creating *static* graphics, which can be viewed equally well on a
-computer screen or on paper. However, the main topic of this book is
+computer screen or on paper. However, the main topic of this manual is
 `animint`, an R package for *interactive* graphics. In contrast to
 static graphics, interactive graphics are best viewed on a computer
 with a mouse and keyboard that can be used to interact with the plot.
@@ -175,7 +175,7 @@ list.
 scatter.viz <- list(scatter=scatter)
 ```
 
-In this book we use `viz` (short for data visualization) to indicate
+In this manual we use `viz` (short for data visualization) to indicate
 variables that are lists that contain ggplots. The `animint` package
 implements a compiler that takes a `viz` list as input, and outputs a
 web page with a data visualization. To activate the `animint`

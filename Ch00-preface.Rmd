@@ -4,11 +4,11 @@ layout: default
 output: bookdown::html_chapter
 ---
 
-# Welcome to the Animint book web site!
+# Welcome to the Animint Designer Manual web site!
 
-This book explains how to create interactive data visualizations using
-the R package `animint`. The chapters of this book are organized as
-follows.
+This manual explains how to design and create interactive data
+visualizations using the R package `animint`. The chapters of this
+manual are organized as follows.
 
 ## The animint extensions to the grammar of graphics {#animint}
 
@@ -86,6 +86,6 @@ visualization of a peak detection model.
 ## Appendix {#appendix}
 
 [The appendix](ChXX-appendix.html) contains detailed explanations of
-several R code idioms that are used throughout this book.
+several R code idioms that are used throughout this manual.
 
 
