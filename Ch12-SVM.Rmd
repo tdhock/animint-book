@@ -1,0 +1,137 @@
+---
+title: Support Vector Machines
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 13, Poisson regression
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch13-figures/")
+```
+
+This goal of this chapter is to create an interactive data
+visualization that explains the
+[Support Vector Machine](https://en.wikipedia.org/wiki/Support_vector_machine),
+a machine learning model for binary classification.
+
+```{r}
+library(data.table)
+N <- 100
+set.seed(1)
+getInput <- function(){
+  rnorm(N, 0, 1)
+}
+sqInput <- function(x){
+  x * x
+}
+data.dt <- data.table(
+  x1=getInput(),
+  x2=getInput())
+data.dt[, x1.sq := sqInput(x1) ]
+data.dt[, x2.sq := sqInput(x2) ]
+data.dt[, f := x1^2 + x2^2]
+data.dt[, noise := rnorm(N, 0, 0.1)]
+data.dt[, f.noise := f+noise]
+true.decision.boundary <- 1
+data.dt[, y := factor(ifelse(f.noise<true.decision.boundary, -1, 1))]
+```
+
+```{r}
+x.min <- -2
+x.max <- 2
+n.grid <- 20
+x.vec <- seq(x.min, x.max, l=n.grid)
+grid.dt <- data.table(expand.grid(
+  x1=x.vec,
+  x2=x.vec))
+grid.dt[, f := x1^2 + x2^2 ]
+input.space <- ggplot()+
+  geom_contour(aes(x1, x2, z=f),
+               breaks=true.decision.boundary,
+               data=grid.dt)+
+  geom_point(aes(x1, x2, color=y),
+             shape=21,
+             fill=NA,
+             data=data.dt)
+input.space
+```
+
+```{r}
+x.sq.vec <- seq(0, x.max^2, l=n.grid)
+grid.sq.dt <- data.table(expand.grid(
+  x1.sq=x.sq.vec,
+  x2.sq=x.sq.vec))
+grid.sq.dt[, f := x1.sq + x2.sq ]
+squared.space <- ggplot()+
+  geom_contour(aes(x1.sq, x2.sq, z=f),
+               breaks=true.decision.boundary,
+               size=1,
+               color="red",
+               data=grid.sq.dt)+
+  geom_point(aes(x1.sq, x2.sq, color=y),
+             shape=21,
+             fill=NA,
+             data=data.dt)
+squared.space
+
+```
+
+```{r}
+library(kernlab)
+squared.mat <- data.dt[, cbind(x1.sq, x2.sq)]
+y.vec <- data.dt$y
+fit <- ksvm(squared.mat, y.vec, kernel="vanilladot", scaled=TRUE, C=1)
+predF <- function(fit, X){
+  fit.sc <- scaling(fit)$x.scale
+  X.sc <- scale(X, fit.sc[["scaled:center"]], fit.sc[["scaled:scale"]])
+  kernelMult(kernelf(fit), X.sc, xmatrix(fit)[[1]], coef(fit)[[1]])-b(fit)
+}
+grid.sq.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
+data.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
+data.dt[, pred.y := predict(fit, cbind(x1.sq, x2.sq))]
+grid.dt[, x1.sq := x1^2]
+grid.dt[, x2.sq := x2^2]
+grid.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
+squared.space+
+  geom_contour(aes(x1.sq, x2.sq, z=pred.f),
+               breaks=0,
+               color="black",
+               data=grid.sq.dt)+
+  geom_contour(aes(x1.sq, x2.sq, z=pred.f),
+               breaks=c(-1, 1),
+               color="black",
+               linetype="dashed",
+               data=grid.sq.dt)
+
+ggplot()+
+  geom_point(aes(x1.sq, x2.sq, color=pred.y),
+             shape=21,
+             fill=NA,
+             data=data.dt)+
+  geom_contour(aes(x1.sq, x2.sq, z=pred.f),
+               breaks=0,
+               color="black",
+               data=grid.sq.dt)+
+  geom_contour(aes(x1.sq, x2.sq, z=pred.f),
+               breaks=c(-1, 1),
+               color="black",
+               linetype="dashed",
+               data=grid.sq.dt)
+
+ggplot()+
+  geom_point(aes(x1, x2, color=pred.y),
+             shape=21,
+             fill=NA,
+             data=data.dt)+
+  geom_contour(aes(x1, x2, z=pred.f),
+               breaks=0,
+               color="black",
+               data=grid.dt)+
+  geom_contour(aes(x1, x2, z=pred.f),
+               breaks=c(-1, 1),
+               color="black",
+               linetype="dashed",
+               data=grid.dt)
+
+```
