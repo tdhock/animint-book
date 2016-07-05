@@ -298,6 +298,7 @@ viz.chunk.vars <- list(
                  showSelected2=bases.per.probe),
              color="green",
              chunk_vars=character(),
+             validate_params=FALSE,
              linetype="dashed",
              data=breakpoints$breaks)
 )
@@ -324,6 +325,7 @@ tsvSizes <- function(segment.chunk.vars){
                      showSelected2=bases.per.probe),
                  color="green",
                  chunk_vars=segment.chunk.vars,
+                 validate_params=FALSE,
                  linetype="dashed",
                  data=breakpoints$breaks)
   )
