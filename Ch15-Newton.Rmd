@@ -1,0 +1,52 @@
+---
+title: Newton's root-finding method
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 15, Newton's root-finding method
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch15-figures/")
+```
+
+This goal of this chapter is to create an interactive data
+visualization that explains 
+[Newton's method](https://en.wikipedia.org/wiki/Newton%27s_method)
+for finding the roots of smooth functions.
+
+```{r}
+library(data.table)
+Linear <- -628
+Log <- 1
+Constant <- 776.140660
+Linear <- 5
+Log <- -5*1
+Constant <- -6
+loss.fun <- function(x){
+  Linear*x + Log*log(x) + Constant
+}
+loss.deriv <- function(x){
+  Linear + Log/x
+}
+##uniroot(loss.fun, c(1,2))
+loss.dt <- data.table(mean=seq(0, 2, l=1000))
+loss.dt[, loss := loss.fun(mean)]
+ggplot()+
+  geom_line(aes(mean, loss),
+            data=loss.dt)
+possible.root <- 0.9
+while(1e-30 < abs({
+  fun.value <- loss.fun(possible.root)
+})){
+  cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
+  deriv.value <- loss.deriv(possible.root)
+  possible.next <- possible.root - fun.value/deriv.value
+  possible.root <- if(possible.next <= 0){
+    possible.root/2
+  }else{
+    possible.next
+  }
+}
+```
+
