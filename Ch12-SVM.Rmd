@@ -34,7 +34,8 @@ data.dt[, f := x1^2 + x2^2]
 data.dt[, noise := rnorm(N, 0, 0.5)]
 data.dt[, f.noise := f+noise]
 true.decision.boundary <- 1
-data.dt[, y := factor(ifelse(f.noise<true.decision.boundary, -1, 1))]
+data.dt[, y.num := ifelse(f.noise<true.decision.boundary, -1, 1)]
+data.dt[, y := factor(y.num)]
 train.i <- 1:(N/2)
 train.dt <- data.dt[train.i,]
 test.dt <- data.dt[-train.i,]
@@ -84,112 +85,211 @@ squared.space
 library(kernlab)
 squared.mat <- train.dt[, cbind(x1.sq, x2.sq)]
 y.vec <- train.dt$y
-cost.param <- 1
-fit <- ksvm(squared.mat, y.vec, kernel="vanilladot", scaled=TRUE, C=cost.param)
-fit.sc <- scaling(fit)$x.scale
-mu <- fit.sc[["scaled:center"]]
-sigma <- fit.sc[["scaled:scale"]]
-predF <- function(fit, X){
-  X.sc <- scale(X, mu, sigma)
-  kernelMult(kernelf(fit), X.sc, xmatrix(fit)[[1]], coef(fit)[[1]])-b(fit)
-}
-weight.vec <- colSums(xmatrix(fit)[[1]]*coef(fit)[[1]])
-predF2 <- function(fit, X){
-  X.sc <- scale(X, mu, sigma)
-  X.sc %*% weight.vec - b(fit)
-}
-grid.sq.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
-train.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
-train.dt[, pred.f2 := predF2(fit, cbind(x1.sq, x2.sq))]
-train.dt[, pred.y := predict(fit, cbind(x1.sq, x2.sq))]
-grid.dt[, x1.sq := x1^2]
-grid.dt[, x2.sq := x2^2]
-grid.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
-train.dt$alpha <- 0
-train.dt[as.integer(rownames(xmatrix(fit)[[1]])), alpha := alpha(fit)[[1]]]
-train.dt[, status := ifelse(
-  alpha==0, "alpha=0",
-  ifelse(alpha==cost.param, "alpha=C", "0<alpha<C"))]
-## The equation of the margin lines is x2 = m2 + s2/w2[c+b+w1*m1/s1]
-## -s2*w1/(w2*s1)*x1 for c=1 and -1. x is input feature, m is mean, s
-## is scale, w is learned weight.
-slack.slope <- weight.vec[2]*sigma[1]/(weight.vec[1]*sigma[2])
-abline.dt <- data.table(
-  y=factor(c(-1,0,1)),
-  intercept=mu[2]+sigma[2]/weight.vec[2]*(
-    c(-1, 0, 1)+b(fit)+weight.vec[1]*mu[1]/sigma[1]),
-  slope=-weight.vec[1]*sigma[2]/(weight.vec[2]*sigma[1]))
-setkey(abline.dt, y)
-slack.dt <- train.dt[alpha==cost.param,]
-setkey(slack.dt, y)
-slack.join <- abline.dt[slack.dt]
-slack.join[, x1.sq.margin := (
-  x2.sq-slack.slope*x1.sq-intercept)/(slope-slack.slope)]
-slack.join[, x2.sq.margin := slope*x1.sq.margin + intercept]
-squared.space+
-  coord_equal()+
-  geom_abline(aes(slope=slope, intercept=intercept),
-              color="green",
-              linetype="dotted",
-              data=abline.dt)+
-  geom_segment(aes(x1.sq, x2.sq,
-                   xend=x1.sq.margin, yend=x2.sq.margin),
-               color="grey",
-               data=slack.join)+
-  geom_contour(aes(x1.sq, x2.sq, z=pred.f),
-               breaks=0,
-               color="black",
-               data=grid.sq.dt)+
-  geom_contour(aes(x1.sq, x2.sq, z=pred.f),
-               breaks=c(-1, 1),
-               color="black",
-               linetype="dashed",
-               data=grid.sq.dt)
+modelInfo.list <- list()
+predictions.list <- list()
+slackSegs.list <- list()
+modelLines.list <- list()
+inputGrid.list <- list()
+cost.by <- 0.5
+for(cost.param in 10^seq(-2, 2, by=cost.by)){
+  fit <- ksvm(
+    squared.mat, y.vec, kernel="vanilladot", scaled=FALSE, C=cost.param)
+  fit.sc <- scaling(fit)$x.scale
+  if(is.null(fit.sc)){
+    fit.sc <- list(
+      "scaled:center"=c(0,0),
+      "scaled:scale"=c(1,1))
+  }
+  mu <- fit.sc[["scaled:center"]]
+  sigma <- fit.sc[["scaled:scale"]]
+  predF <- function(fit, X){
+    X.sc <- scale(X, mu, sigma)
+    kernelMult(kernelf(fit), X.sc, xmatrix(fit)[[1]], coef(fit)[[1]])-b(fit)
+  }
+  weight.vec <- colSums(xmatrix(fit)[[1]]*coef(fit)[[1]])
+  predF2 <- function(fit, X){
+    X.sc <- scale(X, mu, sigma)
+    X.sc %*% weight.vec - b(fit)
+  }
+  grid.sq.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
+  train.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
+  train.dt[, pred.f2 := predF2(fit, cbind(x1.sq, x2.sq))]
+  train.dt[, pred.y := predict(fit, cbind(x1.sq, x2.sq))]
+  grid.dt[, x1.sq := x1^2]
+  grid.dt[, x2.sq := x2^2]
+  grid.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
+  inputGrid.list[[paste(cost.param)]] <- data.table(
+    cost.param, grid.dt)
+  train.dt$alpha <- 0
+  train.dt[as.integer(rownames(xmatrix(fit)[[1]])), alpha := alpha(fit)[[1]]]
+  train.dt[, status := ifelse(
+    alpha==0, "alpha=0",
+    ifelse(alpha==cost.param, "alpha=C", "0<alpha<C"))]
+  ## The equation of the margin lines is x2 = m2 + s2/w2[c+b+w1*m1/s1]
+  ## -s2*w1/(w2*s1)*x1 for c=1 and -1. x is input feature, m is mean, s
+  ## is scale, w is learned weight.
+  slack.slope <- weight.vec[2]*sigma[1]/(weight.vec[1]*sigma[2])
+  abline.dt <- data.table(
+    y=factor(c(-1,0,1)),
+    line=c("margin", "decision", "margin"),
+    intercept=mu[2]+sigma[2]/weight.vec[2]*(
+      c(-1, 0, 1)+b(fit)+weight.vec[1]*mu[1]/sigma[1]),
+    slope=-weight.vec[1]*sigma[2]/(weight.vec[2]*sigma[1]))
+  setkey(abline.dt, y)
+  slack.dt <- train.dt[alpha==cost.param,]
+  setkey(slack.dt, y)
+  slack.join <- abline.dt[slack.dt]
+  slack.join[, x1.sq.margin := (
+    x2.sq-slack.slope*x1.sq-intercept)/(slope-slack.slope)]
+  slack.join[, x2.sq.margin := slope*x1.sq.margin + intercept]
+  squared.space+
+    coord_equal()+
+    geom_abline(aes(slope=slope, intercept=intercept),
+                color="green",
+                linetype="dotted",
+                data=abline.dt)+
+    geom_segment(aes(x1.sq, x2.sq,
+                     xend=x1.sq.margin, yend=x2.sq.margin),
+                 color="grey",
+                 data=slack.join)+
+    geom_contour(aes(x1.sq, x2.sq, z=pred.f),
+                 breaks=0,
+                 color="black",
+                 data=grid.sq.dt)+
+    geom_contour(aes(x1.sq, x2.sq, z=pred.f),
+                 breaks=c(-1, 1),
+                 color="black",
+                 linetype="dashed",
+                 data=grid.sq.dt)
 
-sv.colors <- c(
-  "alpha=0"="white",
-  "0<alpha<C"="black",
-  "alpha=C"="grey")
-ggplot()+
-  geom_contour(aes(x1.sq, x2.sq, z=f),
-               breaks=true.decision.boundary,
-               size=1,
-               color="red",
-               data=grid.sq.dt)+
-  geom_point(aes(x1.sq, x2.sq, color=y, fill=status),
-             shape=21,
-             data=train.dt)+
-  scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-  geom_segment(aes(x1.sq, x2.sq,
-                   xend=x1.sq.margin, yend=x2.sq.margin),
-               color="grey",
-               data=slack.join)+
-  geom_contour(aes(x1.sq, x2.sq, z=pred.f),
-               breaks=0,
-               color="black",
-               data=grid.sq.dt)+
-  geom_contour(aes(x1.sq, x2.sq, z=pred.f),
-               breaks=c(-1, 1),
-               color="black",
-               linetype="dashed",
-               data=grid.sq.dt)
+  weight.l2normsq <- as.numeric(weight.vec %*% weight.vec)
+  modelInfo.list[[paste(cost.param)]] <- data.table(
+    cost.param,
+    total.slack=slack.join[, sum(1-pred.f*y.num)],
+    weight.l2normsq,
+    margin.size=2/sqrt(weight.l2normsq))
 
-ggplot()+
-  geom_point(aes(x1, x2, color=y, fill=status),
-             shape=21,
-             data=train.dt)+
-  scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-  geom_contour(aes(x1, x2, z=f),
-               breaks=true.decision.boundary,
-               data=grid.dt)+
-  geom_contour(aes(x1, x2, z=pred.f),
-               breaks=0,
-               color="black",
-               data=grid.dt)+
-  geom_contour(aes(x1, x2, z=pred.f),
-               breaks=c(-1, 1),
-               color="black",
-               linetype="dashed",
-               data=grid.dt)
+  predictions.list[[paste(cost.param)]] <- data.table(
+    cost.param, train.dt)
+
+  slackSegs.list[[paste(cost.param)]] <- data.table(
+    cost.param, slack.join)
+
+  modelLines.list[[paste(cost.param)]] <- data.table(
+    cost.param, abline.dt)
+  
+  sv.colors <- c(
+    "alpha=0"="white",
+    "0<alpha<C"="black",
+    "alpha=C"="grey")
+  ggplot()+
+    geom_contour(aes(x1.sq, x2.sq, z=f),
+                 breaks=true.decision.boundary,
+                 size=1,
+                 color="red",
+                 data=grid.sq.dt)+
+    geom_point(aes(x1.sq, x2.sq, color=y, fill=status),
+               shape=21,
+               data=train.dt)+
+    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
+    geom_segment(aes(x1.sq, x2.sq,
+                     xend=x1.sq.margin, yend=x2.sq.margin),
+                 color="grey",
+                 data=slack.join)+
+    geom_abline(aes(slope=slope, intercept=intercept, linetype=line),
+                color="black",
+                data=abline.dt)
+  ## geom_contour(aes(x1.sq, x2.sq, z=pred.f),
+  ##              breaks=0,
+  ##              color="black",
+  ##              data=grid.sq.dt)+
+  ## geom_contour(aes(x1.sq, x2.sq, z=pred.f),
+  ##              breaks=c(-1, 1),
+  ##              color="black",
+  ##              linetype="dashed",
+  ##              data=grid.sq.dt)
+
+  ggplot()+
+    geom_point(aes(x1, x2, color=y, fill=status),
+               shape=21,
+               data=train.dt)+
+    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
+    geom_contour(aes(x1, x2, z=f),
+                 breaks=true.decision.boundary,
+                 data=grid.dt)+
+    geom_contour(aes(x1, x2, z=pred.f),
+                 breaks=0,
+                 color="black",
+                 data=grid.dt)+
+    geom_contour(aes(x1, x2, z=pred.f),
+                 breaks=c(-1, 1),
+                 color="black",
+                 linetype="dashed",
+                 data=grid.dt)
+
+}
+inputGrid <- do.call(rbind, inputGrid.list)
+predictions <- do.call(rbind, predictions.list)
+slackSegs <- do.call(rbind, slackSegs.list)
+modelLines <- do.call(rbind, modelLines.list)
+modelInfo <- do.call(rbind, modelInfo.list)
+
+modelInfo.tall <- melt(modelInfo, id.vars="cost.param")
+
+library(animint)
+viz <- list(
+  selectModel=ggplot()+
+    geom_tallrect(aes(
+      xmin=log10(cost.param)-cost.by/2,
+      xmax=log10(cost.param)+cost.by/2,
+      clickSelects=cost.param),
+      alpha=0.5,
+      data=modelInfo)+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))+
+    facet_grid(variable ~ ., scales="free")+
+    geom_line(aes(log10(cost.param), log10(value)),
+              data=modelInfo.tall),
+  inputSpace=ggplot()+
+    geom_point(aes(x1, x2, color=y, fill=status, showSelected=cost.param),
+               data=predictions)+
+    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
+    geom_contour(aes(x1, x2, z=f),
+                 breaks=true.decision.boundary,
+                 color="violet",
+                 data=grid.dt)+
+    guides(color="none", fill="none")+
+    geom_contour(aes(x1, x2, z=pred.f,
+                     group=cost.param,
+                     showSelected=cost.param),
+                 breaks=0,
+                 color="black",
+                 data=inputGrid)+
+    geom_contour(aes(x1, x2, z=pred.f,
+                     group=cost.param,
+                     showSelected=cost.param),
+                 breaks=c(-1, 1),
+                 color="black",
+                 linetype="dashed",
+                 data=inputGrid),
+  kernelSpace=ggplot()+
+    geom_contour(aes(x1.sq, x2.sq, z=f),
+                 breaks=true.decision.boundary,
+                 size=1,
+                 color="violet",
+                 data=grid.sq.dt)+
+    geom_point(aes(x1.sq, x2.sq, color=y, fill=status, showSelected=cost.param),
+               data=predictions)+
+    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
+    geom_segment(aes(x1.sq, x2.sq,
+                     showSelected=cost.param,
+                     xend=x1.sq.margin, yend=x2.sq.margin),
+                 color="grey",
+                 data=slackSegs)+
+    geom_abline(aes(slope=slope, intercept=intercept, linetype=line,
+                    showSelected=cost.param),
+                color="black",
+                data=modelLines))
+structure(viz, class="animint")
 
 ```
