@@ -20,6 +20,7 @@ library(data.table)
 Linear <- 5
 Log <- -5*1
 Constant <- -6
+<<<<<<< HEAD
 Linear <- -500
 Log <- -5*1
 Constant <- -6
@@ -30,6 +31,10 @@ Linear <- -1
 Log <- 14
 Constant <- -22.611909
 (mean.at.optimum <- -Log/Linear)
+Linear <- -1339
+Log <- 256030
+Constant <- -967999.239638
+-Log/Linear
 loss.fun <- function(x){
   Linear*x + Log*log(x) + Constant
 }
@@ -37,13 +42,13 @@ loss.fun(mean.at.optimum)
 loss.deriv <- function(x){
   Linear + Log/x
 }
-##uniroot(loss.fun, c(1,2))
-loss.dt <- data.table(mean=seq(0, 20, l=1000))
+uniroot(loss.fun, c(0, 0.001))
+loss.dt <- data.table(mean=seq(431,442, l=1000))
 loss.dt[, loss := loss.fun(mean)]
 ggplot()+
   geom_line(aes(mean, loss),
             data=loss.dt)
-possible.root <- 12
+<<<<<<< HEAD
 while(1e-30 < abs({
   fun.value <- loss.fun(possible.root)
 })){
