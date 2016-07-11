@@ -23,28 +23,71 @@ Constant <- 776.140660
 loss.fun <- function(x){
   Linear*x + Log*log(x) + Constant
 }
-loss.deriv <- function(x){
-  Linear + Log/x
+(mean.at.optimum <- -Log/Linear)
+loss.fun(mean.at.optimum)
+loss.deriv <- function(mean){
+  Linear + Log/mean
 }
 uniroot(loss.fun, c(0, 0.001))
 uniroot(loss.fun, c(1, 2))
-loss.dt <- data.table(mean=seq(0, 2, l=1000))
-loss.dt[, loss := loss.fun(mean)]
-ggplot()+
-  geom_line(aes(mean, loss),
-            data=loss.dt)
 possible.root <- 1
 while(1e-30 < abs({
   fun.value <- loss.fun(possible.root)
 })){
   cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
   deriv.value <- loss.deriv(possible.root)
-  possible.next <- possible.root - fun.value/deriv.value
-  possible.root <- if(possible.next <= 0){
-    possible.root/2
-  }else{
-    possible.next
-  }
+  possible.root <- possible.root - fun.value/deriv.value
 }
+loss.dt <- data.table(mean=seq(0, 2, l=1000))
+loss.dt[, loss := loss.fun(mean)]
+loss.dt[, log.mean := log(mean)]
+root.dt <- data.table(possible.root, fun.value)
+ggplot()+
+  geom_point(aes(possible.root, fun.value),
+             data=root.dt)+
+  geom_line(aes(mean, loss),
+            data=loss.dt)
+
+log.loss.fun <- function(log.mean){
+  Linear*exp(log.mean) + Log*log.mean + Constant
+}
+log.loss.deriv <- function(log.mean){
+  exp(log.mean)*Linear + Log
+}
+possible.root <- -250
+while(1e-30 < abs({
+  fun.value <- log.loss.fun(possible.root)
+})){
+  cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
+  deriv.value <- log.loss.deriv(possible.root)
+  possible.root <- possible.root - fun.value/deriv.value
+}
+log.loss.dt <- data.table(log.mean=seq(-1000, 1, l=1000))
+log.loss.dt[, loss := log.loss.fun(log.mean)]
+root.dt <- data.table(possible.root, fun.value)
+ggplot()+
+  geom_point(aes(possible.root, fun.value),
+             data=root.dt)+
+  geom_line(aes(log.mean, loss),
+            data=log.loss.dt)
+
+possible.root <- 1
+while(1e-30 < abs({
+  fun.value <- log.loss.fun(possible.root)
+})){
+  cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
+  deriv.value <- log.loss.deriv(possible.root)
+  possible.root <- possible.root - fun.value/deriv.value
+}
+log.loss.dt <- data.table(log.mean=seq(-1, 1, l=1000))
+log.loss.dt[, loss := log.loss.fun(log.mean)]
+root.dt <- data.table(possible.root, fun.value)
+ggplot()+
+  geom_point(aes(possible.root, fun.value),
+             data=root.dt)+
+  geom_line(aes(log.mean, loss),
+            data=log.loss.dt)
+
+
 ```
 
