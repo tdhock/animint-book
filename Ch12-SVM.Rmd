@@ -15,27 +15,89 @@ visualization that explains the
 [Support Vector Machine](https://en.wikipedia.org/wiki/Support_vector_machine),
 a machine learning model for binary classification.
 
+## Generate and plot some data
+
+We begin by generating two input features, `x1` and `x2`.
+
 ```{r}
 library(data.table)
 N <- 100
-set.seed(6)
+set.seed(1)
 getInput <- function(){
-  rnorm(N, 0, 1)
-}
-sqInput <- function(x){
-  x * x
+  runif(N, -1, 1)
 }
 data.dt <- data.table(
   x1=getInput(),
   x2=getInput())
-data.dt[, x1.sq := sqInput(x1) ]
-data.dt[, x2.sq := sqInput(x2) ]
-data.dt[, f := x1^2 + x2^2]
-data.dt[, noise := rnorm(N, 0, 1)]
+ggplot()+
+  geom_point(aes(x1, x2),
+             data=data.dt)
+```
+
+The plot below shows the same data, after computing two additional
+input features (the squares of the original two inputs).
+
+```{r}
+data.dt[, x1.sq := x1^2 ]
+data.dt[, x2.sq := x2^2 ]
+ggplot()+
+  geom_point(aes(x1.sq, x2.sq),
+             data=data.dt)
+```
+
+In our simulation, we assume that the output score `f` is a linear
+function of `x1.sq`, and ignores `x2.sq`. 
+
+```{r}
+data.dt[, f := x1.sq]
+true.decision.boundary <- 0.2
+ggplot()+
+  theme_bw()+
+  scale_fill_gradient2(midpoint=true.decision.boundary)+
+  geom_point(aes(x1.sq, x2.sq, fill=f),
+             shape=21,
+             color="grey",
+             data=data.dt)
+```
+
+In particular, we assume that the label `y` is negative (-1) if `x1.sq
+< 1`, and positive (1) otherwise.
+
+
+```{r}
+data.dt[, noise := rnorm(N, 0, 0.1)]
 data.dt[, f.noise := f+noise]
-true.decision.boundary <- 1
+ggplot()+
+  geom_point(aes(x1, f.noise),
+             data=data.dt)
+ggplot()+
+  geom_point(aes(x1.sq, f.noise),
+             data=data.dt)
 data.dt[, y.num := ifelse(f.noise<true.decision.boundary, -1, 1)]
 data.dt[, y := factor(y.num)]
+table(data.dt$y)
+ggplot()+
+  geom_point(aes(x1.sq, x2.sq, color=y),
+             shape=21,
+             fill=NA,
+             data=data.dt)
+
+ggplot()+
+  theme_bw()+
+  scale_fill_gradient2(midpoint=true.decision.boundary)+
+  geom_point(aes(x1, x2, fill=f),
+             shape=21,
+             color="grey",
+             data=data.dt)
+
+ggplot()+
+  geom_point(aes(x1, x2, color=y),
+             shape=21,
+             fill=NA,
+             data=data.dt)
+```
+
+```{r}
 data.dt[, data.i := 1:.N]
 train.i <- 1:(N/2)
 data.dt[, set := "test"]
@@ -115,7 +177,7 @@ slackSegs.list <- list()
 modelLines.list <- list()
 inputBoundaries.list <- list()
 setErrors.list <- list()
-cost.by <- 0.5
+cost.by <- 0.1
 for(cost.param in 10^seq(-1, 1, by=cost.by)){
   fit <- ksvm(
     squared.mat, y.vec, kernel="vanilladot", scaled=FALSE, C=cost.param)
