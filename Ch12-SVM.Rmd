@@ -46,7 +46,8 @@ ggplot()+
 ```
 
 In our simulation, we assume that the output score `f` is a linear
-function of `x1.sq`, and ignores `x2.sq`. 
+function of `x1.sq`, and ignores `x2.sq`. The plot below visualizes
+the output scores using the point fill aesthetic.
 
 ```{r}
 data.dt[, f := x1.sq]
@@ -60,42 +61,138 @@ ggplot()+
              data=data.dt)
 ```
 
-In particular, we assume that the label `y` is negative (-1) if `x1.sq
-< 1`, and positive (1) otherwise.
-
+In particular, we assume that the label `y` is negative (-1) if
+`x1.sq + noise < 0.2`, and positive (1) otherwise. The plot below
+visualizes the scores and labels, as a function of the input feature
+`x1`. It also shows the true score function in black.
 
 ```{r}
-data.dt[, noise := rnorm(N, 0, 0.1)]
-data.dt[, f.noise := f+noise]
-ggplot()+
-  geom_point(aes(x1, f.noise),
-             data=data.dt)
-ggplot()+
-  geom_point(aes(x1.sq, f.noise),
-             data=data.dt)
+data.dt[, f.noise := f+rnorm(N, 0, 0.1)]
 data.dt[, y.num := ifelse(f.noise<true.decision.boundary, -1, 1)]
 data.dt[, y := factor(y.num)]
+scores <- data.table(x1=seq(-1, 1, l=101))
+scores[, x1.sq := x1^2 ]
+scores[, f := x1.sq ]
+x1.boundaries <- data.table(boundary=c(1, -1)*sqrt(true.decision.boundary))
+ggplot()+
+  scale_y_continuous(breaks=seq(0, 1, by=0.2))+
+  geom_vline(aes(xintercept=boundary), color="grey50", data=x1.boundaries)+
+  geom_line(aes(x1, f), data=scores)+
+  geom_point(aes(x1, f.noise, color=y),
+             shape=21,
+             fill=NA,
+             data=data.dt)
+```
+
+The plot below shows the scores and labels, as a function of the
+squared feature `x1.sq`. It is clear that the score function that we
+want to learn is linear in `x1.sq`.
+
+```{r}
+x1sq.boundary <- data.table(boundary=0.2)
+ggplot()+
+  scale_y_continuous(breaks=seq(0, 1, by=0.2))+
+  scale_x_continuous(breaks=seq(0, 1, by=0.2))+
+  geom_vline(aes(xintercept=boundary), color="grey50", data=x1sq.boundary)+
+  geom_line(aes(x1.sq, f), data=scores)+
+  geom_point(aes(x1.sq, f.noise, color=y),
+             shape=21,
+             fill=NA,
+             data=data.dt)
+```
+
+Next, we visualize the labels in the two-dimensional squared feature
+space. It is clear that the decision boundary is linear in this space.
+
+```{r}
 table(data.dt$y)
 ggplot()+
+  scale_y_continuous(breaks=seq(0, 1, by=0.2))+
+  scale_x_continuous(breaks=seq(0, 1, by=0.2))+
+  geom_vline(aes(xintercept=boundary), color="grey50", data=x1sq.boundary)+
   geom_point(aes(x1.sq, x2.sq, color=y),
              shape=21,
              fill=NA,
              data=data.dt)
+```
 
-ggplot()+
-  theme_bw()+
-  scale_fill_gradient2(midpoint=true.decision.boundary)+
-  geom_point(aes(x1, x2, fill=f),
-             shape=21,
-             color="grey",
-             data=data.dt)
+The plot below shows the input feature space (`x1` and `x2`). It is
+clear that the decision boundary is non-linear in `x1`.
 
+```{r}
 ggplot()+
+  scale_y_continuous(breaks=seq(-1, 1, by=0.2))+
+  scale_x_continuous(breaks=seq(-1, 1, by=0.2))+
+  geom_vline(aes(xintercept=boundary), color="grey50", data=x1.boundaries)+
   geom_point(aes(x1, x2, color=y),
              shape=21,
              fill=NA,
              data=data.dt)
 ```
+
+The animint below uses `clickSelects` to show which points in the
+input and squared space correspond. We just need to create an
+`observation.i` variable that has a unique ID for each data point.
+
+```{r}
+library(animint)
+data.dt[, observation.i := 1:.N]
+YVAR <- function(dt, y.var){
+  dt$y.var <- factor(y.var, c("x2", "x2.sq", "f"))
+  dt
+}
+viz.simple <- list(
+  input=ggplot()+
+    ggtitle("input feature space")+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))+
+    facet_grid(y.var ~ ., scales="free")+
+    scale_x_continuous(breaks=seq(-1, 1, by=0.2))+
+    ylab("")+
+    guides(color="none")+
+    geom_vline(aes(xintercept=boundary),
+               color="grey50",
+               data=x1.boundaries)+
+    geom_point(aes(x1, x2, color=y, clickSelects=observation.i),
+               size=4,
+               alpha=0.7,
+               data=YVAR(data.dt, "x2"))+
+    geom_line(aes(x1, f),
+              data=YVAR(scores, "f"))+
+    geom_point(aes(x1, f.noise, color=y, clickSelects=observation.i),
+               size=4,
+               alpha=0.7,
+               data=YVAR(data.dt, "f")),
+  square=ggplot()+
+    ggtitle("squared feature space")+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))+
+    facet_grid(y.var ~ ., scales="free")+
+    ylab("")+
+    scale_x_continuous(breaks=seq(0, 1, by=0.2))+
+    geom_vline(aes(xintercept=boundary), color="grey50",
+               data=x1sq.boundary)+
+    geom_point(aes(x1.sq, x2.sq, color=y, clickSelects=observation.i),
+               size=4,
+               alpha=0.7,
+               data=YVAR(data.dt, "x2.sq"))+
+    geom_line(aes(x1.sq, f),
+              data=YVAR(scores, "f"))+
+    geom_point(aes(x1.sq, f.noise, color=y, clickSelects=observation.i),
+               size=4,
+               alpha=0.7,
+               data=YVAR(data.dt, "f")))
+structure(viz.simple, class="animint")
+```
+
+Note how we used two multi-panel plots with the
+[addColumn then facet](ChXX-appendix.html#addColumn-then-facet) idiom,
+rather than creating four separate plots. This emphasizes the fact
+that some plots/facets have a common `x1` or `x1.sq` axis. Note that
+we also hid the color legend in the first plot, since it is sufficient
+to just have one color legend.
+
+### SVM
 
 ```{r}
 data.dt[, data.i := 1:.N]
@@ -110,10 +207,6 @@ train.dt <- data.dt[set=="train",]
 foo
 
 ```{r}
-x.min <- -2
-x.max <- 2
-n.grid <- 40
-x.vec <- seq(x.min, x.max, l=n.grid)
 grid.dt <- data.table(expand.grid(
   x1=x.vec,
   x2=x.vec))
