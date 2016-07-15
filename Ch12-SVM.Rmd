@@ -64,13 +64,15 @@ ggplot()+
 In particular, we assume that the label `y` is negative (-1) if
 `x1.sq + noise < 0.2`, and positive (1) otherwise. The plot below
 visualizes the scores and labels, as a function of the input feature
-`x1`. It also shows the true score function in black.
+`x1`. It also shows the true score function in black. Of course, we
+would not be able to make this visualization with real data (only the
+labels are known in real data, not the scores).
 
 ```{r}
-data.dt[, f.noise := f+rnorm(N, 0, 0.2)]
+data.dt[, f.noise := f+rnorm(N, 0, 0.3)]
 data.dt[, y.num := ifelse(f.noise<true.decision.boundary, -1, 1)]
 data.dt[, y := factor(y.num)]
-scores <- data.table(x1=seq(-1, 1, l=101))
+scores <- data.table(x1=seq(-2, 2, l=101))
 scores[, x1.sq := x1^2 ]
 scores[, f := x1.sq ]
 x1.boundaries <- data.table(boundary=c(1, -1)*sqrt(true.decision.boundary))
@@ -134,7 +136,7 @@ The animint below uses `clickSelects` to show which points in the
 input and squared space correspond. We just need to create an
 `data.i` variable that has a unique ID for each data point.
 
-```{r}
+```{r, Ch12-viz-simple}
 library(animint)
 data.dt[, data.i := 1:.N]
 YVAR <- function(dt, y.var){
@@ -306,10 +308,6 @@ ggplot()+
               color="green",
               size=1,
               data=abline.dt)+
-  geom_segment(aes(x1.sq, x2.sq,
-                   xend=x1.sq.margin, yend=x2.sq.margin),
-               color="grey",
-               data=slack.join)+
   geom_point(aes(x1.sq, x2.sq, color=y),
              shape=21,
              fill=NA,
@@ -351,6 +349,8 @@ sv.colors <- c(
   "alpha=C"="grey")
 ggplot()+
   scale_linetype_manual(values=c(margin="dashed", decision="solid"))+
+  geom_vline(aes(xintercept=boundary), color="violet",
+             data=x1sq.boundary)+
   geom_abline(aes(slope=slope, intercept=intercept, linetype=boundary),
               size=1,
               data=abline.dt)+
@@ -365,14 +365,20 @@ ggplot()+
              data=train.dt)
 ```
 
-The plot above shows the slack in grey, and the decision and margin
-lines in black. The goal below will be to make an animint that shows
-how the decision boundary, margin, and slack change as a function of
-the cost parameter.
+The plot above shows the slack in grey segments, and the decision and
+margin lines in black. The Bayes decision boundary is shown in the
+background as a vertical violet line. The support vectors are the
+points with non-zero alpha coefficients. Black filled support vectors
+are on the margin, and grey support vectors are on the wrong side of
+the margin (and have non-zero slack). The plot below shows the model
+that was learned in the original feature space,
 
 ```{r}
-squared.mat <- train.dt[, cbind(x1.sq, x2.sq)]
-y.vec <- train.dt$y
+n.grid <- 41
+x.vec <- seq(-1, 1, l=n.grid)
+grid.dt <- data.table(expand.grid(
+  x1=x.vec,
+  x2=x.vec))
 getBoundaryDF <- function(score.vec, level.vec=c(-1, 0, 1)){
   stopifnot(length(score.vec) == n.grid * n.grid)
   several.paths <- contourLines(
@@ -385,17 +391,42 @@ getBoundaryDF <- function(score.vec, level.vec=c(-1, 0, 1)){
       path.i,
       level.num=as.numeric(level),
       level.fac=factor(level, c(-1, 0, 1)),
+      boundary=ifelse(level==0, "decision", "margin"),
       x1=x, x2=y))
   }
   do.call(rbind, contour.list)
 }
+grid.dt[, pred.f := predF(fit, cbind(x1^2, x2^2))]
+boundaries <- grid.dt[, getBoundaryDF(pred.f)]
+ggplot()+
+  scale_linetype_manual(values=c(margin="dashed", decision="solid"))+
+  geom_vline(aes(xintercept=boundary),
+             color="violet",
+             data=x1.boundaries)+
+  geom_path(aes(x1, x2, group=path.i, linetype=boundary),
+            size=1,
+            data=boundaries)+
+  scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
+  scale_size_manual(values=c(correct=2, error=4))+
+  geom_point(aes(x1, x2, color=y,
+                 size=train.error,
+                 fill=status),
+             shape=21,
+             data=train.dt)
+```
+
+The goal below will be to make an animint that shows
+how the decision boundary, margin, and slack change as a function of
+the cost parameter.
+
+```{r}
 modelInfo.list <- list()
 predictions.list <- list()
 slackSegs.list <- list()
 modelLines.list <- list()
 inputBoundaries.list <- list()
 setErrors.list <- list()
-cost.by <- 0.1
+cost.by <- 0.2
 for(cost.param in 10^seq(-1, 1, by=cost.by)){
   fit <- ksvm(
     squared.mat, y.vec, kernel="vanilladot", scaled=FALSE, C=cost.param)
@@ -407,26 +438,14 @@ for(cost.param in 10^seq(-1, 1, by=cost.by)){
   }
   mu <- fit.sc[["scaled:center"]]
   sigma <- fit.sc[["scaled:scale"]]
-  predF <- function(fit, X){
-    X.sc <- scale(X, mu, sigma)
-    kernelMult(kernelf(fit), X.sc, xmatrix(fit)[[1]], coef(fit)[[1]])-b(fit)
-  }
   weight.vec <- colSums(xmatrix(fit)[[1]]*coef(fit)[[1]])
-  predF2 <- function(fit, X){
-    X.sc <- scale(X, mu, sigma)
-    X.sc %*% weight.vec - b(fit)
-  }
   grid.sq.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
   data.dt[, pred.y := predict(fit, cbind(x1.sq, x2.sq))]
   one.error <- data.dt[, list(errors=sum(y!=pred.y)), by=set]
   setErrors.list[[paste(cost.param)]] <- data.table(
     cost.param, one.error)
-  train.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
-  train.dt[, pred.f2 := predF2(fit, cbind(x1.sq, x2.sq))]
-  train.dt[, pred.y := predict(fit, cbind(x1.sq, x2.sq))]
-  grid.dt[, x1.sq := x1^2]
-  grid.dt[, x2.sq := x2^2]
-  grid.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
+  train.dt[, pred.f := predF(fit, cbind(x1^2, x2^2))]
+  grid.dt[, pred.f := predF(fit, cbind(x1^2, x2^2))]
   boundaries <- getBoundaryDF(grid.dt$pred.f)
   inputBoundaries.list[[paste(cost.param)]] <- data.table(
     cost.param, boundaries)
@@ -452,87 +471,18 @@ for(cost.param in 10^seq(-1, 1, by=cost.by)){
   slack.join[, x1.sq.margin := (
     x2.sq-slack.slope*x1.sq-intercept)/(slope-slack.slope)]
   slack.join[, x2.sq.margin := slope*x1.sq.margin + intercept]
-  squared.space+
-    coord_equal()+
-    geom_abline(aes(slope=slope, intercept=intercept),
-                color="green",
-                linetype="dotted",
-                data=abline.dt)+
-    geom_segment(aes(x1.sq, x2.sq,
-                     xend=x1.sq.margin, yend=x2.sq.margin),
-                 color="grey",
-                 data=slack.join)+
-    geom_contour(aes(x1.sq, x2.sq, z=pred.f),
-                 breaks=0,
-                 color="black",
-                 data=grid.sq.dt)+
-    geom_contour(aes(x1.sq, x2.sq, z=pred.f),
-                 breaks=c(-1, 1),
-                 color="black",
-                 linetype="dashed",
-                 data=grid.sq.dt)
-
   norm.weights <- as.numeric(weight.vec %*% weight.vec)
   modelInfo.list[[paste(cost.param)]] <- data.table(
     cost.param,
     total.slack=slack.join[, sum(1-pred.f*y.num)],
     norm.weights,
     margin.size=2/sqrt(norm.weights))
-
   predictions.list[[paste(cost.param)]] <- data.table(
     cost.param, train.dt)
-
   slackSegs.list[[paste(cost.param)]] <- data.table(
     cost.param, slack.join)
-
   modelLines.list[[paste(cost.param)]] <- data.table(
     cost.param, abline.dt)
-  
-  ggplot()+
-    geom_contour(aes(x1.sq, x2.sq, z=f),
-                 breaks=true.decision.boundary,
-                 size=1,
-                 color="red",
-                 data=grid.sq.dt)+
-    geom_point(aes(x1.sq, x2.sq, color=y, fill=status),
-               shape=21,
-               data=train.dt)+
-    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-    geom_segment(aes(x1.sq, x2.sq,
-                     xend=x1.sq.margin, yend=x2.sq.margin),
-                 color="grey",
-                 data=slack.join)+
-    geom_abline(aes(slope=slope, intercept=intercept, linetype=boundary),
-                color="black",
-                data=abline.dt)
-  ## geom_contour(aes(x1.sq, x2.sq, z=pred.f),
-  ##              breaks=0,
-  ##              color="black",
-  ##              data=grid.sq.dt)+
-  ## geom_contour(aes(x1.sq, x2.sq, z=pred.f),
-  ##              breaks=c(-1, 1),
-  ##              color="black",
-  ##              linetype="dashed",
-  ##              data=grid.sq.dt)
-
-  ggplot()+
-    geom_point(aes(x1, x2, color=y, fill=status),
-               shape=21,
-               data=train.dt)+
-    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-    geom_contour(aes(x1, x2, z=f),
-                 breaks=true.decision.boundary,
-                 data=grid.dt)+
-    geom_contour(aes(x1, x2, z=pred.f),
-                 breaks=0,
-                 color="black",
-                 data=grid.dt)+
-    geom_contour(aes(x1, x2, z=pred.f),
-                 breaks=c(-1, 1),
-                 color="black",
-                 linetype="dashed",
-                 data=grid.dt)
-
 }
 inputBoundaries <- do.call(rbind, inputBoundaries.list)
 predictions <- do.call(rbind, predictions.list)
@@ -540,79 +490,9 @@ slackSegs <- do.call(rbind, slackSegs.list)
 modelLines <- do.call(rbind, modelLines.list)
 modelInfo <- do.call(rbind, modelInfo.list)
 setErrors <- do.call(rbind, setErrors.list)
-
 modelInfo.tall <- melt(modelInfo, id.vars="cost.param")
-
-library(animint)
 grid.sq.dt$boundary <- "true"
 setErrors$variable <- "errors"
-viz <- list(
-  selectModel=ggplot()+
-    ggtitle("select regularization parameter")+
-    geom_tallrect(aes(
-      xmin=log10(cost.param)-cost.by/2,
-      xmax=log10(cost.param)+cost.by/2,
-      clickSelects=cost.param),
-      alpha=0.5,
-      data=modelInfo)+
-    theme_bw()+
-    theme(panel.margin=grid::unit(0, "lines"))+
-    facet_grid(variable ~ ., scales="free")+
-    geom_line(aes(log10(cost.param), errors,
-                  group=set, color=set),
-              data=setErrors)+
-    geom_line(aes(log10(cost.param), log10(value)),
-              data=modelInfo.tall),
-  inputSpace=ggplot()+
-    ggtitle("Input space features")+
-    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-    geom_contour(aes(x1, x2, z=f),
-                 breaks=true.decision.boundary,
-                 color="violet",
-                 data=grid.dt)+
-    guides(color="none", fill="none")+
-    scale_linetype_manual(values=c(
-      "-1"="dashed",
-      "0"="solid",
-      "1"="dashed"))+
-    geom_path(aes(x1, x2,
-                  group=path.i,
-                  linetype=level.fac,
-                  showSelected=cost.param),
-              color="black",
-              data=inputBoundaries)+
-    geom_point(aes(x1, x2, color=y, fill=status, showSelected=cost.param,
-                   clickSelects=data.i),
-               size=3,
-               data=predictions),
-  kernelSpace=ggplot()+
-    ggtitle("Kernel space features")+
-    geom_abline(aes(slope=slope, intercept=intercept, linetype=boundary,
-                    showSelected=cost.param),
-                color="black",
-                data=modelLines)+
-    scale_linetype_manual(values=c(
-      decision="solid",
-      margin="dashed",
-      true="solid"))+
-    ## geom_contour(aes(x1.sq, x2.sq, z=f, linetype=boundary),
-    ##              breaks=true.decision.boundary,
-    ##              size=2,
-    ##              color="violet",
-    ##              data=grid.sq.dt)+
-    geom_point(aes(x1.sq, x2.sq, color=y, fill=status,
-                   clickSelects=data.i,
-                   showSelected=cost.param),
-               size=3,
-               data=predictions)+
-    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-    geom_segment(aes(x1.sq, x2.sq,
-                     showSelected=cost.param,
-                     xend=x1.sq.margin, yend=x2.sq.margin),
-                 color="grey",
-                 data=slackSegs))
-structure(viz, class="animint")
-
 inputBoundaries[, boundary := ifelse(level.num==0, "decision", "margin")]
 slackSegs$boundary <- "margin"
 viz.linked <- list(
@@ -640,10 +520,9 @@ viz.linked <- list(
   inputSpace=ggplot()+
     ggtitle("Input space features")+
     scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-    geom_contour(aes(x1, x2, z=f),
-                 breaks=true.decision.boundary,
-                 color="violet",
-                 data=grid.dt)+
+    geom_vline(aes(xintercept=boundary),
+               color="violet",
+               data=x1.boundaries)+
     guides(color="none", fill="none", linetype="none")+
     scale_linetype_manual(values=c(
       "-1"="dashed",
@@ -673,6 +552,9 @@ viz.linked <- list(
                data=predictions),
   kernelSpace=ggplot()+
     ggtitle("Kernel space features")+
+    geom_vline(aes(xintercept=boundary), color="violet",
+               data=x1sq.boundary)+
+    coord_cartesian(xlim=c(0, 1), ylim=c(0, 1))+
     geom_abline(aes(slope=slope, intercept=intercept, linetype=boundary,
                     showSelected=cost.param),
                 color="black",
@@ -681,11 +563,6 @@ viz.linked <- list(
       decision="solid",
       margin="dashed",
       true="solid"))+
-    ## geom_contour(aes(x1.sq, x2.sq, z=f, linetype=boundary),
-    ##              breaks=true.decision.boundary,
-    ##              size=2,
-    ##              color="violet",
-    ##              data=grid.sq.dt)+
     geom_point(aes(x1.sq, x2.sq, color=y, fill=status,
                    showSelected2=data.i,
                    showSelected=cost.param),
@@ -705,7 +582,6 @@ viz.linked <- list(
                  color="grey",
                  data=slackSegs))
 structure(viz.linked, class="animint")
-
-## TODO: add polynomial kernels.
-
 ```
+
+### Non-linear SVM
