@@ -584,12 +584,111 @@ viz.linked <- list(
 structure(viz.linked, class="animint")
 ```
 
-### Non-linear SVM
+### Non-linear polynomial kernel SVM
 
 In the previous section we fit a linear kernel in the squared feature
 space, which resulted in learning a function which is non-linear in
 terms of the original feature space. In this section we directly fit a
 non-linear polynomial kernel in the original space.
+
+```{r}
+predictions.list <- list()
+inputBoundaries.list <- list()
+setErrors.list <- list()
+cost.by <- 0.2
+orig.mat <- train.dt[, cbind(x1, x2)]
+for(cost.param in 10^seq(-1, 2, by=cost.by)){
+  for(degree.num in c(1, 2, 3, 4)){
+    k <- polydot(degree.num, offset=0)
+    fit <- ksvm(
+      orig.mat, y.vec, kernel=k, scaled=FALSE, C=cost.param)
+    grid.dt[, pred.f := predF(fit, cbind(x1, x2))]
+    grid.dt[, pred.y := predict(fit, cbind(x1, x2))]
+    grid.dt[, stopifnot(sign(pred.f) == pred.y)]
+    data.dt[, pred.y := predict(fit, cbind(x1, x2))]
+    one.error <- data.dt[, list(errors=sum(y != pred.y)), by=set]
+    setErrors.list[[paste(cost.param, degree.num)]] <- data.table(
+      cost.param, degree.num, one.error)
+    boundaries <- getBoundaryDF(grid.dt$pred.f)
+    inputBoundaries.list[[paste(cost.param, degree.num)]] <- data.table(
+      cost.param, degree.num, boundaries)
+    train.dt$alpha <- 0
+    train.dt[as.integer(rownames(xmatrix(fit)[[1]])), alpha := alpha(fit)[[1]]]
+    train.dt[, status := ifelse(
+      alpha==0, "alpha=0",
+      ifelse(alpha==cost.param, "alpha=C", "0<alpha<C"))]
+    predictions.list[[paste(cost.param, degree.num)]] <- data.table(
+      cost.param, degree.num, train.dt)
+  }
+}
+inputBoundaries <- do.call(rbind, inputBoundaries.list)
+predictions <- do.call(rbind, predictions.list)
+setErrors <- do.call(rbind, setErrors.list)
+
+testErrors <- setErrors[set=="test",]
+
+testErrors$select <- "degree"
+setErrors$select <- "cost"
+
+viz.poly <- list(
+  selectModel=ggplot()+
+    ggtitle("select hyper parameters")+
+    geom_tallrect(aes(
+      xmin=log10(cost.param)-cost.by/2,
+      xmax=log10(cost.param)+cost.by/2,
+      clickSelects=cost.param),
+      alpha=0.5,
+      data=setErrors[degree.num==1 & set=="train",])+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))+
+    facet_grid(select ~ ., scales="free")+
+    geom_line(aes(log10(cost.param), errors,
+                  showSelected=degree.num,
+                  key=set,
+                  group=set,
+                  color=set),
+              data=setErrors)+
+    ## geom_text(aes(log10(cost.param), errors-1, label=set,
+    ##               color=set),
+    ##           hjust=1,
+    ##           data=setErrors[cost.param==min(cost.param),])+
+    ## guides(color="none")+
+    geom_tile(aes(log10(cost.param), degree.num, fill=errors,
+                  clickSelects=degree.num),
+              data=testErrors),
+  inputSpace=ggplot()+
+    ggtitle("Input space features")+
+    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
+    geom_vline(aes(xintercept=boundary),
+               color="violet",
+               data=x1.boundaries)+
+    scale_linetype_manual(values=c(
+      margin="dashed",
+      decision="solid"))+
+    geom_path(aes(x1, x2,
+                  group=path.i,
+                  linetype=boundary,
+                  showSelected3=degree.num,
+                  showSelected=cost.param),
+              color="black",
+              data=inputBoundaries)+
+    geom_point(aes(x1, x2, color=y, fill=status,
+                   showSelected=cost.param,
+                   showSelected5=degree.num),
+               size=3,
+               data=predictions))
+structure(viz.poly, class="animint")
+
+```
+
+
+### Non-linear RBF kernel SVM
+
+In the previous section we fit an SVM with a polynomial kernel in the
+original feature space. In this section we use the RBF kernel in the
+original space.
+
+TODO
 
 ```{r}
 predictions.list <- list()
