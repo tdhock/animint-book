@@ -1,0 +1,99 @@
+---
+title: Lasso
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 11, Lasso
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch11-figures/")
+```
+
+This goal of this chapter is to create an interactive data
+visualization that explains the
+[Lasso](https://en.wikipedia.org/wiki/Lasso_%28statistics%29), a
+machine learning model for regularized linear regression.
+
+## Fix one train/validation split
+
+We begin by loading the prostate cancer data set.
+
+```{r}
+data(prostate, package="ElemStatLearn")
+head(prostate)
+```
+
+We construct a train inputs `x` and outputs `y` using the code below.
+
+```{r}
+input.cols <- c(
+  "lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason", 
+  "pgg45")
+is.validation <- prostate$train == FALSE
+train.df <- prostate[!is.validation, ]
+x <- as.matrix(train.df[input.cols])
+head(x)
+y <- train.df$lpsa
+head(y)
+```
+
+Below we fit the lasso model and plot its coefficients.
+
+```{r}
+fit <- lars(x,y,type="lasso")
+pred.nox <- predict(fit, type="coef")
+fraction <- sort(unique(c(
+  ##pred.nox$fraction, #include exact breakpoints? (uneven animation)
+  seq(0, 1, l=21))))
+pred.list <- predict(
+  fit, prostate[input.cols],
+  mode="fraction", s=fraction)
+residual.mat <- pred.list$fit - prostate$lpsa
+for(fraction.i in seq_along(fraction)){
+  f <- fraction[fraction.i]
+  obs.error.list[[paste(validation.fold, fraction.i)]] <- 
+    data.frame(
+      validation.fold,
+      observation.i=1:nrow(residual.mat),
+      set=ifelse(is.validation, "validation", "train"),
+      fraction.i,
+      fraction.fac=factor(f, fraction),
+      fraction=f,
+      residual=residual.mat[, fraction.i],
+      predicted=pred.list$fit[, fraction.i],
+      true=prostate$lpsa)
+}
+squares.mat <- residual.mat * residual.mat
+for(set in c("train", "validation")){
+  val <- if(set=="validation")TRUE else FALSE
+  is.set <- is.validation == val
+  mse <- colMeans(squares.mat[is.set, ])
+  mean.error.list[[paste(validation.fold, set)]] <- error.df <- data.frame(
+    validation.fold, set, mse, fraction, what="mean squared error")
+}
+selected.list[[paste(validation.fold)]] <-
+  subset(error.df, mse==min(mse))
+beta <- scale(pred.nox$coefficients, FALSE, 1/fit$normx)
+arclength <- rowSums(abs(beta))
+for(variable in colnames(beta)){
+  standardized.coef <- beta[, variable]
+  path.list[[paste(validation.fold, variable)]] <- data.frame(
+    validation.fold,
+    step=seq_along(standardized.coef),
+    variable,
+    standardized.coef,
+    fraction=pred.nox$fraction,
+    arclength)
+}
+zeros.list[[paste(validation.fold)]] <-
+  data.frame(validation.fold,
+             zeros=rowSums(beta==0),
+             fraction=pred.nox$fraction)
+
+```
+
+
+## Several train sets
+
+## Chapter summary and exercises

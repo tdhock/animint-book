@@ -12,6 +12,7 @@ prostate$fold <- NA
 prostate$fold[prostate$train==FALSE] <- 1
 prostate$fold[prostate$train==TRUE] <- sample(rep(2:3, l=sum(prostate$train)))
 table(prostate$fold)
+options(warn=1)
 
 mean.error.list <- list()
 obs.error.list <- list()
@@ -25,7 +26,7 @@ for(validation.fold in 0:3){
   x <- as.matrix(train.df[input.cols])
   y <- train.df$lpsa
   fit <- lars(x,y,type="lasso")
-  pred.nox <- predict(fit)
+  pred.nox <- predict(fit, type="coef")
   enters.path <- apply(pred.nox$coefficients, 2, function(coef.vec){
     pred.nox$fraction[min(which(coef.vec != 0))-1]
   })
@@ -35,7 +36,7 @@ for(validation.fold in 0:3){
                variable=names(enters.path))
   fraction <- sort(unique(c(
     ##pred.nox$fraction, #include exact breakpoints? (uneven animation)
-    seq(0, 1, l=20))))
+    seq(0, 1, l=21))))
   pred.list <- predict(
     fit, prostate[input.cols],
     mode="fraction", s=fraction)
@@ -81,6 +82,7 @@ for(validation.fold in 0:3){
                zeros=rowSums(beta==0),
                fraction=pred.nox$fraction)
 }
+
 path <- do.call(rbind, path.list)
 mean.error <- do.call(rbind, mean.error.list)
 zeros <- do.call(rbind, zeros.list)
@@ -183,11 +185,11 @@ viz <- list(
                  key=paste(step, variable),
                  color=variable),
             data=data.frame(subset(path, standardized.coef!=0), what="weights"))+
-  geom_point(aes(fraction, mse,
-                 showSelected=validation.fold),
-             shape=1,
-             size=4,
-             data=selected)+
+    geom_point(aes(fraction, mse,
+                   showSelected=validation.fold),
+               shape=1,
+               size=4,
+               data=selected)+
   geom_line(aes(fraction, mse, linetype=set, group=set,
                 key=set,
                 showSelected=validation.fold),
