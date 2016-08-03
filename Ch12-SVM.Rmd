@@ -291,6 +291,14 @@ parameters `mu` and `sigma`).
 ## The equation of the margin lines is x2 = m2 + s2/w2[c+b+w1*m1/s1]
 ## -s2*w1/(w2*s1)*x1 for c=1 and -1. x is input feature, m is mean, s
 ## is scale, w is learned weight.
+fit.sc <- scaling(fit)$x.scale
+if(is.null(fit.sc)){
+  fit.sc <- list(
+    "scaled:center"=c(0,0),
+    "scaled:scale"=c(1,1))
+}
+mu <- fit.sc[["scaled:center"]]
+sigma <- fit.sc[["scaled:scale"]]
 weight.vec <- colSums(xmatrix(fit)[[1]]*coef(fit)[[1]])
 predF.linear <- function(fit, X){
   X.sc <- scale(X, mu, sigma)
@@ -598,7 +606,7 @@ setErrors.list <- list()
 cost.by <- 0.2
 orig.mat <- train.dt[, cbind(x1, x2)]
 for(cost.param in 10^seq(-1, 2, by=cost.by)){
-  for(degree.num in c(1, 2, 3, 4)){
+  for(degree.num in seq(0, 5, by=1)){
     k <- polydot(degree.num, offset=0)
     fit <- ksvm(
       orig.mat, y.vec, kernel=k, scaled=FALSE, C=cost.param)
@@ -610,8 +618,10 @@ for(cost.param in 10^seq(-1, 2, by=cost.by)){
     setErrors.list[[paste(cost.param, degree.num)]] <- data.table(
       cost.param, degree.num, one.error)
     boundaries <- getBoundaryDF(grid.dt$pred.f)
-    inputBoundaries.list[[paste(cost.param, degree.num)]] <- data.table(
-      cost.param, degree.num, boundaries)
+    if(is.data.frame(boundaries) && nrow(boundaries)){
+      inputBoundaries.list[[paste(cost.param, degree.num)]] <- data.table(
+        cost.param, degree.num, boundaries)
+    }
     train.dt$alpha <- 0
     train.dt[as.integer(rownames(xmatrix(fit)[[1]])), alpha := alpha(fit)[[1]]]
     train.dt[, status := ifelse(
@@ -626,7 +636,6 @@ predictions <- do.call(rbind, predictions.list)
 setErrors <- do.call(rbind, setErrors.list)
 
 testErrors <- setErrors[set=="test",]
-
 testErrors$select <- "degree"
 setErrors$select <- "cost"
 
@@ -642,6 +651,7 @@ viz.poly <- list(
     theme_bw()+
     theme(panel.margin=grid::unit(0, "lines"))+
     facet_grid(select ~ ., scales="free")+
+    ylab("")+
     geom_line(aes(log10(cost.param), errors,
                   showSelected=degree.num,
                   key=set,
@@ -681,103 +691,10 @@ structure(viz.poly, class="animint")
 
 ```
 
+## Chapter summary and exercises
 
-### Non-linear RBF kernel SVM
+Exercises:
 
-In the previous section we fit an SVM with a polynomial kernel in the
-original feature space. In this section we use the RBF kernel in the
-original space.
-
-TODO
-
-```{r}
-predictions.list <- list()
-inputBoundaries.list <- list()
-setErrors.list <- list()
-cost.by <- 0.2
-orig.mat <- train.dt[, cbind(x1, x2)]
-for(cost.param in 10^seq(-1, 2, by=cost.by)){
-  for(degree.num in c(1, 2, 3, 4)){
-    k <- polydot(degree.num, offset=0)
-    fit <- ksvm(
-      orig.mat, y.vec, kernel=k, scaled=FALSE, C=cost.param)
-    grid.dt[, pred.f := predF(fit, cbind(x1, x2))]
-    grid.dt[, pred.y := predict(fit, cbind(x1, x2))]
-    grid.dt[, stopifnot(sign(pred.f) == pred.y)]
-    data.dt[, pred.y := predict(fit, cbind(x1, x2))]
-    one.error <- data.dt[, list(errors=sum(y != pred.y)), by=set]
-    setErrors.list[[paste(cost.param, degree.num)]] <- data.table(
-      cost.param, degree.num, one.error)
-    boundaries <- getBoundaryDF(grid.dt$pred.f)
-    inputBoundaries.list[[paste(cost.param, degree.num)]] <- data.table(
-      cost.param, degree.num, boundaries)
-    train.dt$alpha <- 0
-    train.dt[as.integer(rownames(xmatrix(fit)[[1]])), alpha := alpha(fit)[[1]]]
-    train.dt[, status := ifelse(
-      alpha==0, "alpha=0",
-      ifelse(alpha==cost.param, "alpha=C", "0<alpha<C"))]
-    predictions.list[[paste(cost.param, degree.num)]] <- data.table(
-      cost.param, degree.num, train.dt)
-  }
-}
-inputBoundaries <- do.call(rbind, inputBoundaries.list)
-predictions <- do.call(rbind, predictions.list)
-setErrors <- do.call(rbind, setErrors.list)
-
-testErrors <- setErrors[set=="test",]
-
-testErrors$select <- "degree"
-setErrors$select <- "cost"
-
-viz.poly <- list(
-  selectModel=ggplot()+
-    ggtitle("select hyper parameters")+
-    geom_tallrect(aes(
-      xmin=log10(cost.param)-cost.by/2,
-      xmax=log10(cost.param)+cost.by/2,
-      clickSelects=cost.param),
-      alpha=0.5,
-      data=setErrors[degree.num==1 & set=="train",])+
-    theme_bw()+
-    theme(panel.margin=grid::unit(0, "lines"))+
-    facet_grid(select ~ ., scales="free")+
-    geom_line(aes(log10(cost.param), errors,
-                  showSelected=degree.num,
-                  key=set,
-                  group=set,
-                  color=set),
-              data=setErrors)+
-    ## geom_text(aes(log10(cost.param), errors-1, label=set,
-    ##               color=set),
-    ##           hjust=1,
-    ##           data=setErrors[cost.param==min(cost.param),])+
-    ## guides(color="none")+
-    geom_tile(aes(log10(cost.param), degree.num, fill=errors,
-                  clickSelects=degree.num),
-              data=testErrors),
-  inputSpace=ggplot()+
-    ggtitle("Input space features")+
-    scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-    geom_vline(aes(xintercept=boundary),
-               color="violet",
-               data=x1.boundaries)+
-    scale_linetype_manual(values=c(
-      margin="dashed",
-      decision="solid"))+
-    geom_path(aes(x1, x2,
-                  group=path.i,
-                  linetype=boundary,
-                  showSelected3=degree.num,
-                  showSelected=cost.param),
-              color="black",
-              data=inputBoundaries)+
-    geom_point(aes(x1, x2, color=y, fill=status,
-                   showSelected=cost.param,
-                   showSelected5=degree.num),
-               size=3,
-               data=predictions))
-structure(viz.poly, class="animint")
-
-```
-
+* Use `rbfdot` as the kernel function. Compute train and test error,
+  then add a new panel to the "select hyper parameters" plot.
 
