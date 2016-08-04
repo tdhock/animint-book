@@ -38,23 +38,75 @@ y <- train.df$lpsa
 head(y)
 ```
 
-Below we fit the lasso model and plot its coefficients.
+Below we fit the full path of lasso solutions using the `lars` package.
 
 ```{r}
+library(lars)
 fit <- lars(x,y,type="lasso")
+fit$lambda
+```
+
+The path of `lambda` values are not evenly spaced.
+
+```{r}
 pred.nox <- predict(fit, type="coef")
+beta <- scale(pred.nox$coefficients, FALSE, 1/fit$normx)
+arclength <- rowSums(abs(beta))
+path.list <- list()
+library(data.table)
+for(variable in colnames(beta)){
+  standardized.coef <- beta[, variable]
+  path.list[[variable]] <- data.table(
+    step=seq_along(standardized.coef),
+    lambda=c(fit$lambda, 0),
+    variable,
+    standardized.coef,
+    fraction=pred.nox$fraction,
+    arclength)
+}
+path <- do.call(rbind, path.list)
+
+variable.colors <- c(
+  "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
+  "#A65628", "#F781BF", "#999999")
+ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  scale_color_manual(values=variable.colors)+
+  geom_line(aes(lambda, standardized.coef, color=variable, group=variable),
+            data=path)+
+  ggtitle("LASSO path for prostate cancer data calculated using the LARS")
+```
+
+```{r}
 fraction <- sort(unique(c(
-  ##pred.nox$fraction, #include exact breakpoints? (uneven animation)
   seq(0, 1, l=21))))
 pred.list <- predict(
   fit, prostate[input.cols],
   mode="fraction", s=fraction)
-residual.mat <- pred.list$fit - prostate$lpsa
+```
+
+```{r}
+residual.mat <- pred.list$fit - y
+squares.mat <- residual.mat * residual.mat
+for(set in c("train", "validation")){
+  val <- if(set=="validation")TRUE else FALSE
+  is.set <- is.validation == val
+  mse <- colMeans(squares.mat[is.set, ])
+  mean.error.list[[paste(set)]] <- error.df <- data.frame(
+    set, mse, fraction, what="mean squared error")
+}
+
+```
+
+and plot its coefficients.
+
+
+```{r}
 for(fraction.i in seq_along(fraction)){
   f <- fraction[fraction.i]
-  obs.error.list[[paste(validation.fold, fraction.i)]] <- 
+  obs.error.list[[paste(fraction.i)]] <- 
     data.frame(
-      validation.fold,
       observation.i=1:nrow(residual.mat),
       set=ifelse(is.validation, "validation", "train"),
       fraction.i,
@@ -64,28 +116,9 @@ for(fraction.i in seq_along(fraction)){
       predicted=pred.list$fit[, fraction.i],
       true=prostate$lpsa)
 }
-squares.mat <- residual.mat * residual.mat
-for(set in c("train", "validation")){
-  val <- if(set=="validation")TRUE else FALSE
-  is.set <- is.validation == val
-  mse <- colMeans(squares.mat[is.set, ])
-  mean.error.list[[paste(validation.fold, set)]] <- error.df <- data.frame(
-    validation.fold, set, mse, fraction, what="mean squared error")
-}
+
 selected.list[[paste(validation.fold)]] <-
   subset(error.df, mse==min(mse))
-beta <- scale(pred.nox$coefficients, FALSE, 1/fit$normx)
-arclength <- rowSums(abs(beta))
-for(variable in colnames(beta)){
-  standardized.coef <- beta[, variable]
-  path.list[[paste(validation.fold, variable)]] <- data.frame(
-    validation.fold,
-    step=seq_along(standardized.coef),
-    variable,
-    standardized.coef,
-    fraction=pred.nox$fraction,
-    arclength)
-}
 zeros.list[[paste(validation.fold)]] <-
   data.frame(validation.fold,
              zeros=rowSums(beta==0),
