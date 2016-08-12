@@ -104,11 +104,11 @@ will use later for animation.
 ```{r}
 fraction <- sort(unique(c(
   seq(0, 1, l=21))))
-pred.list <- predict(
+pred.fraction <- predict(
   fit, prostate[input.cols],
   type="coef", mode="fraction", s=fraction)
 coef.grid.list <- list()
-coef.grid.mat <- scale(pred.list$coefficients, FALSE, 1/fit$normx)
+coef.grid.mat <- scale(pred.fraction$coefficients, FALSE, 1/fit$normx)
 for(fraction.i in seq_along(fraction)){
   standardized.coef <- coef.grid.mat[fraction.i,]
   coef.grid.list[[fraction.i]] <- data.table(
@@ -134,7 +134,21 @@ ggplot()+
              data=coef.grid)
 ```
 
+The plot above shows that the weights at the grid points are
+consistent with the lines that represent the entire path of
+solutions. The LARS algorithm quickly provides Lasso solutions for as
+many grid points as you like. More precisely, since the LARS only
+computes the change-points in the piecewise linear path, its time
+complexity only depends on the number of change-points (not the number
+of grid points).
+
+The plot below combines the lasso weight path with the train/test
+error plot.
+
 ```{r}
+pred.list <- predict(
+  fit, prostate[input.cols],
+  mode="fraction", s=fraction)
 residual.mat <- pred.list$fit - prostate$lpsa
 squares.mat <- residual.mat * residual.mat
 mean.error.list <- list()
@@ -143,38 +157,55 @@ for(set in c("train", "validation")){
   is.set <- is.validation == val
   mse <- colMeans(squares.mat[is.set, ])
   mean.error.list[[paste(set)]] <- data.table(
-    set, mse, fraction, what="mean squared error")
+    set, mse, fraction,
+    arclength=rowSums(abs(coef.grid.mat)))
 }
 mean.error <- do.call(rbind, mean.error.list)
+rect.width <- diff(mean.error$arclength[1:2])/2
+library(animint)
+addY <- function(dt, y){
+  data.table(dt, y.var=factor(y, c("error", "weights")))
+}
+ggplot()+
+  ggtitle("LASSO path for prostate cancer data calculated using the LARS")+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(y.var ~ ., scales="free")+
+  ylab("")+
+  scale_color_manual(values=variable.colors)+
+  geom_line(aes(arclength, standardized.coef, color=variable, group=variable),
+            data=addY(path, "weights"))+
+  geom_line(aes(arclength, mse, linetype=set),
+            data=addY(mean.error, "error"))+
+  geom_tallrect(aes(
+    xmin=arclength-rect.width,
+    xmax=arclength+rect.width,
+    clickSelects=arclength),
+    alpha=0.5,
+    data=coef.grid)
 ```
 
-and plot its coefficients.
-
+Finally, we add a plot of residuals versus actual values.
 
 ```{r}
+lasso.res.list <- list()
 for(fraction.i in seq_along(fraction)){
-  f <- fraction[fraction.i]
-  obs.error.list[[paste(fraction.i)]] <- 
-    data.frame(
-      observation.i=1:nrow(residual.mat),
-      set=ifelse(is.validation, "validation", "train"),
-      fraction.i,
-      fraction.fac=factor(f, fraction),
-      fraction=f,
-      residual=residual.mat[, fraction.i],
-      predicted=pred.list$fit[, fraction.i],
-      true=prostate$lpsa)
+  lasso.res.list[[fraction.i]] <- data.table(
+    observation.i=1:nrow(prostate),
+    fraction=fraction[[fraction.i]],
+    residual=residual.mat[, fraction.i],
+    response=prostate$lpsa,
+    arclength=sum(abs(coef.grid.mat[fraction.i,])),
+    set=ifelse(prostate$train, "train","validation"))
 }
-
-selected.list[[paste(validation.fold)]] <-
-  subset(error.df, mse==min(mse))
-zeros.list[[paste(validation.fold)]] <-
-  data.frame(validation.fold,
-             zeros=rowSums(beta==0),
-             fraction=pred.nox$fraction)
-
+lasso.res <- do.call(rbind, lasso.res.list)
+ggplot()+
+  geom_point(aes(response, residual, fill=set, showSelected=arclength),
+             shape=21,
+             data=lasso.res)
 ```
 
+TODO combine in a single animint.
 
 ## Several train sets
 
