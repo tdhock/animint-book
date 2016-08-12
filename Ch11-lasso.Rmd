@@ -65,17 +65,37 @@ for(variable in colnames(beta)){
     arclength)
 }
 path <- do.call(rbind, path.list)
-
 variable.colors <- c(
   "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
   "#A65628", "#F781BF", "#999999")
-ggplot()+
+gg.path <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   scale_color_manual(values=variable.colors)+
   geom_line(aes(lambda, standardized.coef, color=variable, group=variable),
             data=path)+
   ggtitle("LASSO path for prostate cancer data calculated using the LARS")
+gg.path
+```
+
+The plot above shows the entire lasso path, the optimal weights in the
+L1-regularized least squares regression problem, for every
+regularization parameter lambda. The path begins at the least squares
+solution, lambda=0 on the left. It ends at the completely regularized
+intercept-only model on the right. To see the equivalence with the
+ordinary least squares solution, we add dots in the plot below.
+
+```{r}
+x.scaled <- with(fit, scale(x, meanx, normx))
+lfit <- lm.fit(x.scaled, y)
+lpoints <- data.table(
+  variable=colnames(x),
+  standardized.coef=lfit$coefficients)
+gg.path+
+  geom_point(aes(0, standardized.coef, fill=variable),
+             shape=21,
+             color="black",
+             data=lpoints)
 ```
 
 ```{r}
@@ -87,16 +107,17 @@ pred.list <- predict(
 ```
 
 ```{r}
-residual.mat <- pred.list$fit - y
+residual.mat <- pred.list$fit - prostate$lpsa
 squares.mat <- residual.mat * residual.mat
+mean.error.list <- list()
 for(set in c("train", "validation")){
   val <- if(set=="validation")TRUE else FALSE
   is.set <- is.validation == val
   mse <- colMeans(squares.mat[is.set, ])
-  mean.error.list[[paste(set)]] <- error.df <- data.frame(
+  mean.error.list[[paste(set)]] <- data.table(
     set, mse, fraction, what="mean squared error")
 }
-
+mean.error <- do.call(rbind, mean.error.list)
 ```
 
 and plot its coefficients.
