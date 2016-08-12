@@ -68,14 +68,14 @@ path <- do.call(rbind, path.list)
 variable.colors <- c(
   "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
   "#A65628", "#F781BF", "#999999")
-gg.path <- ggplot()+
+gg.lambda <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   scale_color_manual(values=variable.colors)+
   geom_line(aes(lambda, standardized.coef, color=variable, group=variable),
             data=path)+
   ggtitle("LASSO path for prostate cancer data calculated using the LARS")
-gg.path
+gg.lambda
 ```
 
 The plot above shows the entire lasso path, the optimal weights in the
@@ -90,20 +90,48 @@ x.scaled <- with(fit, scale(x, meanx, normx))
 lfit <- lm.fit(x.scaled, y)
 lpoints <- data.table(
   variable=colnames(x),
-  standardized.coef=lfit$coefficients)
-gg.path+
-  geom_point(aes(0, standardized.coef, fill=variable),
-             shape=21,
-             color="black",
+  standardized.coef=lfit$coefficients,
+  arclength=sum(abs(lfit$coefficients)))
+gg.lambda+
+  geom_point(aes(0, standardized.coef, color=variable),
              data=lpoints)
 ```
+
+In the next plot below, we show the path as a function of L1 norm
+(arclength), with some more points on an evenly spaced grid that we
+will use later for animation.
 
 ```{r}
 fraction <- sort(unique(c(
   seq(0, 1, l=21))))
 pred.list <- predict(
   fit, prostate[input.cols],
-  mode="fraction", s=fraction)
+  type="coef", mode="fraction", s=fraction)
+coef.grid.list <- list()
+coef.grid.mat <- scale(pred.list$coefficients, FALSE, 1/fit$normx)
+for(fraction.i in seq_along(fraction)){
+  standardized.coef <- coef.grid.mat[fraction.i,]
+  coef.grid.list[[fraction.i]] <- data.table(
+    fraction=fraction[[fraction.i]],
+    variable=colnames(x),
+    standardized.coef,
+    arclength=sum(abs(standardized.coef)))
+}
+coef.grid <- do.call(rbind, coef.grid.list)
+ggplot()+
+  ggtitle("LASSO path for prostate cancer data calculated using the LARS")+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  scale_color_manual(values=variable.colors)+
+  geom_line(aes(arclength, standardized.coef, color=variable, group=variable),
+            data=path)+
+  geom_point(aes(arclength, standardized.coef, color=variable),
+             data=lpoints)+
+  geom_point(aes(arclength, standardized.coef, color=variable),
+             shape=21,
+             fill=NA,
+             size=3,
+             data=coef.grid)
 ```
 
 ```{r}
