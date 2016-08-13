@@ -122,7 +122,7 @@ viz.one.rect <- list(
                      key=observation.i,
                      showSelected=arclength),
                data=lasso.res),
-  ##time=list(variable="arclength", ms=2000),
+  time=list(variable="arclength", ms=2000),
   duration=list(arclength=2000))
 animint2dir(viz.one.rect, "Ch11-viz-one-rect")
 
@@ -170,7 +170,7 @@ viz.other <- list(
                      key=observation.i,
                      showSelected=arclength),
                data=lasso.res),
-  ##time=list(variable="arclength", ms=2000),
+  time=list(variable="arclength", ms=2000),
   duration=list(arclength=2000))
 animint2dir(viz.other, "Ch11-viz-other")
 
@@ -215,13 +215,14 @@ viz.other2 <- list(
                      key=observation.i,
                      showSelected=arclength),
                data=lasso.res),
-  ##time=list(variable="arclength", ms=2000),
+  time=list(variable="arclength", ms=2000),
   duration=list(arclength=2000))
 animint2dir(viz.other2, "Ch11-viz-other2")
 
-prostateLasso <- list(
-  path=data.frame(path),
-  residuals=data.frame(lasso.res),
-  models=data.frame(tallrect.dt),
-  error=data.frame(mean.error))
-save(prostateLasso, file="~/R/animint/data/prostateLasso.RData")
+## prostateLasso <- list(
+##   path=data.frame(path),
+##   residuals=data.frame(lasso.res),
+##   models=data.frame(tallrect.dt),
+##   error=data.frame(mean.error))
+## save(prostateLasso, file="~/R/animint/data/prostateLasso.RData")
+## prompt(prostateLasso, file="~/R/animint/man/prostateLasso.Rd")
