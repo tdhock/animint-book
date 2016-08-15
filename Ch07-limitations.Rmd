@@ -357,5 +357,5 @@ Exercises:
   To fix the problem, compute a normalized version of `var` 
   and use that for the `showSelected` variable.
 
-Next, [Chapter 8](Ch08-WorldBank.html) explains how to create a
+Next, [Chapter 8](Ch08-WorldBank-facets.html) explains how to create a
 multi-panel visualization of the World Bank data.

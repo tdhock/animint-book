@@ -1,5 +1,5 @@
 ---
-title: K-Nearest-Neighbors example
+title: Poisson regression
 layout: default
 output: bookdown::html_chapter
 ---
@@ -296,6 +296,12 @@ structure(viz.log.loss, class="animint")
 ```
 
 ## Chapter summary and exercises
+
+Summary TODO
+
+Exercises:
+
+* TODO
 
 Next, [Chapter 14](Ch14-PeakSegJoint.html) explains how to use the
 `.variable` and `.value` aesthetics to visualize the PeakSegJoint

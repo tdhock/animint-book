@@ -1,0 +1,29 @@
+---
+title: Montreal bikes data viz
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 9, Montreal bikes data viz
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch09-figures/")
+```
+
+In this chapter we will explore several data visualizations of the
+Montreal bike data set.
+
+Chapter outline:
+
+* TODO
+
+## Original static figure {#static}
+
+## Chapter summary and exercises {#exercises}
+
+Exercises:
+
+* TODO
+
+Next, [Chapter 10](Ch10-nearest-neighbors.html) explains how to visualize the
+K-Nearest-Neighbors machine learning model.

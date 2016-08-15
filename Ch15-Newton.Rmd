@@ -20,25 +20,27 @@ library(data.table)
 Linear <- -628
 Log <- 1
 Constant <- 776.140660
+Linear <- 95
+Log <- -1097
+Constant <- 1586.763953
 loss.fun <- function(x){
   Linear*x + Log*log(x) + Constant
 }
 (mean.at.optimum <- -Log/Linear)
-loss.fun(mean.at.optimum)
+(loss.at.optimum <- loss.fun(mean.at.optimum))
 loss.deriv <- function(mean){
   Linear + Log/mean
 }
-uniroot(loss.fun, c(0, 0.001))
-uniroot(loss.fun, c(1, 2))
-possible.root <- 1
-while(1e-30 < abs({
+##uniroot(loss.fun, c(1, 2))
+possible.root <- mean.at.optimum-loss.at.optimum/Linear
+while(1e-6 < abs({
   fun.value <- loss.fun(possible.root)
 })){
   cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
   deriv.value <- loss.deriv(possible.root)
   possible.root <- possible.root - fun.value/deriv.value
 }
-loss.dt <- data.table(mean=seq(0, 2, l=1000))
+loss.dt <- data.table(mean=seq(0, 20, l=1000))
 loss.dt[, loss := loss.fun(mean)]
 loss.dt[, log.mean := log(mean)]
 root.dt <- data.table(possible.root, fun.value)
@@ -54,32 +56,19 @@ log.loss.fun <- function(log.mean){
 log.loss.deriv <- function(log.mean){
   exp(log.mean)*Linear + Log
 }
-possible.root <- -250
-while(1e-30 < abs({
+(log.mean.at.optimum <- log(mean.at.optimum))
+loss.fun(mean.at.optimum) #should be the same as the following:
+(loss.at.optimum <- log.loss.fun(log.mean.at.optimum))
+possible.root <- log.mean.at.optimum-loss.at.optimum/Log
+possible.root <- log.mean.at.optimum-1
+while(1e-6 < abs({
   fun.value <- log.loss.fun(possible.root)
 })){
   cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
   deriv.value <- log.loss.deriv(possible.root)
   possible.root <- possible.root - fun.value/deriv.value
 }
-log.loss.dt <- data.table(log.mean=seq(-1000, 1, l=1000))
-log.loss.dt[, loss := log.loss.fun(log.mean)]
-root.dt <- data.table(possible.root, fun.value)
-ggplot()+
-  geom_point(aes(possible.root, fun.value),
-             data=root.dt)+
-  geom_line(aes(log.mean, loss),
-            data=log.loss.dt)
-
-possible.root <- 1
-while(1e-30 < abs({
-  fun.value <- log.loss.fun(possible.root)
-})){
-  cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
-  deriv.value <- log.loss.deriv(possible.root)
-  possible.root <- possible.root - fun.value/deriv.value
-}
-log.loss.dt <- data.table(log.mean=seq(-1, 1, l=1000))
+log.loss.dt <- data.table(log.mean=seq(-1, 3, l=1000))
 log.loss.dt[, loss := log.loss.fun(log.mean)]
 root.dt <- data.table(possible.root, fun.value)
 ggplot()+
@@ -91,3 +80,13 @@ ggplot()+
 
 ```
 
+## Chapter summary and exercises
+
+Summary TODO.
+
+Exercises:
+
+* TODO
+
+Next, [Chapter 16](Ch16-change-point.html) explains how to visualize
+change-point detection models.

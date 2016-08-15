@@ -457,3 +457,6 @@ Exercises:
 
 * Use `.variable` and `.value` aesthetics to create a visualization
   of some data from your domain of expertise.
+
+Next, [Chapter 15](Ch15-Newton.html) explains how to visualize
+root-finding algorithms.

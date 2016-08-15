@@ -1,0 +1,29 @@
+---
+title: World Bank data viz
+layout: default
+output: bookdown::html_chapter
+---
+
+# Chapter 8, World Bank data viz
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch08-figures/")
+```
+
+In this chapter we will explore several data visualizations of the
+World Bank data set.
+
+Chapter outline:
+
+* TODO
+
+## Original static figure {#static}
+
+## Chapter summary and exercises {#exercises}
+
+Exercises:
+
+* TODO
+
+Next, [Chapter 9](Ch09-Montreal-bikes.html) explains how to visualize the
+Montreal bike data set.

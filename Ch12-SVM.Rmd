@@ -693,8 +693,12 @@ structure(viz.poly, class="animint")
 
 ## Chapter summary and exercises
 
+Summary TODO.
+
 Exercises:
 
 * Use `rbfdot` as the kernel function. Compute train and test error,
   then add a new panel to the "select hyper parameters" plot.
 
+Next, [Chapter 13](Ch13-poisson-regression.html) explains how to
+visualize the Poisson regression model.

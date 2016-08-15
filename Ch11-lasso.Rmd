@@ -337,6 +337,11 @@ perfect prediction.
 
 TODO
 
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
-TODO
+Exercises:
+
+* TODO
+
+Next, [Chapter 12](Ch12-SVM.html) explains how to visualize the
+Support Vector Machine.
