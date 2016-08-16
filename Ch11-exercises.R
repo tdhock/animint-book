@@ -219,6 +219,41 @@ viz.other2 <- list(
   duration=list(arclength=2000))
 animint2dir(viz.other2, "Ch11-viz-other2")
 
+viz.make <- list(
+  title="make_tallrect",
+  path=ggplot()+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))+
+    facet_grid(y.var ~ ., scales="free")+
+    ylab("")+
+    scale_color_manual(values=variable.colors)+
+    geom_line(aes(arclength, standardized.coef, color=variable, group=variable),
+              data=addY(path, "weights"))+
+    geom_line(aes(arclength, mse, linetype=set, group=set),
+              data=addY(mean.error, "error"))+
+    make_tallrect(mean.error, "arclength"),
+  res=ggplot()+
+    geom_hline(aes(yintercept=residual),
+               data=hline.dt,
+               color="grey")+
+    guides(linetype="none")+
+    geom_point(aes(response, residual, 
+                   key=observation.i,
+                   showSelected=arclength),
+               shape=21,
+               fill=NA,
+               color="black",
+               data=lasso.res)+
+    geom_segment(aes(response, residual,
+                     xend=response, yend=0,
+                     linetype=set,
+                     key=observation.i,
+                     showSelected=arclength),
+               data=lasso.res),
+  time=list(variable="arclength", ms=2000),
+  duration=list(arclength=2000))
+animint2dir(viz.make, "Ch11-viz-make")
+
 ## prostateLasso <- list(
 ##   path=data.frame(path),
 ##   residuals=data.frame(lasso.res),
