@@ -156,7 +156,7 @@ OneFold <- function(validation.fold){
 
 Below, we run the `OneFold` function in parallel using the
 `doParallel` package. This is an example of the
-[foreach loop idiom](ChXX-appendix.html#foreach-loop) which is
+[foreach loop idiom](Ch17-appendix.html#foreach-loop) which is
 generally useful for parallel computations. Note that validation folds
 1:10 will be used to compute the validation set error. The validation
 fold 0 treats all 200 observations as a train set, and will be used
@@ -179,7 +179,7 @@ practical or informative. Instead of visualizing them all at once, we
 will compute and plot summary statistics. In the code below we compute
 the mean and standard error of the mis-classification error for each
 model (over the 10 validation folds). This is an example of the
-[summarize data table idiom](ChXX-appendix.html#summarize-data-table)
+[summarize data table idiom](Ch17-appendix.html#summarize-data-table)
 which is generally useful for computing summary statistics for a
 single data table.
 

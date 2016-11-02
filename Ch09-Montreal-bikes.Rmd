@@ -15,7 +15,8 @@ Montreal bike data set.
 
 Chapter outline:
 
-* TODO
+* TODO create a data package from https://github.com/tdhock/montreal-velos
+* TODO adapt viz code
 
 ## Original static figure {#static}
 

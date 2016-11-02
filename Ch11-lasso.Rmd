@@ -15,7 +15,14 @@ visualization that explains the
 [Lasso](https://en.wikipedia.org/wiki/Lasso_%28statistics%29), a
 machine learning model for regularized linear regression.
 
-## Fix one train/validation split
+Chapter outline:
+* We begin with several static data visualizations of the lasso path.
+* We then create an interactive version with a facet and plot showing
+  train/validation error and residuals.
+* Finally we re-design the interactive data visualization with
+  simplified legends and moving tallrects.
+
+## Static plots of the coefficient regularization path
 
 We begin by loading the prostate cancer data set.
 
@@ -142,6 +149,8 @@ computes the change-points in the piecewise linear path, its time
 complexity only depends on the number of change-points (not the number
 of grid points).
 
+## Interactive data visualization
+
 The plot below combines the lasso weight path with the train/test
 error plot.
 
@@ -225,6 +234,8 @@ viz.one.split <- list(
   time=list(variable="arclength", ms=2000))
 structure(viz.one.split, class="animint")
 ```
+
+## Re-design with moving tallrects
 
 The re-design below has two changes. First, you may have noticed that
 there are two different set legends in the previous animint
@@ -324,24 +335,20 @@ viz.moving.rect <- list(
 structure(viz.moving.rect, class="animint")
 ```
 
-**Exercise:** re-make this data viz, including the same visual effect
-for the tallrects, using only one `geom_tallrect`. Hint: create
-another data set with `expand.grid(arclength.click=arclength,
-arclength.show=arclength)`.
-
-**Exercise:** add another scatterplot that shows predicted values
-versus response, with a `geom_abline` in the background to indicate
-perfect prediction.
-
-## Several train sets
-
-TODO
-
 ## Chapter summary and exercises {#exercises}
 
 Exercises:
-
-* TODO
+* Re-make this data viz, including the same visual effect for the
+  tallrects, using only one `geom_tallrect`. Hint: create another data
+  set with `expand.grid(arclength.click=arclength,
+  arclength.show=arclength)`, as in the definition of the
+  `make_tallrect_or_widerect` function.
+* Add another scatterplot that shows predicted values versus response,
+  with a `geom_abline` in the background to indicate perfect
+  prediction.
+* How would the error curves look if other train/validation splits
+  were chosen?  Perform 4-fold cross-validation and add a plot that
+  can be used to select test fold.
 
 Next, [Chapter 12](Ch12-SVM.html) explains how to visualize the
 Support Vector Machine.

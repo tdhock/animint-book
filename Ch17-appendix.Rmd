@@ -7,7 +7,7 @@ output: bookdown::html_chapter
 # Appendix, useful idioms
 
 ```{r setup, echo=FALSE}
-knitr::opts_chunk$set(fig.path="ChXX-figures/")
+knitr::opts_chunk$set(fig.path="Ch17-figures/")
 ```
 
 This appendix describes several idioms which are useful for creating
@@ -121,11 +121,15 @@ viz.aligned <- list(
               data=addColumn(WorldBankBefore1975, "1975"))+
     geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
               data=addColumn(WorldBank, "1960-2010"))+
-    facet_grid(. ~ time.period, scales="free")
+    facet_grid(. ~ time.period, scales="free")+
+    xlab("")
 )
 library(animint)
 structure(viz.aligned, class="animint")
 ```
+
+Note that `scales="free"` and `xlab("")` are used since the x axes now
+have very different units (year and life expectancy).
 
 ## Manual color legends {#manual-color-legends}
 

@@ -85,7 +85,7 @@ visualization of a peak detection model.
 
 ## Appendix {#appendix}
 
-[The appendix](ChXX-appendix.html) contains detailed explanations of
+[The appendix](Ch17-appendix.html) contains detailed explanations of
 several R code idioms that are used throughout this manual.
 
 

@@ -15,16 +15,30 @@ visualization that explains the
 [Support Vector Machine](https://en.wikipedia.org/wiki/Support_vector_machine),
 a machine learning model for binary classification.
 
+Chapter summary:
+* We begin by simulating some data for binary classification in two
+  dimensions, and making some static plots.
+* In the second section, we make an interactive data visualization to
+  show how the linear Support Vector Machine decision boundary changes
+  as a function of the cost hyper-parameter.
+* In the last section, we make an interactive data visualization to
+  show how the decision boundary of the polynomial kernel Support
+  Vector Machine changes as a function of the two hyper-parameters
+  (cost and degree).
+
 ## Generate and plot some data
 
 We begin by generating two input features, `x1` and `x2`.
 
 ```{r}
 library(data.table)
-N <- 100
+N <- 50
 set.seed(1)
 getInput <- function(){
-  runif(N, -1, 1)
+  c(#rnorm(N, sd=0.3),
+    runif(N, -1, 1),
+    runif(N, -1, 1)    
+    )
 }
 data.dt <- data.table(
   x1=getInput(),
@@ -62,17 +76,18 @@ ggplot()+
 ```
 
 In particular, we assume that the label `y` is negative (-1) if
-`x1.sq + noise < 0.2`, and positive (1) otherwise. The plot below
+`x1.sq + noise < threshold`, and positive (1) otherwise. The plot below
 visualizes the scores and labels, as a function of the input feature
 `x1`. It also shows the true score function in black. Of course, we
 would not be able to make this visualization with real data (only the
 labels are known in real data, not the scores).
 
 ```{r}
-data.dt[, f.noise := f+rnorm(N, 0, 0.3)]
+data.dt[, f.noise := f+rnorm(N, 0, 0.2)]
 data.dt[, y.num := ifelse(f.noise<true.decision.boundary, -1, 1)]
 data.dt[, y := factor(y.num)]
-scores <- data.table(x1=seq(-2, 2, l=101))
+table(data.dt$y)
+scores <- data.table(x1=seq(-1, 1, l=101))
 scores[, x1.sq := x1^2 ]
 scores[, f := x1.sq ]
 x1.boundaries <- data.table(boundary=c(1, -1)*sqrt(true.decision.boundary))
@@ -91,7 +106,7 @@ squared feature `x1.sq`. It is clear that the score function that we
 want to learn is linear in `x1.sq`.
 
 ```{r}
-x1sq.boundary <- data.table(boundary=0.2)
+x1sq.boundary <- data.table(boundary=true.decision.boundary)
 ggplot()+
   scale_y_continuous(breaks=seq(0, 1, by=0.2))+
   scale_x_continuous(breaks=seq(0, 1, by=0.2))+
@@ -107,7 +122,6 @@ Next, we visualize the labels in the two-dimensional squared feature
 space. It is clear that the decision boundary is linear in this space.
 
 ```{r}
-table(data.dt$y)
 ggplot()+
   scale_y_continuous(breaks=seq(0, 1, by=0.2))+
   scale_x_continuous(breaks=seq(0, 1, by=0.2))+
@@ -188,7 +202,7 @@ structure(viz.simple, class="animint")
 ```
 
 Note how we used two multi-panel plots with the
-[addColumn then facet](ChXX-appendix.html#addColumn-then-facet) idiom,
+[addColumn then facet](Ch17-appendix.html#addColumn-then-facet) idiom,
 rather than creating four separate plots. This emphasizes the fact
 that some plots/facets have a common `x1` or `x1.sq` axis. Note that
 we also hid the color legend in the first plot, since it is sufficient
@@ -197,7 +211,7 @@ to just have one color legend.
 ### Linear SVM
 
 ```{r}
-train.i <- 1:(N/2)
+train.i <- 1:N
 data.dt[, set := "test"]
 data.dt <- data.dt[train.i, set := "train"]
 table(data.dt$set)
@@ -427,7 +441,7 @@ The goal below will be to make an animint that shows
 how the decision boundary, margin, and slack change as a function of
 the cost parameter.
 
-```{r}
+```{r Ch12-viz-linear}
 modelInfo.list <- list()
 predictions.list <- list()
 slackSegs.list <- list()
@@ -503,7 +517,7 @@ grid.sq.dt$boundary <- "true"
 setErrors$variable <- "errors"
 inputBoundaries[, boundary := ifelse(level.num==0, "decision", "margin")]
 slackSegs$boundary <- "margin"
-viz.linked <- list(
+viz.linear <- list(
   selectModel=ggplot()+
     ggtitle("select regularization parameter")+
     geom_tallrect(aes(
@@ -589,7 +603,7 @@ viz.linked <- list(
                      xend=x1.sq.margin, yend=x2.sq.margin),
                  color="grey",
                  data=slackSegs))
-structure(viz.linked, class="animint")
+structure(viz.linear, class="animint")
 ```
 
 ### Non-linear polynomial kernel SVM
@@ -599,13 +613,13 @@ space, which resulted in learning a function which is non-linear in
 terms of the original feature space. In this section we directly fit a
 non-linear polynomial kernel in the original space.
 
-```{r}
+```{r Ch12-viz-poly}
 predictions.list <- list()
 inputBoundaries.list <- list()
 setErrors.list <- list()
 cost.by <- 0.2
 orig.mat <- train.dt[, cbind(x1, x2)]
-for(cost.param in 10^seq(-1, 2, by=cost.by)){
+for(cost.param in 10^seq(-1, 3, by=cost.by)){
   for(degree.num in seq(0, 5, by=1)){
     k <- polydot(degree.num, offset=0)
     fit <- ksvm(
@@ -658,11 +672,6 @@ viz.poly <- list(
                   group=set,
                   color=set),
               data=setErrors)+
-    ## geom_text(aes(log10(cost.param), errors-1, label=set,
-    ##               color=set),
-    ##           hjust=1,
-    ##           data=setErrors[cost.param==min(cost.param),])+
-    ## guides(color="none")+
     geom_tile(aes(log10(cost.param), degree.num, fill=errors,
                   clickSelects=degree.num),
               data=testErrors),
@@ -688,12 +697,14 @@ viz.poly <- list(
                size=3,
                data=predictions))
 structure(viz.poly, class="animint")
-
 ```
 
 ## Chapter summary and exercises
 
-Summary TODO.
+We used ggplots to visualize the Support Vector Machine model for
+binary classification. We used animint and interactivity to show how
+the SVM decision boundary changes as a function of the model
+hyper-parameters.
 
 Exercises:
 

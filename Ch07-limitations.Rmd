@@ -264,7 +264,7 @@ please send us a Pull Request. The following list documents all the
 
 * `panel.margin` designates the distance between panels, and is used
   in the
-  [space saving facets idiom](ChXX-appendix.html#space-saving-facets)
+  [space saving facets idiom](Ch17-appendix.html#space-saving-facets)
   to eliminate the distance between panels.
 * `panel.grid.major` is used to draw the the grid lines which are
   designated by the `breaks` argument to the scale.
