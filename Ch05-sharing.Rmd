@@ -104,7 +104,7 @@ I can view it on http://cbio.ensmp.fr/~thocking/WorldBank-facets/
 If you don't have access to a personal web server, try using
 [GitHub pages](https://pages.github.com/).
 
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
 This chapter explained how to share animints on the web.
 

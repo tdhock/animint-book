@@ -25,7 +25,7 @@ After reading this chapter, you will be able to
 * Use the `selector.types` option to specify multiple selection
   variables.
   
-## Interactive legends implicitly use clickSelects
+## Interactive legends implicitly use clickSelects {#implicit-clickSelects}
 
 In this section, we will explain how the clickSelects keyword is
 implicitly used in interactive legends. If you have read the previous
@@ -375,7 +375,7 @@ year.
 **Exercise:** add `time`, `duration`, `first`, and `selector.types`
   options to the data viz above.
 
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
 This chapter explained `clickSelects`, one of the two main keywords
 that animint introduces for interactive data visualization design. We

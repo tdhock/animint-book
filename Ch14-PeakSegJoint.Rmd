@@ -12,8 +12,25 @@ knitr::opts_chunk$set(fig.path="Ch14-figures/")
 
 This chapter explains how to use
 [.variable and .value](Ch06-other.html#variable-value) aesthetics for
-creating data-driven selector names. The example data come from the
-[PeakSegJoint package](https://github.com/tdhock/PeakSegJoint).
+creating data-driven selector names. This feature makes it easier to
+write animint code, and makes it faster to compile.
+
+Chapter outline:
+
+* We begin by downloading the PSJ data set and computing the data to
+  plot.
+* We show one method of defining an animint with many selectors, using
+  for loops. This method is technically correct, but computationally
+  inefficient.
+* We then explain the preferred method for defining an animint with
+  many selectors, using `.variable` and `.value` aesthetics. This
+  method is more computationally efficient, and easier to code.
+
+## Download data set {#download}
+
+The example data come from the
+[PeakSegJoint package](https://github.com/tdhock/PeakSegJoint). The
+code below downloads the data set.
 
 ```{r download-PSJ}
 library(animint)
@@ -30,7 +47,7 @@ if(!file.exists("PSJ.RData")){
 load("PSJ.RData")
 ```
 
-## Compute data to plot
+## Compute data to plot {#compute-data-to-plot}
 
 The section below computes some common data that we will use in two
 data visualizations below.
@@ -76,7 +93,7 @@ modelSelection.labels <- unique(with(all.modelSelection, {
 }))
 ```
 
-## Define data viz using for loops
+## Define data viz using for loops {#define-using-for-loops}
 
 The R code below constructs a data viz using for loops. TODO break up
 into pieces and comment each piece to explain what we are doing?
@@ -247,7 +264,7 @@ many geoms. The data viz can be viewed on
 [Ch14-for/index.html](Ch14-for/index.html). In the next section we
 will create the same data viz, but more efficiently.
 
-## Define data viz using variable and value aesthetics
+## Define data viz using variable and value aesthetics {#define-using-var-val}
 
 In this section we use `.variable` and `.value` aesthetics to create a
 more efficient version of the previous data visualization. In general,
@@ -416,7 +433,7 @@ should appear to be the same as the other data viz above. The timings
 above show that `.variable` and `.value` aesthetics are much faster
 than for loops, in both the definition and compilation steps.
 
-## Disk usage comparison
+## Disk usage comparison {#disk-usage}
 
 In this section we compute the disk usage of both methods.
 
@@ -434,7 +451,7 @@ The table above shows that the data viz defined using for loops takes
 about twice as much disk space as the data viz that used `.variable`
 and `.value` aesthetics.
 
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
 The table below summarizes the disk usage and timings presented in
 this chapter. It is clear that `.variable` and `.value` aesthetics are

@@ -16,6 +16,7 @@ visualization that explains the
 a machine learning model for binary classification.
 
 Chapter summary:
+
 * We begin by simulating some data for binary classification in two
   dimensions, and making some static plots.
 * In the second section, we make an interactive data visualization to
@@ -26,7 +27,7 @@ Chapter summary:
   Vector Machine changes as a function of the two hyper-parameters
   (cost and degree).
 
-## Generate and plot some data
+## Generate and plot some data {#generate}
 
 We begin by generating two input features, `x1` and `x2`.
 
@@ -43,6 +44,7 @@ getInput <- function(){
 data.dt <- data.table(
   x1=getInput(),
   x2=getInput())
+library(ggplot2)
 ggplot()+
   geom_point(aes(x1, x2),
              data=data.dt)
@@ -208,7 +210,7 @@ that some plots/facets have a common `x1` or `x1.sq` axis. Note that
 we also hid the color legend in the first plot, since it is sufficient
 to just have one color legend.
 
-### Linear SVM
+### Linear SVM {#linear-svm}
 
 ```{r}
 train.i <- 1:N
@@ -606,7 +608,7 @@ viz.linear <- list(
 structure(viz.linear, class="animint")
 ```
 
-### Non-linear polynomial kernel SVM
+### Non-linear polynomial kernel SVM {#nonlinear-polynomial-kernel-svm}
 
 In the previous section we fit a linear kernel in the squared feature
 space, which resulted in learning a function which is non-linear in
@@ -699,7 +701,7 @@ viz.poly <- list(
 structure(viz.poly, class="animint")
 ```
 
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
 We used ggplots to visualize the Support Vector Machine model for
 binary classification. We used animint and interactivity to show how
@@ -710,6 +712,9 @@ Exercises:
 
 * Use `rbfdot` as the kernel function. Compute train and test error,
   then add a new panel to the "select hyper parameters" plot.
+* By default ggplot2 uses the same two colors for the **y** and
+  **set** legends, which could be confusing. Change the colors in one
+  of the two legends so that they are different.
 
 Next, [Chapter 13](Ch13-poisson-regression.html) explains how to
 visualize the Poisson regression model.

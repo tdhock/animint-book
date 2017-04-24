@@ -21,7 +21,7 @@ this chapter, you will be able to
   option and key aesthetic.
 * Create animated data visualizations using the time option.
 
-## Sketching with showSelected
+## Sketching with showSelected {#sketching}
 
 In this section, we will explain how the showSelected keyword can be
 used in plot sketches. The showSelected keyword specifies a variable
@@ -136,13 +136,12 @@ reflect the current selection.
 We use the terms "direct manipulation" and "indirect manipulation" to
 describe these different ways of changing the selection. Direct
 manipulation typically involves clicking on the objects that you want
-to change, and is usually easier to understand (TODO:ref infovis
-literature). In contrast, indirect manipulation techniques such as
-menus are typically more complicated to understand. In the animint
-above, you can change the value of the `region` variable using either
-the legend or the menu. Using the legend is a more direct manipulation
-technique, since the legend is drawn closer to the plotted data points
-that will be updated.
+to change, and is usually easier to understand. In contrast, indirect
+manipulation techniques such as menus are typically more complicated
+to understand. In the animint above, you can change the value of the
+`region` variable using either the legend or the menu. Using the
+legend is a more direct manipulation technique, since the legend is
+drawn closer to the plotted data points that will be updated.
 
 Other selection variables such as year default to single selection, so
 only one value is selected and shown at any time. **Try** changing the
@@ -268,7 +267,7 @@ structure(viz.duration.time, class="animint")
 smooth transitions. Hint: make a list of ggplots that has the `time`
 option but no `duration` option.
 
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
 This chapter explained the showSelected aesthetic, selection menus,
 transition durations, and animation.

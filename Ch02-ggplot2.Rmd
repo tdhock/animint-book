@@ -46,8 +46,6 @@ plots, including a legend and panels. The disadvantage is the set of
 pre-defined chart types, which means that it is not easy to create
 more complex graphics.
 
-TODO: figure or table.
-
 Newer plotting systems based on the grammar of graphics are situated
 between these two extremes. Wilkinson proposed the grammar of graphics
 in order to describe and create a large class of plots

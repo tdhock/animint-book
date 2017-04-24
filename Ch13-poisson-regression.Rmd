@@ -23,7 +23,17 @@ to model the output labels, instead of a Gaussian distribution. This
 modeling choice is appropriate when output labels are non-negative
 integers. 
 
-## Plot the probability mass function and select the Poisson mean parameter
+Chapter outline:
+
+* We begin by creating a plot that shows the probability mass function
+  for a Poisson distribution mean parameter that can be interactively
+  selected.
+* We then add a second panel that shows the cumulative distribution
+  function.
+* We then add a second plot which shows the Poisson loss, with a
+  second selector for label value.
+
+## Plot the probability mass function and select the Poisson mean parameter {#plot-prob-mass}
 
 The goal of this section is to create a data visualization that shows
 the probability mass function for a selected Poisson mean parameter.
@@ -94,7 +104,7 @@ Poisson distribution). For example the Poisson distribution with a
 mean of 3 attains its maximum probability of about 0.224 at label
 values of 2 and 3.
 
-## Add a panel for the cumulative distribution function
+## Add a panel for the cumulative distribution function {#panel-cdf}
 
 To add a panel for the cumulative distribution function, we will
 re-make the ggplot based on the sketch below.
@@ -148,7 +158,7 @@ points to plot for each Poisson distribution. This is an example of
 "show your arbitrary choices," one of the general principles of
 designing good interactive data visualizations.
 
-## Add a plot of the Poisson loss and a selector for label value
+## Add a plot of the Poisson loss and a selector for label value {#plot-loss}
 
 Next we will compute the Poisson loss for several values of the output
 label.
@@ -295,13 +305,16 @@ viz.log.loss$loss <- ggplot()+
 structure(viz.log.loss, class="animint")
 ```
 
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
-Summary TODO
+We explained how to visualize the Poisson distribution and loss, which
+are used for the Poisson regression model.
 
 Exercises:
 
-* TODO
+* Create a similar sequence of data visualizations for the
+  [Binomial regression](https://en.wikipedia.org/wiki/Binomial_regression)
+  model.
 
 Next, [Chapter 14](Ch14-PeakSegJoint.html) explains how to use the
 `.variable` and `.value` aesthetics to visualize the PeakSegJoint

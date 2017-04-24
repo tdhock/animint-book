@@ -25,8 +25,6 @@ This introductory chapter uses the following outline:
 * Medium data -- static data visualization is sufficient.
 * Large data -- interactive data visualization is useful.
 
-TODO: Figure comparing small, medium, large data.
-
 ## What is data? {#data}
 
 Data are any pieces of information that are systematically recorded,
@@ -38,8 +36,6 @@ different types of information. The word "data" is the plural form of
 "datum," which we use to refer to one observation/row of a data
 table. We use the term "data set" to refer to a subset of
 observations/rows, or the entire data table.
-
-TODO: should we show example data tables?
 
 There are many examples of data that could be created to answer
 questions based on everyday experiences:
@@ -84,7 +80,7 @@ In this section, we will discuss "small data," which are small enough
 such that data analysis can be done by simply looking at the entire
 data table. For small data sets, there is no need to use data
 visualization. Instead, the data can simply be presented for visual
-inspection in a table (REF:TUFTE).
+inspection in a table.
 
 As a concrete example, consider
 [the famous tea tasting experiment proposed by Ronald Fisher](https://en.wikipedia.org/wiki/Lady_tasting_tea). A
@@ -261,14 +257,7 @@ the set of points which corresponds to the currently selected
 months. In Chapters 3-4, we will explain how to design data
 visualizations by writing R code using these two new keywords.
 
-## Multi-plot data viz
-
-As another example, consider the more complicated data visualization
-below.
-
-TODO worldwide temperature data viz?
-
-## Chapter summary and exercises
+## Chapter summary and exercises {#exercises}
 
 This chapter explained some basic facts about data, and gave
 definitions of different sizes of data: small, medium, and large.

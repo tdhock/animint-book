@@ -78,7 +78,7 @@ ggstat <- ggplot() +
 ggstat+facet_grid(facet ~ .)
 ```
 
-Using `showSelected` instead of facets does not results in what you
+Using `showSelected` instead of facets does not result in what you
 may expect.
 
 ```{r Ch07-viz-stat}
@@ -342,9 +342,10 @@ visualization. This means that animint is not appropriate when there
 are more subsets of data to plot than you could ever compute. In that
 case, it would be better to use shiny.
 
-TODO: example?
+## Chapter summary and exercises {#exercises}
 
-## Chapter summary and exercises
+We discussed limitations of the current implementation of Animint, and
+explained several workarounds.
 
 Exercises:
 
