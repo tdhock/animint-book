@@ -188,7 +188,7 @@ ggplot()+
 It is clear that the algorithm quickly converges to the root. The
 following is an animated interactive version of the same data viz.
 
-```{r bigger}
+```{r Ch15-viz}
 library(animint)
 viz <- list(
   time=list(variable="iteration", ms=2000),
