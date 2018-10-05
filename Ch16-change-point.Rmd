@@ -11,19 +11,363 @@ knitr::opts_chunk$set(fig.path="Ch16-figures/")
 ```
 
 In this chapter we will explore several data visualizations of
-change-point detection models.
+supervised changepoint detection models.
 
 Chapter outline:
 
-* TODO
+* We begin by making several static visualizations of the `intreg`
+  data set.
+* We then create an interactive visualization in which one plot can be
+  click to select the number of changepoints/segments, and the other
+  plot shows the corresponding model.
+* We end by showing a static visualization of the 
 
-## Original static figure {#static}
+## Static figures {#static}
+
+We begin by loading the `intreg` data set.
+
+```{r intreg}
+data(intreg)
+str(intreg)
+```
+
+As shown above, it is a named list of 7 related data.frames. We begin
+our exploration of these data by plotting the signals in separate
+facets.
+
+```{r signals}
+data.color <- "grey50"
+gg.signals <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(signal ~ ., scales="free")+
+  geom_point(aes(
+    base/1e6, logratio,
+    showSelected=signal),
+    color=data.color,
+    data=intreg$signals)
+print(gg.signals)
+```
+
+Each data point plotted above shows an approximate measurement of DNA
+copy number (logratio), as a function of base position on a
+chromosome. Such data come from high-throughput assays which are
+important for diagnosing certain types of cancer such as
+neuroblastoma. 
+
+An important part of the diagnosis is detecting "breakpoints" or
+abrupt changes, within a given chromosome (panel). It is clear from
+the plot above that there are several breakpoint in these data. In
+particular signal 4.2 appears to have three breakpoints, signal 4.3
+appears to have one, etc. In fact these data come from medical doctors
+at the Institute Curie (Paris, France) who have visually annotated
+regions with and without breakpoints. These data are available as
+`intreg$annotations` and are plotted below.
+
+```{r annotations}
+breakpoint.colors <- c("1breakpoint"="#ff7d7d", "0breakpoints"='#f6f4bf')
+gg.ann <- gg.signals+
+  scale_fill_manual(values=breakpoint.colors)+
+  geom_tallrect(aes(
+    xmin=first.base/1e6, xmax=last.base/1e6,
+    fill=annotation),
+    color="grey",
+    alpha=0.5,
+    data=intreg$annotations)
+print(gg.ann)
+```
+
+The plot above shows yellow regions where the doctors have determined
+that there are no significant breakpoints, and red regions where there
+is one breakpoint. The goal in analyzing these data is to learn from
+the limited labeled data (colored regions) and provide consistent
+breakpoint predictions throughout (even in un-labeled regions).
+
+In order to detect these breakpoints we have fit some maximum
+likelihood segmentation models, using the efficient algorithm
+implemented in `jointseg::Fpsn`. The segment means are available in
+`intreg$segments` and the predicted breakpoints are available in
+`intreg$breaks`. For each signal there is a sequence of models from 1
+to 20 segments. First let's zoom in on one signal:
+
+```{r one}
+sig.name <- "4.2"
+show.segs <- 7
+sig.labels <- subset(intreg$annotations, signal==sig.name)
+gg.one <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  geom_tallrect(aes(
+    xmin=first.base/1e6, xmax=last.base/1e6,
+    fill=annotation),
+    color="grey",
+    alpha=0.5,
+    data=sig.labels)+
+  geom_point(aes(
+    base/1e6, logratio),
+    color=data.color,
+    data=subset(intreg$signals, signal==sig.name))+
+  scale_fill_manual(values=breakpoint.colors)
+print(gg.one)
+```
+
+We plot some of these models for one of the signals below:
+
+```{r models}
+sig.segs <- data.table(intreg$segments)[signal == sig.name & segments <= show.segs]
+sig.breaks <- data.table(intreg$breaks)[signal == sig.name & segments <= show.segs]
+model.color <- "green"
+gg.models <- gg.one+
+  facet_grid(segments ~ .)+
+  geom_segment(aes(
+    first.base/1e6, mean,
+    xend=last.base/1e6, yend=mean),
+    color=model.color,
+    data=sig.segs)+
+  geom_vline(aes(
+    xintercept=base/1e6),
+    color=model.color,
+    linetype="dashed",
+    data=sig.breaks)
+print(gg.models)
+```
+
+The plot above shows the maximum likelihood segmentation models in
+green (from one to six segments). Below we use the
+`penaltyLearning::labelError` function to compute the label error,
+which quantifies which models agree with which labels.
+
+```{r labelerr}
+sig.models <- data.table(segments=1:show.segs, signal=sig.name)
+sig.errors <- penaltyLearning::labelError(
+  sig.models, sig.labels, sig.breaks,
+  change.var="base",
+  label.vars=c("first.base", "last.base"),
+  model.vars="segments",
+  problem.vars="signal")
+```
+
+The `sig.errors$label.errors` data.table contains one row for every
+(model,label) combination. The `status` column can be used to show the
+label error: `false negative` for too few changes, `false positive`
+for too many changes, or `correct` for the right number of changes.
+
+```{r plotlabelerr}
+gg.models+
+  geom_tallrect(aes(
+    xmin=first.base/1e6, xmax=last.base/1e6,
+    linetype=status),
+    data=sig.errors$label.errors,
+    color="black",
+    size=1,
+    fill=NA)+
+  scale_linetype_manual(
+    "error type",
+    values=c(
+      correct=0,
+      "false negative"=3,
+      "false positive"=1))
+```
+
+Looking at the label error plot above, it is clear that the model with
+four segments should be selected, because it achieves zero label
+errors. There are a number of criteria that
+can be used to select which one of these models is best. One way to do
+that is by selecting the model with $s$ segments is
+$S^*(\lambda)=L_s + \lambda*s$, where $L_s$ is the total loss of the
+model with $s$ segments, and $\lambda$ is a non-negative penalty. In
+the plot below we show the model selection function $S^*(\lambda)$ for
+this data set:
+
+```{r selection}
+sig.selection <- data.table(intreg$selection)[signal == sig.name & segments <= show.segs]
+gg.selection <- ggplot()+
+  theme_bw()+
+  geom_segment(aes(
+    min.L, segments,
+    xend=max.L, yend=segments),
+    data=sig.selection)+
+  xlab("log(lambda)")
+print(gg.selection)
+```
+
+It is clear from the plot above that the model selection function is
+decreasing. In the next section we make an interactive version of
+these two plots where we can actually click on the model selection
+plot in order to select the model. 
+
+## Interactive figures for one signal {#interactive-one}
+
+We will create an interactive figure for one signal by adding a
+`geom_tallrect` with `clickSelects=segments` to the plot above:
+
+```{r selectionClick}
+interactive.selection <- gg.selection+
+  geom_tallrect(aes(
+    xmin=min.L, xmax=max.L,
+    clickSelects=segments),
+    data=sig.selection,
+    color=NA,
+    fill="black",
+    alpha=0.5)
+print(interactive.selection)
+```
+
+We will combine that with the non-facetted version of the data/models
+plot below, in which we have added `showSelected=segments` to the
+model geoms:
+
+```{r selectionData}
+interactive.models <- gg.one+
+  geom_segment(aes(
+    first.base/1e6, mean,
+    showSelected=segments,
+    xend=last.base/1e6, yend=mean),
+    color=model.color,
+    data=sig.segs)+
+  geom_vline(aes(
+    showSelected=segments,
+    xintercept=base/1e6),
+    color=model.color,
+    linetype="dashed",
+    data=sig.breaks)+
+  geom_tallrect(aes(
+    showSelected=segments,
+    xmin=first.base/1e6, xmax=last.base/1e6,
+    linetype=status),
+    data=sig.errors$label.errors,
+    size=2,
+    color="black",
+    fill=NA)+
+  scale_linetype_manual(
+    "error type",
+    values=c(
+      correct=0,
+      "false negative"=3,
+      "false positive"=1))
+print(interactive.models)
+```
+
+Of course the plot above is not very informative because it is not
+interactive. Below we combine the two interactive ggplots in a single
+linked animint:
+
+```{r interactiveOne}
+viz <- list(
+  models=interactive.models+
+    ggtitle("Selected model"),
+  selection=interactive.selection+
+    ggtitle("Click to select number of segments"))
+structure(viz, class="animint")
+```
+
+Note that in the data viz above the model with 6 segments is not
+selectable for any value of lambda, so there is no way to click on the
+plot to select that model. However it is possible to select the model
+using the segments selection menu (click "Show selection menus" at the
+bottom of the data viz).
+
+## Static max margin regression plot {#max-margin}
+
+Another part of this data set is `intreg$intervals` which has one row
+for every signal. The columns `min.L` and `max.L` indicate the min/max
+values of the target interval, which is the largest range of
+log(penalty) values with minimum label errors. Below we plot this
+interval as a function of a feature of the data (log number of data
+points):
+
+```{r intervals}
+gg.intervals <- ggplot()+
+  geom_segment(aes(
+    feature, min.L,
+    xend=feature, yend=max.L),
+    size=2,
+    data=intreg$intervals)+
+  geom_text(aes(
+    feature, min.L, label=signal,
+    color=ifelse(signal==sig.name, "black", "grey50")),
+    vjust=1,
+    data=intreg$intervals)+
+  scale_color_identity()+
+  ylab("output log(lambda)")+
+  xlab("input feature x")
+print(gg.intervals)
+```
+
+The target intervals in the plot above denote the region of
+log(lambda) space that will select a model with minimum label
+errors. There is one interval for each signal; we made an animint in
+the previous section for the signal indicated in black text. Machine
+learning algorithms can be used to find a penalty function that
+intersects each of the intervals, and maximizes the margin (the
+distance between the regression function and the nearest interval
+limit). Data for the linear max margin regression function are in
+`intreg$model` which is shown in the plot below:
+
+```{r maxMargin}
+gg.mm <- gg.intervals+
+  geom_segment(aes(
+    min.feature, min.L,
+    xend=max.feature, yend=max.L,
+    linetype=line),
+    color="red",
+    size=1,
+    data=intreg$model)+
+  scale_linetype_manual(
+    values=c(
+      regression="solid",
+      margin="dotted",
+      limit="dashed"))
+print(gg.mm)    
+```
+
+The plot above shows the linear max margin regression function f(x) as
+the solid red line. It is clear that it intersects each of the black
+target intervals, and maximizes the margin (red vertical dotted
+lines). For more information on the subject of supervised changepoint
+detection, please see
+[my useR 2017 tutorial](https://github.com/tdhock/change-tutorial).
+
+Now that you know how to visualize each of the seven parts of the
+`intreg` data set, the rest of the chapter is devoted to exercises.
 
 ## Chapter summary and exercises {#exercises}
 
 Exercises:
 
-* TODO
+* Add a `geom_text` which shows the currently selected signal name at
+  the top of the plot, in `interactive.models` in the first animint
+  above.
+* Make an animint with two plots that shows the data set that
+  corresponds to each interval on the max margin regression plot. One
+  plot should show an interactive version of the max margin regression
+  plot where you can click on an interval to select a signal. The
+  other plot should show the data set for the currently selected
+  signal.
+* In the animint you created in the previous exercise, add a third
+  plot with the model selection function for the currently selected
+  signal. 
+* Re-design the previous animint so that instead of using a third
+  plot, add a facet to the max margin regression regression plot such
+  that the log(lambda) axes are aligned. Add another facet that shows
+  the number of incorrect labels (`intreg$selection$cost`) for each
+  log(lambda) value.
+* Add geoms for selecting the number of segments. Clicking the model
+  selection plot should select the number of segments, which should
+  update the displayed model and label errors on the plot of the data
+  for the currently selected signal. Furthermore add a visual
+  indication of the selected model to the max margin regression plot.
+  The result should look something
+  [like this](http://bl.ocks.org/tdhock/raw/10f27e4ace80bffa10a0/).
+* Make another data viz by starting with the facetted `gg.signals`
+  plot in the beginning of this chapter. Add a plot that can be used
+  to select the number of segments for each signal. For each signal in
+  the facetted plot of the data, show the currently selected model for
+  that signal (there should be a separate selection variable for each
+  signal -- you can use .variable and .value aes as explained in
+  [Chapter 14](Ch14-PeakSegJoint.html)). The result should look
+  something
+  [like this](http://bl.ocks.org/tdhock/raw/9311ca39d643d127e04a088814c81ee1/).
 
 Next, [Chapter 17](Ch17-appendix.html) explains some R programming
 idioms that are generally useful for interactive data visualization
