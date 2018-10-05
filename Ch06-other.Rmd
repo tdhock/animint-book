@@ -184,7 +184,7 @@ The `.variable` and `.value` aesthetics are useful not only to avoid
 repetition in the definition of the data viz, but also because they
 are more computationally efficient. For a detailed example with
 timings and disk space measurements, see
-[Chapter 14](Ch14-variable-value.html).
+[Chapter 14](Ch14-PeakSegJoint.html).
 
 ## Geom options {#geom-options}
 
