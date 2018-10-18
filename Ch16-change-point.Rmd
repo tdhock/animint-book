@@ -27,6 +27,7 @@ Chapter outline:
 We begin by loading the `intreg` data set.
 
 ```{r intreg}
+library(animint)
 data(intreg)
 str(intreg)
 ```
@@ -114,8 +115,11 @@ print(gg.one)
 We plot some of these models for one of the signals below:
 
 ```{r models}
-sig.segs <- data.table(intreg$segments)[signal == sig.name & segments <= show.segs]
-sig.breaks <- data.table(intreg$breaks)[signal == sig.name & segments <= show.segs]
+library(data.table)
+sig.segs <- data.table(
+  intreg$segments)[signal == sig.name & segments <= show.segs]
+sig.breaks <- data.table(
+  intreg$breaks)[signal == sig.name & segments <= show.segs]
 model.color <- "green"
 gg.models <- gg.one+
   facet_grid(segments ~ .)+
