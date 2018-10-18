@@ -13,22 +13,6 @@ knitr::opts_chunk$set(fig.path="Ch17-figures/")
 This appendix describes several idioms which are useful for creating
 animints.
 
-## Summarize data table {#summarize-data-table}
-
-TODO
-
-## Parallel computations with a foreach loop {#foreach-loop}
-
-TODO
-
-## Hide all but the selected object
-
-alpha=0.5
-
-## Select any x axis value
-
-geom_tallrect
-
 ## Space saving facets {#space-saving-facets}
 
 To emphasize the plotted data in facetted ggplots, eliminate the space
