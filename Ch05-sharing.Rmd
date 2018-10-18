@@ -57,7 +57,7 @@ GitHub account, you can
 [sign up for free](https://github.com/join). Second, install the
 `gistr` package:
 
-```{r}
+```{r installgistr, eval=FALSE}
 if(!require(gistr))install.packages("gistr")
 ```
 
