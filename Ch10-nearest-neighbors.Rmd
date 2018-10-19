@@ -160,22 +160,19 @@ OneFold <- function(validation.fold){
 ```
 
 Below, we run the `OneFold` function in parallel using the
-`doParallel` package. This is an example of the
-[foreach loop idiom](Ch17-appendix.html#foreach-loop) which is
-generally useful for parallel computations. Note that validation folds
+`parallel` package. Note that validation folds
 1:10 will be used to compute the validation set error. The validation
 fold 0 treats all 200 observations as a train set, and will be used
 for visualizing the learned decision boundaries of the
 K-Nearest-Neighbors classifier.
 
 ```{r}
-library(doParallel)
-registerDoParallel()
-data.all.folds <- foreach(validation.fold=0:n.folds, .combine=rbind) %dopar% {
+library(parallel)
+data.all.folds.list <- mclapply(0:n.folds, function(validation.fold){
   one.fold <- OneFold(validation.fold)
   data.table(validation.fold, one.fold)
-}
-data.all.folds
+})
+(data.all.folds <- do.call(rbind, data.all.folds.list))
 ```
 
 The data table of predictions contains almost 3 million observations!
