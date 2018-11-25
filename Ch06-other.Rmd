@@ -136,9 +136,9 @@ different selector variable names, `selector1value`
 ```{r, eval=FALSE}
 viz <- list(
   points=ggplot()+
-    geom_point(aes(clickSelects=selector1value), data=data1)+
+    geom_point(clickSelects="selector1value", data=data1)+
     ...
-    geom_point(aes(clickSelects=selector20value),data=data20)
+    geom_point(clickSelects="selector20value", data=data20)
 )
 ```
 
@@ -150,22 +150,22 @@ viz <- list(points=ggplot())
 for(selector.name in paste0("selector", 1:20, "value")){
   data.for.selector <- all.data.list[[selector.name]]
   viz$points <- viz$points +
-    geom_point(aes_string(clickSelects=selector.name),
+    geom_point(clickSelects=selector.name,
                data=data.for.selector)
 }
 ```
 
 That method is bad since it is slow to construct `viz`, and the
-compiled viz potentially takes up a lot of disk space since there 
-is at least one TSV file created for each `geom_point`. The preferable
-method is to use `clickSelects.variable` and `clickSelects.value`
-aesthetics:
+compiled viz potentially takes up a lot of disk space since there is
+at least one TSV file created for each `geom_point`. The preferable
+method is to use a named character vector for `clickSelects`. The
+names should be used to indicate the column that contains the selector
+variable name. For example:
 
 ```{r, eval=FALSE}
 viz <- list(
   points=ggplot()+
-    geom_point(aes(clickSelects.variable=selector.name,
-                   clickSelects.value=selector.value),
+    geom_point(clickSelects=c("selector.name"="selector.value"),
                data=all.data)
 )
 ```
@@ -176,11 +176,10 @@ create selectors for each of the distinct values of
 corresponding selector with the value indicated in
 `all.data$selector.value`.
 
-You can similarly use one geom with `showSelected.variable` and
-`showSelected.value` instead of a bunch of different geoms with
-`showSelected`.
+You can similarly use one geom with a named `showSelected` instead of
+a bunch of different geoms with `showSelected`.
 
-The `.variable` and `.value` aesthetics are useful not only to avoid
+This feature is useful not only to avoid
 repetition in the definition of the data viz, but also because they
 are more computationally efficient. For a detailed example with
 timings and disk space measurements, see
@@ -245,19 +244,19 @@ fp.fn.dt <- error.type.dt[, list(
 errorPlot <- ggplot()+
   ggtitle("select data and segments")+
   theme_bw()+
-  geom_tallrect(aes(xmin=segments-0.5, xmax=segments+0.5,
-                    clickSelects=segments),
+  geom_tallrect(aes(xmin=segments-0.5, xmax=segments+0.5),
+                    clickSelects="segments",
                 data=only.segments,
                 alpha=1/2)+
   geom_line(aes(segments, error.value, color=error.type,
-                group=paste(bases.per.probe, error.type),
-                showSelected=bases.per.probe),
+                group=paste(bases.per.probe, error.type)),
+                showSelected="bases.per.probe",
             data=fp.fn.dt,
             size=5)+
   scale_color_manual(values=c(
     "false positives"="red", "false negatives"="blue"))+
-  geom_line(aes(segments, error, group=bases.per.probe,
-                clickSelects=bases.per.probe),
+  geom_line(aes(segments, error, group=bases.per.probe),
+                clickSelects="bases.per.probe",
             data=only.error,
             size=4)+
   scale_x_continuous(breaks=c(1, 6, 10, 20))
@@ -272,13 +271,12 @@ to select the data and model in the plot below.
 signalPlot <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
-  geom_point(aes(position/1e5, signal,
-                 showSelected=bases.per.probe),
+  geom_point(aes(position/1e5, signal),
+                 showSelected="bases.per.probe",
              shape=1,
              data=breakpoints$signals)+
-  geom_segment(aes(first.base/1e5, mean, xend=last.base/1e5, yend=mean,
-                   showSelected=segments,
-                   showSelected2=bases.per.probe),
+  geom_segment(aes(first.base/1e5, mean, xend=last.base/1e5, yend=mean),
+                   showSelected=c("segments", "bases.per.probe"),
                color="green",
                data=breakpoints$segments)
 signalPlot+facet_grid(segments ~ bases.per.probe)
@@ -293,12 +291,10 @@ these facets will be shown.
 viz.chunk.vars <- list(
   error=errorPlot,
   signal=signalPlot+
-  geom_vline(aes(xintercept=base/1e5,
-                 showSelected=segments,
-                 showSelected2=bases.per.probe),
+  geom_vline(aes(xintercept=base/1e5),
+                 showSelected=c("segments", "bases.per.probe"),
              color="green",
              chunk_vars=character(),
-             validate_params=FALSE,
              linetype="dashed",
              data=breakpoints$breaks)
 )
@@ -320,12 +316,10 @@ tsvSizes <- function(segment.chunk.vars){
   viz <- list(
     error=errorPlot,
     signal=signalPlot+
-      geom_vline(aes(xintercept=base/1e5,
-                     showSelected=segments,
-                     showSelected2=bases.per.probe),
+      geom_vline(aes(xintercept=base/1e5),
+                     showSelected=c("segments", "bases.per.probe"),
                  color="green",
                  chunk_vars=segment.chunk.vars,
-                 validate_params=FALSE,
                  linetype="dashed",
                  data=breakpoints$breaks)
   )

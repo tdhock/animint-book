@@ -190,8 +190,8 @@ gg.path <- ggplot()+
             data=addY(mean.error, "error"))+
   geom_tallrect(aes(
     xmin=arclength-rect.width,
-    xmax=arclength+rect.width,
-    clickSelects=arclength),
+    xmax=arclength+rect.width),
+    clickSelects="arclength",
     alpha=0.5,
     data=tallrect.dt)
 print(gg.path)
@@ -217,8 +217,8 @@ gg.res <- ggplot()+
              data=hline.dt,
              color="grey")+
   geom_point(aes(response, residual, fill=set, 
-                 key=observation.i,
-                 showSelected=arclength),
+                 key=observation.i),
+                 showSelected="arclength",
              shape=21,
              data=lasso.res)
 print(gg.res)
@@ -282,17 +282,16 @@ viz.moving.rect <- list(
     geom_tallrect(aes(
       xmin=arclength-rect.width,
       xmax=arclength+rect.width,
-      showSelected=arclength,
       key=1),
+      showSelected="arclength",
       alpha=0.5,
       data=tallrect.dt)+
     geom_tallrect(aes(
       xmin=arclength-rect.width,
       xmax=arclength+rect.width,
-      clickSelects=arclength,
-      showSelected.variable=show.var,
-      showSelected.value=show.val,
       key=paste(arclength, show.val)),
+      clickSelects="arclength",
+      showSelected=c("show.var"="show.val"),
       alpha=0.5,
       data=tallrect.show),
   res=ggplot()+
@@ -301,35 +300,31 @@ viz.moving.rect <- list(
                color="grey")+
     guides(linetype="none")+
     geom_point(aes(response, residual, 
-                   key=observation.i,
-                   showSelected2=set,
-                   showSelected=arclength),
+                   key=observation.i),
+                   showSelected=c("set", "arclength"),
                shape=21,
                fill=NA,
                color="black",
                data=lasso.res)+
     geom_text(aes(3, 2.5, label=sprintf("L1 arclength = %.1f", arclength),
-                  key=1,
-                  showSelected=arclength),
+                  key=1),
+                  showSelected="arclength",
               data=tallrect.dt)+
     geom_text(aes(0, -2, label=sprintf("train error = %.3f", mse),
-                  key=1,
-                  showSelected2=set,
-                  showSelected=arclength),
+                  key=1),
+                  showSelected=c("set", "arclength"),
               hjust=0,
               data=mean.error[set=="train",])+
     geom_text(aes(0, -2.5, label=sprintf("validation error = %.3f", mse),
-                  key=1,
-                  showSelected2=set,
-                  showSelected=arclength),
+                  key=1),
+                  showSelected=c("set", "arclength"),
               hjust=0,
               data=mean.error[set=="validation",])+
     geom_segment(aes(response, residual,
                      xend=response, yend=0,
                      linetype=set,
-                     showSelectedLinetype=set,
-                     key=observation.i,
-                     showSelected=arclength),
+                     key=observation.i),
+                     showSelected=c("set", "arclength"),
                  size=1,
                data=lasso.res),
   duration=list(arclength=2000),

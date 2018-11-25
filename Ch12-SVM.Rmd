@@ -171,13 +171,15 @@ viz.simple <- list(
     geom_vline(aes(xintercept=boundary),
                color="grey50",
                data=x1.boundaries)+
-    geom_point(aes(x1, x2, color=y, clickSelects=data.i),
+      geom_point(aes(x1, x2, color=y),
+                 clickSelects="data.i",
                size=4,
                alpha=0.7,
                data=YVAR(data.dt, "x2"))+
     geom_line(aes(x1, f),
               data=YVAR(scores, "f"))+
-    geom_point(aes(x1, f.noise, color=y, clickSelects=data.i),
+      geom_point(aes(x1, f.noise, color=y),
+                 clickSelects="data.i",
                size=4,
                alpha=0.7,
                data=YVAR(data.dt, "f")),
@@ -190,13 +192,15 @@ viz.simple <- list(
     scale_x_continuous(breaks=seq(0, 1, by=0.2))+
     geom_vline(aes(xintercept=boundary), color="grey50",
                data=x1sq.boundary)+
-    geom_point(aes(x1.sq, x2.sq, color=y, clickSelects=data.i),
+      geom_point(aes(x1.sq, x2.sq, color=y),
+                 clickSelects="data.i",
                size=4,
                alpha=0.7,
                data=YVAR(data.dt, "x2.sq"))+
     geom_line(aes(x1.sq, f),
               data=YVAR(scores, "f"))+
-    geom_point(aes(x1.sq, f.noise, color=y, clickSelects=data.i),
+      geom_point(aes(x1.sq, f.noise, color=y),
+                 clickSelects="data.i",
                size=4,
                alpha=0.7,
                data=YVAR(data.dt, "f")))
@@ -524,8 +528,8 @@ viz.linear <- list(
     ggtitle("select regularization parameter")+
     geom_tallrect(aes(
       xmin=log10(cost.param)-cost.by/2,
-      xmax=log10(cost.param)+cost.by/2,
-      clickSelects=cost.param),
+      xmax=log10(cost.param)+cost.by/2),
+      clickSelects="cost.param",
       alpha=0.5,
       data=modelInfo)+
     theme_bw()+
@@ -554,24 +558,18 @@ viz.linear <- list(
       "1"="dashed"))+
     geom_path(aes(x1, x2,
                   group=path.i,
-                  linetype=level.fac,
-                  showSelected2=boundary,
-                  showSelected=cost.param),
+                  linetype=level.fac),
+                  showSelected=c("boundary", "cost.param"),
               color="black",
               data=inputBoundaries)+
-    geom_point(aes(x1, x2, color=y, fill=status,
-                   showSelected4=status,
-                   showSelected3=y,
-                   showSelected2=data.i,
-                   showSelected=cost.param),
+    geom_point(aes(x1, x2, color=y, fill=status),
+                   showSelected=c("status", "y", "data.i", "cost.param"),
                size=5,
                color="grey",
                data=predictions)+
-    geom_point(aes(x1, x2, color=y, fill=status,
-                   showSelected=cost.param,
-                   showSelected4=status,
-                   showSelected3=y,
-                   clickSelects=data.i),
+    geom_point(aes(x1, x2, color=y, fill=status),
+                   showSelected=c("cost.param", "status", "y"),
+                   clickSelects="data.i",
                size=3,
                data=predictions),
   kernelSpace=ggplot()+
@@ -579,30 +577,28 @@ viz.linear <- list(
     geom_vline(aes(xintercept=boundary), color="violet",
                data=x1sq.boundary)+
     coord_cartesian(xlim=c(0, 1), ylim=c(0, 1))+
-    geom_abline(aes(slope=slope, intercept=intercept, linetype=boundary,
-                    showSelected=cost.param),
+    geom_abline(aes(slope=slope, intercept=intercept, linetype=boundary),
+                    showSelected="cost.param",
                 color="black",
                 data=modelLines)+
     scale_linetype_manual(values=c(
       decision="solid",
       margin="dashed",
       true="solid"))+
-    geom_point(aes(x1.sq, x2.sq, color=y, fill=status,
-                   showSelected2=data.i,
-                   showSelected=cost.param),
+    geom_point(aes(x1.sq, x2.sq, color=y, fill=status),
+                   showSelected=c("data.i", "cost.param"),
                size=5,
                color="grey",
                data=predictions)+
-    geom_point(aes(x1.sq, x2.sq, color=y, fill=status,
-                   clickSelects=data.i,
-                   showSelected=cost.param),
+    geom_point(aes(x1.sq, x2.sq, color=y, fill=status),
+                   clickSelects="data.i",
+                   showSelected="cost.param",
                size=3,
                data=predictions)+
     scale_fill_manual(values=sv.colors, breaks=names(sv.colors))+
-    geom_segment(aes(x1.sq, x2.sq,
-                     showSelected=cost.param,
-                     showSelected2=boundary,
+    geom_segment(aes(x1.sq, x2.sq, 
                      xend=x1.sq.margin, yend=x2.sq.margin),
+                     showSelected=c("cost.param", "boundary"),
                  color="grey",
                  data=slackSegs))
 structure(viz.linear, class="animint")
@@ -660,8 +656,8 @@ viz.poly <- list(
     ggtitle("select hyper parameters")+
     geom_tallrect(aes(
       xmin=log10(cost.param)-cost.by/2,
-      xmax=log10(cost.param)+cost.by/2,
-      clickSelects=cost.param),
+      xmax=log10(cost.param)+cost.by/2),
+      clickSelects="cost.param",
       alpha=0.5,
       data=setErrors[degree.num==1 & set=="train",])+
     theme_bw()+
@@ -669,13 +665,13 @@ viz.poly <- list(
     facet_grid(select ~ ., scales="free")+
     ylab("")+
     geom_line(aes(log10(cost.param), errors,
-                  showSelected=degree.num,
                   key=set,
                   group=set,
                   color=set),
+                  showSelected="degree.num",
               data=setErrors)+
-    geom_tile(aes(log10(cost.param), degree.num, fill=errors,
-                  clickSelects=degree.num),
+    geom_tile(aes(log10(cost.param), degree.num, fill=errors),
+                  clickSelects="degree.num",
               data=testErrors),
   inputSpace=ggplot()+
     ggtitle("Input space features")+
@@ -688,14 +684,12 @@ viz.poly <- list(
       decision="solid"))+
     geom_path(aes(x1, x2,
                   group=path.i,
-                  linetype=boundary,
-                  showSelected3=degree.num,
-                  showSelected=cost.param),
+                  linetype=boundary),
+                  showSelected=c("degree.num", "cost.param"),
               color="black",
               data=inputBoundaries)+
-    geom_point(aes(x1, x2, color=y, fill=status,
-                   showSelected=cost.param,
-                   showSelected5=degree.num),
+    geom_point(aes(x1, x2, color=y, fill=status),
+                   showSelected=c("cost.param", "degree.num"),
                size=3,
                data=predictions))
 structure(viz.poly, class="animint")

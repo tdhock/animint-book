@@ -103,21 +103,21 @@ print(timing.for.construct <- system.time({
   viz.for <- list(
     coverage=ggplot()+
       geom_segment(aes(chromStart/1e3, problem.i,
-                       xend=chromEnd/1e3, yend=problem.i,
-                       showSelected=bases.per.problem,
-                       clickSelects=problem.name),
+                       xend=chromEnd/1e3, yend=problem.i),
+                       showSelected="bases.per.problem",
+                       clickSelects="problem.name",
                    data=prob.regions)+
       ggtitle("select problem")+
       geom_text(aes(chromStart/1e3, problem.i,
-                    showSelected=bases.per.problem,
                     label=sprintf("%d problems mean size %.1f kb",
                                   problems, mean.bases/1e3)),
+                    showSelected="bases.per.problem",
                 data=PSJ$problem.labels,
                 hjust=0)+
       geom_segment(aes(problemStart/1e3, problem.i,
-                       showSelected=bases.per.problem,
-                       clickSelects=problem.name,
                        xend=problemEnd/1e3, yend=problem.i),
+                       showSelected="bases.per.problem",
+                       clickSelects="problem.name",
                    size=5,
                    data=PSJ$problems)+
       scale_y_continuous("aligned read coverage",
@@ -170,21 +170,18 @@ print(timing.for.construct <- system.time({
 
     modelSelection=ggplot()+
       geom_segment(aes(min.log.lambda, peaks,
-                       xend=max.log.lambda, yend=peaks,
-                       showSelected=problem.name,
-                       showSelected2=bases.per.problem),
+                       xend=max.log.lambda, yend=peaks),
+                       showSelected=c("bases.per.problem", "problem.name"),
                    data=data.frame(all.modelSelection, what="peaks"),
                    size=5)+
       geom_text(aes(min.log.lambda, peaks,
-                    showSelected=problem.name,
-                    showSelected2=bases.per.problem,
                     label=sprintf("%.1f kb in problem %s",
                     (problemEnd-problemStart)/1e3, problem.name)),
+                    showSelected=c("problem.name", "bases.per.problem"),
                 data=data.frame(modelSelection.labels, what="peaks"))+
       geom_segment(aes(min.log.lambda, as.integer(errors),
-                       xend=max.log.lambda, yend=as.integer(errors),
-                       showSelected=problem.name,
-                       showSelected2=bases.per.problem),
+                       xend=max.log.lambda, yend=as.integer(errors)),
+                       showSelected=c("bases.per.problem", "problem.name"),
                    data=data.frame(modelSelection.errors, what="errors"),
                    size=5)+
       ggtitle("select number of samples with 1 peak")+
@@ -205,11 +202,10 @@ print(timing.for.construct <- system.time({
     regions.dt[[problem.dot]] <- regions.dt$peaks
     if(!is.null(regions.dt)){
       viz.for$coverage <- viz.for$coverage+
-        geom_tallrect(aes_string(xmin="chromStart/1e3",
-                                 xmax="chromEnd/1e3",
-                                 linetype="status",
-                                 showSelected=problem.dot,
-                                 showSelected2="bases.per.problem"),
+        geom_tallrect(aes(xmin=chromStart/1e3,
+                          xmax=chromEnd/1e3,
+                          linetype=status),
+                      showSelected=c(problem.dot, "bases.per.problem"),
                       data=data.frame(regions.dt),
                       fill=NA,
                       color="black")
@@ -223,27 +219,24 @@ print(timing.for.construct <- system.time({
       prob.peaks <- unique(data.frame(peaks)[, prob.peaks.names])
       prob.peaks$sample.id <- "problems"
       viz.for$coverage <- viz.for$coverage +
-        geom_segment(aes_string("chromStart/1e3", "0",
-                                xend="chromEnd/1e3", yend="0",
-                                clickSelects="problem.name",
-                                showSelected=problem.dot,
-                                showSelected2="bases.per.problem"),
+        geom_segment(aes(chromStart/1e3, 0,
+                         xend=chromEnd/1e3, yend=0),
+                     clickSelects="problem.name",
+                     showSelected=c(problem.dot, "bases.per.problem"),
                      data=peaks, size=7, color="deepskyblue")+
-        geom_segment(aes_string("chromStart/1e3", "problem.i",
-                                xend="chromEnd/1e3", yend="problem.i",
+        geom_segment(aes(chromStart/1e3, problem.i,
+                         xend=chromEnd/1e3, yend=problem.i),
                                 clickSelects="problem.name",
-                                showSelected=problem.dot,
-                                showSelected2="bases.per.problem"),
+                     showSelected=c(problem.dot, "bases.per.problem"),
                      data=prob.peaks, size=7, color="deepskyblue")
     }
     modelSelection.dt <- PSJ$modelSelection.by.problem[[problem.dot]]
     modelSelection.dt[[problem.dot]] <- modelSelection.dt$peaks
     viz.for$modelSelection <- viz.for$modelSelection+
-      geom_tallrect(aes_string(xmin="min.log.lambda", 
-                               xmax="max.log.lambda", 
-                               clickSelects=problem.dot,
-                               showSelected="problem.name",
-                               showSelected2="bases.per.problem"),
+      geom_tallrect(aes(xmin=min.log.lambda, 
+                        xmax=max.log.lambda), 
+                    clickSelects=problem.dot,
+                    showSelected=c("problem.name", "bases.per.problem"),
                     data=modelSelection.dt, alpha=0.5)
   }
 }))
@@ -282,26 +275,30 @@ problem.peaks$sample.id <- "problems"
 peakvar <- function(position){
   paste0(gsub("[-:]", ".", position), "peaks")
 }
+all.regions[, selector := peakvar(problem.name)]
+sample.peaks[, selector := peakvar(problem.name)]
+problem.peaks[, selector := peakvar(problem.name)]
+all.modelSelection[, selector := peakvar(problem.name)]
 
 print(timing.var.val.construct <- system.time({
-  viz.var.val <-
-    list(coverage=ggplot()+
+    viz.var.val <- list(
+        coverage=ggplot()+
            geom_segment(aes(chromStart/1e3, problem.i,
-                            xend=chromEnd/1e3, yend=problem.i,
-                            showSelected=bases.per.problem,
-                            clickSelects=problem.name),
+                            xend=chromEnd/1e3, yend=problem.i),
+                            showSelected="bases.per.problem",
+                            clickSelects="problem.name"),
                         data=prob.regions)+
            ggtitle("select problem")+
            geom_text(aes(chromStart/1e3, problem.i,
-                         showSelected=bases.per.problem,
                          label=sprintf("%d problems mean size %.1f kb",
                            problems, mean.bases/1e3)),
+                     showSelected="bases.per.problem",
                      data=PSJ$problem.labels,
                      hjust=0)+
            geom_segment(aes(problemStart/1e3, problem.i,
-                            showSelected=bases.per.problem,
-                            clickSelects=problem.name,
                             xend=problemEnd/1e3, yend=problem.i),
+                            showSelected="bases.per.problem",
+                            clickSelects="problem.name",
                         size=5,
                         data=PSJ$problems)+
            scale_y_continuous("aligned read coverage",
@@ -335,36 +332,31 @@ print(timing.var.val.construct <- system.time({
            geom_line(aes(base/1e3, count),
                      data=PSJ$coverage,
                      color="grey50")+
-           geom_tallrect(aes(xmin=chromStart/1e3,
-                             xmax=chromEnd/1e3,
-                             linetype=status,
-                             showSelected.value=peaks,
-                             showSelected.variable=peakvar(problem.name),
-                             showSelected2=bases.per.problem),
+        geom_tallrect(aes(
+            xmin=chromStart/1e3,
+            xmax=chromEnd/1e3,
+            linetype=status),
+            showSelected=c("selector"=peaks, "bases.per.problem"),
                          data=all.regions,
                          fill=NA,
                          color="black")+
            geom_segment(aes(chromStart/1e3, 0,
-                            xend=chromEnd/1e3, yend=0,
-                            clickSelects=problem.name,
-                            showSelected.variable=peakvar(problem.name),
-                            showSelected.value=peaks,
-                            showSelected2=bases.per.problem),
+                            xend=chromEnd/1e3, yend=0),
+                            clickSelects="problem.name",
+                        showSelected=c("selector"=peaks, "bases.per.problem"),
                         data=sample.peaks, size=7, color="deepskyblue")+
            geom_segment(aes(chromStart/1e3, problem.i,
-                            xend=chromEnd/1e3, yend=problem.i,
-                            clickSelects=problem.name,
-                            showSelected.variable=peakvar(problem.name),
-                            showSelected.value=peaks,
-                            showSelected2=bases.per.problem),
+                            xend=chromEnd/1e3, yend=problem.i),
+                            clickSelects="problem.name",
+            showSelected=c("selector"=peaks, "bases.per.problem"),
                         data=problem.peaks, size=7, color="deepskyblue"),
 
          resError=ggplot()+
            ggtitle("select problem size")+
            ylab("minimum percent incorrect regions")+
            geom_tallrect(aes(xmin=min.bases.per.problem,
-                             xmax=max.bases.per.problem,
-                             clickSelects=bases.per.problem),
+                             xmax=max.bases.per.problem),
+                             clickSelects="bases.per.problem",
                          alpha=0.5,
                          data=res.error)+
            scale_x_log10()+
@@ -377,32 +369,26 @@ print(timing.var.val.construct <- system.time({
 
          modelSelection=ggplot()+
            geom_segment(aes(min.log.lambda, peaks,
-                            xend=max.log.lambda, yend=peaks,
-                            showSelected=problem.name,
-                            showSelected2=bases.per.problem),
+                            xend=max.log.lambda, yend=peaks),
+                            showSelected=c("problem.name", "bases.per.problem"),
                         data=data.frame(all.modelSelection, what="peaks"),
                         size=5)+
            geom_text(aes(min.log.lambda, peaks,
-                         showSelected=problem.name,
-                         showSelected2=bases.per.problem,
                          label=sprintf("%.1f kb in problem %s",
                            (problemEnd-problemStart)/1e3, problem.name)),
+                            showSelected=c("problem.name", "bases.per.problem"),
                      data=data.frame(modelSelection.labels, what="peaks"))+
            geom_segment(aes(min.log.lambda, as.integer(errors),
                             xend=max.log.lambda, yend=as.integer(errors),
-                            showSelected=problem.name,
-                            showSelected2=bases.per.problem),
+                            showSelected=c("problem.name", "bases.per.problem"),
                         data=data.frame(modelSelection.errors, what="errors"),
                         size=5)+
            ggtitle("select number of samples with 1 peak")+
            ylab("")+
            geom_tallrect(aes(xmin=min.log.lambda, 
-                             xmax=max.log.lambda, 
-                             clickSelects.variable=
-                               peakvar(problem.name),
-                             clickSelects.value=peaks,
-                             showSelected=problem.name,
-                             showSelected2=bases.per.problem),
+                             xmax=max.log.lambda), 
+                             clickSelects=c("selector"="peaks"),
+                            showSelected=c("problem.name", "bases.per.problem"),
                          data=all.modelSelection, alpha=0.5)+
            facet_grid(what ~ ., scales="free"),
          

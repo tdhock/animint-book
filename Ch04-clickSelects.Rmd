@@ -69,9 +69,9 @@ data(WorldBank, package="animint")
 library(animint)
 scatter <- ggplot()+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                   key=country,
-                   showSelected=year,
-                   clickSelects=country),
+                   key=country),
+                   showSelected="year",
+                   clickSelects="country"),
                data=WorldBank)
 scatter
 ```
@@ -106,9 +106,8 @@ several showSelected aesthetics:
 viz.text <- viz.scatter
 viz.text$scatter <- scatter+
   geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
-                key=country,
-                showSelected=year,
-                showSelected2=country),
+                key=country),
+                showSelected=c("year", "country"),
             data=WorldBank)
 structure(viz.text, class="animint")
 ```
@@ -257,12 +256,12 @@ Next, we add the time series ggplot to the existing data viz.
 ```{r Ch04-viz-timeSeries}
 viz.timeSeries <- viz.multiple
 viz.timeSeries$timeSeries <- ggplot()+
-  geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5,
-                    clickSelects=year),
+  geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5),
+                    clickSelects="year",
                 alpha=0.5,
                 data=years)+
-  geom_line(aes(x=year, y=fertility.rate, group=country, color=region,
-                clickSelects=country),
+  geom_line(aes(x=year, y=fertility.rate, group=country, color=region),
+                clickSelects="country",
             size=3,
             alpha=0.6,
             data=WorldBank)
@@ -299,16 +298,14 @@ add.x.var <- function(df, x.var){
 }
 scatterFacet <- ggplot()+
   geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                 key=country,
-                 showSelected=year,
-                 clickSelects=country),
+                 key=country),
+                 showSelected="year",
+                 clickSelects="country",
              data=add.x.var(WorldBank, "life expectancy"))+
   geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
-                key=country,
-                clickSelects=country,
-                showSelected=year,
-                showSelected2=country,
-                showSelected3=region),
+                key=country),
+                clickSelects="country",
+                showSelected=c("year", "country", "region"),
             data=add.x.var(WorldBank, "life expectancy"))+
   facet_grid(. ~ x.var, scales="free")+
   xlab("")+
@@ -326,12 +323,12 @@ axis.
 
 ```{r Ch04-ggplot-scatterTS}
 scatterTS <- scatterFacet+
-  geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5,
-                    clickSelects=year),
+  geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5),
+                    clickSelects="year",
                 alpha=0.5,
                 data=add.x.var(years, "year"))+
-  geom_line(aes(x=year, y=fertility.rate, group=country, color=region,
-                clickSelects=country),
+  geom_line(aes(x=year, y=fertility.rate, group=country, color=region),
+                clickSelects="country",
             size=3,
             alpha=0.6,
             data=add.x.var(WorldBank, "year"))

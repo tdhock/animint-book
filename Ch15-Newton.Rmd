@@ -195,8 +195,8 @@ viz <- list(
   iterations=gg.it+
     geom_tallrect(aes(
       xmin=iteration-0.5,
-      xmax=iteration+0.5,
-      clickSelects=iteration),
+      xmax=iteration+0.5),
+      clickSelects="iteration",
       alpha=0.5,
       data=solution),
   loss=ggplot()+
@@ -204,17 +204,21 @@ viz <- list(
     scale_color_manual(values=c("function"="black", approximation="red"))+
     geom_abline(aes(
       slope=deriv.value, intercept=fun.value-possible.root*deriv.value,
-      showSelected=iteration,
       color=fun),
+      showSelected="iteration",
       data=data.table(solution, fun="approximation"))+
-    geom_point(aes(new.root, 0, color=fun, showSelected=iteration),
+      geom_point(aes(new.root, 0, color=fun),
+                 showSelected="iteration",
                size=4,
                data=data.table(solution, fun="approximation"))+
-    geom_point(aes(new.root, new.value, color=fun, showSelected=iteration),
+      geom_point(aes(new.root, new.value, color=fun),
+                 showSelected="iteration",
                data=data.table(solution, fun="function"))+
-    geom_vline(aes(xintercept=new.root, color=fun, showSelected=iteration),
+      geom_vline(aes(xintercept=new.root, color=fun),
+                 showSelected="iteration",
                data=data.table(solution, fun="approximation"))+
-    geom_point(aes(possible.root, fun.value, color=fun, showSelected=iteration),
+      geom_point(aes(possible.root, fun.value, color=fun),
+                 showSelected="iteration",
                data=data.table(solution, fun="function"))+
     geom_line(aes(mean, loss, color=fun),
               data=data.table(loss.dt, fun="function"))+

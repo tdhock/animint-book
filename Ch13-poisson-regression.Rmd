@@ -72,12 +72,14 @@ library(animint)
 prob.mass <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "cm"))+
-  geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+    geom_tallrect(aes(xmin=min, xmax=max),
+                  clickSelects="poisson.mean",
                 alpha=0.6,
                 data=mean.tallrects)+
-  geom_point(aes(label, probability, showSelected=poisson.mean,
+  geom_point(aes(label, probability, 
                  tooltip=sprintf("prob(label = %d) = %f", label, probability)),
              color="red",
+             showSelected="poisson.mean",
              size=5,
              data=poisson.prob)
 prob.mass+
@@ -128,18 +130,21 @@ viz.cum.prob <- list(
     geom_hline(aes(yintercept=quantile.max),
                color="grey",
                data=addPanel(quantile.max.dt, "cum prob"))+
-    geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+      geom_tallrect(aes(xmin=min, xmax=max),
+                    clickSelects="poisson.mean",
                   alpha=0.6,
                   data=mean.tallrects)+
-    geom_point(aes(label, probability, showSelected=poisson.mean,
+      geom_point(aes(label, probability,
                    tooltip=sprintf(
                      "prob(label = %d) = %f", label, probability)),
+                 showSelected="poisson.mean",
                color="red",
                size=5,
                data=addPanel(poisson.prob, "probability"))+
-    geom_point(aes(label, cum.prob, showSelected=poisson.mean,
+    geom_point(aes(label, cum.prob, 
                    tooltip=sprintf(
-                     "prob(label <= %d) = %f", label, cum.prob)),
+                       "prob(label <= %d) = %f", label, cum.prob)),
+               showSelected="poisson.mean",
                color="red",
                size=5,
                data=addPanel(poisson.prob, "cum prob"))
@@ -227,39 +232,46 @@ viz.loss <- list(
     theme_bw()+
     theme(panel.margin=grid::unit(0, "cm"))+
     facet_grid(panel ~ ., scales="free")+
-    geom_text(aes(label, probability, showSelected=poisson.mean, label=sprintf(
+    geom_text(aes(label, probability, label=sprintf(
       "Poisson mean = %.2f", poisson.mean)),
       color="red",
+      showSelected="poisson.mean", 
       data=addPanel(mean.text, "probability"))+
     geom_hline(aes(yintercept=quantile.max),
                color="grey",
                data=addPanel(quantile.max.dt, "cum prob"))+
-    geom_point(aes(label, probability, showSelected=poisson.mean,
-                   clickSelects=label,
+      geom_point(aes(label, probability,
                    tooltip=sprintf(
                      "prob(label = %d) = %f", label, probability)),
+                     showSelected="poisson.mean",
+                   clickSelects="label",
                color="red",
                size=5,
                alpha=0.7,
                data=addPanel(poisson.prob, "probability"))+
-    geom_point(aes(label, cum.prob, showSelected=poisson.mean,
-                   clickSelects=label,
+      geom_point(aes(label, cum.prob,
                    tooltip=sprintf(
                      "prob(label <= %d) = %f", label, cum.prob)),
                color="red",
+                     showSelected="poisson.mean",
+                   clickSelects="label",
                size=5,
                alpha=0.7,
                data=addPanel(poisson.prob, "cum prob")),
   loss=ggplot()+
-    geom_text(aes(poisson.mean, loss, showSelected=label, label=sprintf(
+    geom_text(aes(poisson.mean, loss, label=sprintf(
       "label = %d", label)),
+      showSelected="label",
       hjust=0,
       data=label.text)+
-    geom_line(aes(poisson.mean, loss, showSelected=label),
+      geom_line(aes(poisson.mean, loss),
+                showSelected="label",
               data=loss.fun)+
-    geom_point(aes(label, loss, showSelected=label),
+      geom_point(aes(label, loss),
+                 showSelected="label",
                data=loss.min)+
-    geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+      geom_tallrect(aes(xmin=min, xmax=max),
+                    clickSelects="poisson.mean",
                   alpha=0.6,
                   data=mean.tallrects))
 structure(viz.loss, class="animint")
@@ -283,23 +295,29 @@ viz.log.loss$loss <- ggplot()+
   facet_grid(. ~ x.var, scales="free")+
   xlab("")+
   coord_cartesian(ylim=c(0, loss.max))+
-    geom_text(aes(poisson.mean, loss, showSelected=label, label=sprintf(
+    geom_text(aes(poisson.mean, loss, label=sprintf(
       "label = %d", label)),
+      showSelected="label",
       hjust=0,
       data=addX(label.text, "poisson mean"))+
-  geom_line(aes(poisson.mean, loss, showSelected=label),
+    geom_line(aes(poisson.mean, loss),
+              showSelected="label",
             data=addX(finite.loss, "poisson mean"))+
-  geom_point(aes(label, loss, showSelected=label),
+    geom_point(aes(label, loss),
+               showSelected="label",
              data=addX(loss.min, "poisson mean"))+
-  geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
+    geom_tallrect(aes(xmin=min, xmax=max),
+                  clickSelects="poisson.mean",
                 alpha=0.6,
                 data=addX(mean.tallrects, "poisson mean"))+
-  geom_line(aes(log.poisson.mean, loss, showSelected=label),
+    geom_line(aes(log.poisson.mean, loss),
+              showSelected="label",
             data=addX(finite.log.loss, "log(poisson mean)"))+
-  geom_point(aes(log(label), loss, showSelected=label),
+    geom_point(aes(log(label), loss),
+               showSelected="label",
              data=addX(loss.min[0<label,], "log(poisson mean)"))+
-  geom_tallrect(aes(xmin=log.min, xmax=log(max),
-                    clickSelects=poisson.mean),
+  geom_tallrect(aes(xmin=log.min, xmax=log(max)),
+                    clickSelects="poisson.mean",
                 alpha=0.6,
                 data=addX(mean.tallrects, "log(poisson mean)"))
 structure(viz.log.loss, class="animint")

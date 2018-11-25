@@ -160,9 +160,7 @@ OneFold <- function(validation.fold){
 ```
 
 Below, we run the `OneFold` function in parallel using the
-`doParallel` package. This is an example of the
-[foreach loop idiom](Ch17-appendix.html#foreach-loop) which is
-generally useful for parallel computations. Note that validation folds
+`doParallel` package. Note that validation folds
 1:10 will be used to compute the validation set error. The validation
 fold 0 treats all 200 observations as a train set, and will be used
 for visualizing the learned decision boundaries of the
@@ -236,7 +234,7 @@ The code below reproduces the plot of the error curves from the
 original Figure. 
 
 ```{r}
-library(ggplot2)
+library(animint2)
 errorPlot <- ggplot()+
   theme_bw()+
   geom_hline(aes(yintercept=error.prop, color=set, linetype=set),
@@ -450,14 +448,15 @@ errorPlot <- ggplot()+
   theme_bw()+
   theme_animint(height=500)+
   geom_text(aes(min.neighbors, error.prop,
-                color=set, label="Bayes",
-                showSelected=classifier),
+                color=set, label="Bayes"),
+                showSelected="classifier",
             hjust=1,
             data=Bayes.segment)+
   geom_segment(aes(min.neighbors, error.prop, 
                    xend=max.neighbors, yend=error.prop,
                    color=set,
-                   showSelected=classifier, linetype=classifier),
+                   linetype=classifier),
+               showSelected="classifier", 
                data=Bayes.segment)+
   scale_color_manual(values=set.colors, breaks=names(set.colors))+
   scale_fill_manual(values=set.colors)+
@@ -469,19 +468,20 @@ errorPlot <- ggplot()+
     limits=c(-1, 30),
     breaks=c(1, 10, 20, 29))+
   geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
-                  fill=set,
-                  showSelected=classifier,
-                  showSelected2=set),
+                  fill=set),
+                  showSelected=c("classifier", "set"),
               alpha=0.5,
               data=validation.error)+
   geom_line(aes(neighbors, mean, color=set,
-                showSelected=classifier, linetype=classifier),
+                linetype=classifier),
+            showSelected="classifier", 
             data=validation.error)+
   geom_line(aes(neighbors, error.prop, group=set, color=set,
-                showSelected=classifier, linetype=classifier),
+                linetype=classifier),
+            showSelected="classifier", 
             data=other.error)+
-  geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1,
-                    clickSelects=neighbors),
+  geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1),
+                    clickSelects="neighbors",
                 alpha=0.5,
                 data=validation.error)
 errorPlot
@@ -554,12 +554,12 @@ scatterPlot <- ggplot()+
   coord_equal()+
   scale_color_manual(values=label.colors)+
   scale_linetype_manual(values=classifier.linetypes)+
-  geom_point(aes(V1, V2, color=label,
-                 showSelected=neighbors),
+  geom_point(aes(V1, V2, color=label),
+                 showSelected="neighbors",
              size=0.2,
              data=show.grid)+
-  geom_path(aes(V1, V2, group=path.i, linetype=classifier,
-                showSelected=neighbors),
+  geom_path(aes(V1, V2, group=path.i, linetype=classifier),
+                showSelected="neighbors",
             size=1,
             data=pred.boundary)+
   geom_path(aes(V1, V2, group=path.i, linetype=classifier),
@@ -567,8 +567,8 @@ scatterPlot <- ggplot()+
             size=1,
             data=Bayes.boundary)+
   geom_point(aes(V1, V2, color=label,
-                 fill=prediction,
-                 showSelected=neighbors),
+                 fill=prediction),
+                 showSelected="neighbors",
              size=3,
              shape=21,
              data=show.points)+
@@ -579,16 +579,16 @@ scatterPlot <- ggplot()+
   geom_text(aes(text.V1.prop, text.V2.bottom, label=sprintf("%.3f", error.prop)),
             data=Bayes.error,
             hjust=1)+
-  geom_text(aes(text.V1.error, V2.bottom, label=paste(set, "Error:"),
-                showSelected=neighbors),
+  geom_text(aes(text.V1.error, V2.bottom, label=paste(set, "Error:")),
+                showSelected="neighbors",
             data=other.error,
             hjust=0)+
-  geom_text(aes(text.V1.prop, V2.bottom, label=sprintf("%.3f", error.prop),
-                showSelected=neighbors),
+  geom_text(aes(text.V1.prop, V2.bottom, label=sprintf("%.3f", error.prop)),
+                showSelected="neighbors",
             data=other.error,
             hjust=1)+
-  geom_text(aes(V1, V2,
-                showSelected=neighbors,
+  geom_text(aes(V1, V2),
+                showSelected="neighbors",
                 label=paste0(
                   neighbors,
                   " nearest neighbor",
@@ -676,14 +676,15 @@ errorPlot <- ggplot()+
   theme(panel.margin=grid::unit(0, "cm"))+
   facet_grid(facet ~ ., scales="free")+
   geom_text(aes(min.neighbors, error.prop,
-                color=set, label="Bayes",
-                showSelected=classifier),
+                color=set, label="Bayes"),
+                showSelected="classifier",
             hjust=1,
             data=facets(Bayes.segment, "Misclassification Errors"))+
   geom_segment(aes(min.neighbors, error.prop, 
                    xend=max.neighbors, yend=error.prop,
                    color=set,
-                   showSelected=classifier, linetype=classifier),
+                   linetype=classifier),
+               showSelected="classifier",                
                data=facets(Bayes.segment, "Misclassification Errors"))+
   scale_color_manual(values=set.colors, breaks=names(set.colors))+
   scale_fill_manual(values=set.colors, breaks=names(set.colors))+
@@ -695,25 +696,24 @@ errorPlot <- ggplot()+
     limits=c(-1, 30),
     breaks=c(1, 10, 20, 29))+
   geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
-                  fill=set,
-                  showSelected=classifier,
-                  showSelected2=set,
-                  showSelected3=n.folds),
+                  fill=set),
+                  showSelected=c("classifier", "set", "n.folds"),
               alpha=0.5,
               data=facets(validation.error.several, "Misclassification Errors"))+
   geom_line(aes(neighbors, mean, color=set,
-                showSelected=classifier,
-                showSelected3=n.folds,
                 linetype=classifier),
+                showSelected=c("classifier", "n.folds"),
             data=facets(validation.error.several, "Misclassification Errors"))+
   geom_line(aes(neighbors, error.prop, group=set, color=set,
-                showSelected=classifier, linetype=classifier),
+                linetype=classifier),
+            showSelected="classifier", 
             data=facets(other.error, "Misclassification Errors"))+
-  geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1,
-                    clickSelects=neighbors),
+  geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1),
+                    clickSelects="neighbors",
                 alpha=0.5,
                 data=validation.error)+
-  geom_point(aes(neighbors, n.folds, color=set, clickSelects=n.folds),
+    geom_point(aes(neighbors, n.folds, color=set),
+               clickSelects="n.folds",
              size=9,
              data=facets(min.validation, "n.folds"))
 ```

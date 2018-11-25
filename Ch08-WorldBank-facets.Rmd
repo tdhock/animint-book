@@ -98,11 +98,11 @@ We define the ggplot with a `geom_tallrect` in the background, and a
 
 ```{r}
 ts.right <- ggplot()+
-  geom_tallrect(aes(xmin=year-1/2, xmax=year+1/2,
-                    clickSelects=year),
+  geom_tallrect(aes(xmin=year-1/2, xmax=year+1/2),
+                    clickSelects="year",
                 data=TS.RIGHT(years), alpha=1/2)+
-  geom_line(aes(year, life.expectancy, group=country, colour=region,
-                clickSelects=country),
+  geom_line(aes(year, life.expectancy, group=country, colour=region),
+                clickSelects="country",
             data=TS.RIGHT(not.na), size=4, alpha=3/5)
 ts.right
 ```
@@ -137,10 +137,12 @@ country.
 
 ```{r}
 ts.scatter <- ts.facet+
-  geom_point(aes(fertility.rate, life.expectancy, clickSelects=country,
-                 showSelected=year, colour=region, size=population,
+    geom_point(aes(fertility.rate, life.expectancy,
+                   colour=region, size=population,
                  key=country), # key aesthetic for animated transitions!
-             data=SCATTER(not.na))+
+               clickSelects="country",
+               showSelected="year",
+               data=SCATTER(not.na))+
   scale_size_animint(pixel.range=c(2, 20), breaks=10^(9:5))
 ts.scatter
 ```
@@ -164,11 +166,11 @@ fertility rate.
 
 ```{r}
 scatter.both <- ts.scatter+
-  geom_widerect(aes(ymin=year-1/2, ymax=year+1/2,
-                    clickSelects=year),
+  geom_widerect(aes(ymin=year-1/2, ymax=year+1/2),
+                    clickSelects="year",
                 data=TS.ABOVE(years), alpha=1/2)+
-  geom_path(aes(fertility.rate, year, group=country, colour=region,
-                clickSelects=country),
+  geom_path(aes(fertility.rate, year, group=country, colour=region),
+                clickSelects="country",
             data=TS.ABOVE(not.na), size=4, alpha=3/5)
 scatter.both
 ```

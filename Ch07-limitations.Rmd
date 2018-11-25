@@ -70,7 +70,8 @@ ggstat <- ggplot() +
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   geom_bar(
-    aes(letter, count, fill = stack, showSelected=facet),
+      aes(letter, count, fill = stack),
+      showSelected="facet",
     data = random.counts,
     stat = "identity",
     position="stack"
@@ -106,7 +107,8 @@ ggidentity <- ggplot() +
   geom_segment(
     aes(x=letter, xend=letter,
         y=cumsum, yend=cumsum-count,
-        color=stack, showSelected=facet),
+        color=stack),
+    showSelected="facet",
     data = random.cumsums,
     size=10,
     stat = "identity",

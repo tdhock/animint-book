@@ -63,12 +63,10 @@ categorical legend.
 
 However, the showSelected keyword is not limited to use with
 categorical legends. You can use showSelected keywords for any data
-variables you like, by explicitly specifying them in the aesthetic
-mapping. The animint package recognizes any aesthetic that contains
-the substring `showSelected`, for example `aes(showSelected=year,
-showSelected2=country, showSelectedRegion=region)`.
+variables you like, by explicitly specifying the variable names in the
+showSelected argument of the geom. 
 
-Each variable that is used with a showSelected aesthetic is treated by
+Each variable that is used with showSelected is treated by
 animint as a *selection variable*. For example, the Keeling Curve data
 viz has one selection variable (month), and so does the WorldBank data
 viz (region). For each selection variable, animint keeps track of the
@@ -97,8 +95,8 @@ translate this sketch into R code.
 data(WorldBank, package="animint")
 library(ggplot2)
 scatter <- ggplot()+
-  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                 showSelected=year),
+  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+             showSelected="year",
              data=WorldBank)
 scatter
 ```
@@ -217,8 +215,8 @@ used to match data points before and after changing the selection.
 ```{r}
 scatter.key <- ggplot()+
   geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                 key=country,
-                 showSelected=year),
+                 key=country),
+             showSelected="year",
              data=WorldBank)
 ```
 
@@ -276,7 +274,7 @@ Exercises:
 
 * Make an improved version of `viz.aligned` from the previous
   chapter. Instead of fixing the year at 1975, use
-  `aes(showSelected=year)` so that the user can select a year. Add
+  `showSelected=year` so that the user can select a year. Add
   geoms that show the selected year: a `geom_text` on the scatterplot,
   and a `geom_vline` on the time series.
 * Translate one of the
@@ -286,7 +284,7 @@ Exercises:
   plotting function inside the for loop, use the
   [list of data tables idiom](Ch17-appendix.html#list-of-data-tables)
   to store the data that should be plotted. Then use those data along
-  with `showSelected` aesthetics to create ggplots, and render them
+  with `showSelected` to create ggplots, and render them
   using animint.
 
 Next, [Chapter 4](Ch04-clickSelects.html) explains the `clickSelects`
