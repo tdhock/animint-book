@@ -29,11 +29,11 @@ which has both non-missing values for both life.expectancy and
 fertility.rate.
 
 ```{r}
-library(animint)
+library(animint2)
 data(WorldBank)
 library(data.table)
 not.na <- data.table(
-  WorldBank)[!(is.na(life.expectancy) | is.na(fertility.rate)), ]
+  WorldBank)[!(is.na(life.expectancy) | is.na(fertility.rate))]
 ```
 
 We will also be plotting the population variable using a size
@@ -41,7 +41,7 @@ legend. Before plotting, we will make sure that none of the values are
 missing.
 
 ```{r}
-not.na[is.na(not.na$population), ]
+not.na[is.na(not.na$population)]
 ```
 
 The table above shows that there are three rows with missing values
@@ -50,7 +50,7 @@ for the population variable. They are for the country Kuwait during
 from the neighboring years, 1991-1995.
 
 ```{r}
-not.na[country == "Kuwait" & 1991 <= year & year <= 1995, ]
+not.na[country == "Kuwait" & 1991 <= year & year <= 1995]
 ```
 
 The table above shows that the population of Kuwait decreased over the
@@ -59,7 +59,7 @@ fill in those missing values below.
 
 ```{r}
 not.na[is.na(population), population := 1700000]
-not.na[country == "Kuwait" & 1991 <= year & year <= 1995, ]
+not.na[country == "Kuwait" & 1991 <= year & year <= 1995]
 ```
 
 Next, we define the following helper function, which will be used to
@@ -98,12 +98,14 @@ We define the ggplot with a `geom_tallrect` in the background, and a
 
 ```{r}
 ts.right <- ggplot()+
-  geom_tallrect(aes(xmin=year-1/2, xmax=year+1/2),
-                    clickSelects="year",
-                data=TS.RIGHT(years), alpha=1/2)+
-  geom_line(aes(year, life.expectancy, group=country, colour=region),
-                clickSelects="country",
-            data=TS.RIGHT(not.na), size=4, alpha=3/5)
+  geom_tallrect(aes(
+    xmin=year-1/2, xmax=year+1/2),
+    clickSelects="year",
+    data=TS.RIGHT(years), alpha=1/2)+
+  geom_line(aes(
+    year, life.expectancy, group=country, colour=region),
+    clickSelects="country",
+    data=TS.RIGHT(not.na), size=4, alpha=3/5)
 ts.right
 ```
 
@@ -137,12 +139,13 @@ country.
 
 ```{r}
 ts.scatter <- ts.facet+
-    geom_point(aes(fertility.rate, life.expectancy,
-                   colour=region, size=population,
-                 key=country), # key aesthetic for animated transitions!
-               clickSelects="country",
-               showSelected="year",
-               data=SCATTER(not.na))+
+  geom_point(aes(
+    fertility.rate, life.expectancy,
+    colour=region, size=population,
+    key=country), # key aesthetic for animated transitions!
+    clickSelects="country",
+    showSelected="year",
+    data=SCATTER(not.na))+
   scale_size_animint(pixel.range=c(2, 20), breaks=10^(9:5))
 ts.scatter
 ```
@@ -153,7 +156,7 @@ to specify `top` and `side` columns which are used in the facet
 specification. We also render this ggplot interactively below.
 
 ```{r Ch08-viz-ts-scatter}
-animint(TS=ts.scatter)
+animint(ts.scatter)
 ```
 
 Note that single selection is used by default for both year and
@@ -166,12 +169,14 @@ fertility rate.
 
 ```{r}
 scatter.both <- ts.scatter+
-  geom_widerect(aes(ymin=year-1/2, ymax=year+1/2),
-                    clickSelects="year",
-                data=TS.ABOVE(years), alpha=1/2)+
-  geom_path(aes(fertility.rate, year, group=country, colour=region),
-                clickSelects="country",
-            data=TS.ABOVE(not.na), size=4, alpha=3/5)
+  geom_widerect(aes(
+    ymin=year-1/2, ymax=year+1/2),
+    clickSelects="year",
+    data=TS.ABOVE(years), alpha=1/2)+
+  geom_path(aes(
+    fertility.rate, year, group=country, colour=region),
+    clickSelects="country",
+    data=TS.ABOVE(not.na), size=4, alpha=3/5)
 scatter.both
 ```
 

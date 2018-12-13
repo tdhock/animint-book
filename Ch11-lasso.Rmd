@@ -76,13 +76,14 @@ path <- do.call(rbind, path.list)
 variable.colors <- c(
   "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
   "#A65628", "#F781BF", "#999999")
-library(ggplot2)
+library(animint2)
 gg.lambda <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   scale_color_manual(values=variable.colors)+
-  geom_line(aes(lambda, standardized.coef, color=variable, group=variable),
-            data=path)+
+  geom_line(aes(
+    lambda, standardized.coef, color=variable, group=variable),
+    data=path)+
   ggtitle("LASSO path for prostate cancer data calculated using the LARS")
 gg.lambda
 ```
@@ -102,8 +103,9 @@ lpoints <- data.table(
   standardized.coef=lfit$coefficients,
   arclength=sum(abs(lfit$coefficients)))
 gg.lambda+
-  geom_point(aes(0, standardized.coef, color=variable),
-             data=lpoints)
+  geom_point(aes(
+    0, standardized.coef, color=variable),
+    data=lpoints)
 ```
 
 In the next plot below, we show the path as a function of L1 norm
@@ -132,15 +134,18 @@ ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   scale_color_manual(values=variable.colors)+
-  geom_line(aes(arclength, standardized.coef, color=variable, group=variable),
-            data=path)+
-  geom_point(aes(arclength, standardized.coef, color=variable),
-             data=lpoints)+
-  geom_point(aes(arclength, standardized.coef, color=variable),
-             shape=21,
-             fill=NA,
-             size=3,
-             data=coef.grid)
+  geom_line(aes(
+    arclength, standardized.coef, color=variable, group=variable),
+    data=path)+
+  geom_point(aes(
+    arclength, standardized.coef, color=variable),
+    data=lpoints)+
+  geom_point(aes(
+    arclength, standardized.coef, color=variable),
+    shape=21,
+    fill=NA,
+    size=3,
+    data=coef.grid)
 ```
 
 The plot above shows that the weights at the grid points are
@@ -173,7 +178,6 @@ for(set in c("train", "validation")){
 }
 mean.error <- do.call(rbind, mean.error.list)
 rect.width <- diff(mean.error$arclength[1:2])/2
-library(animint)
 addY <- function(dt, y){
   data.table(dt, y.var=factor(y, c("error", "weights")))
 }
@@ -184,10 +188,12 @@ gg.path <- ggplot()+
   facet_grid(y.var ~ ., scales="free")+
   ylab("")+
   scale_color_manual(values=variable.colors)+
-  geom_line(aes(arclength, standardized.coef, color=variable, group=variable),
-            data=addY(path, "weights"))+
-  geom_line(aes(arclength, mse, linetype=set, group=set),
-            data=addY(mean.error, "error"))+
+  geom_line(aes(
+    arclength, standardized.coef, color=variable, group=variable),
+    data=addY(path, "weights"))+
+  geom_line(aes(
+    arclength, mse, linetype=set, group=set),
+    data=addY(mean.error, "error"))+
   geom_tallrect(aes(
     xmin=arclength-rect.width,
     xmax=arclength+rect.width),
@@ -213,14 +219,17 @@ for(fraction.i in seq_along(fraction)){
 lasso.res <- do.call(rbind, lasso.res.list)
 hline.dt <- data.table(residual=0)
 gg.res <- ggplot()+
-  geom_hline(aes(yintercept=residual),
-             data=hline.dt,
-             color="grey")+
-  geom_point(aes(response, residual, fill=set, 
-                 key=observation.i),
-                 showSelected="arclength",
-             shape=21,
-             data=lasso.res)
+  theme_bw()+
+  geom_hline(aes(
+    yintercept=residual),
+    data=hline.dt,
+    color="grey")+
+  geom_point(aes(
+    response, residual, fill=set, 
+    key=observation.i),
+    showSelected="arclength",
+    shape=21,
+    data=lasso.res)
 print(gg.res)
 ```
 
@@ -229,12 +238,11 @@ below. Clicking the first plot changes the regularization parameter,
 and the residuals that are shown in the second plot.
 
 ```{r Ch11-viz-one-split}
-viz.one.split <- list(
-  path=gg.path,
-  res=gg.res,
+animint(
+  gg.path,
+  gg.res,
   duration=list(arclength=2000),
   time=list(variable="arclength", ms=2000))
-structure(viz.one.split, class="animint")
 ```
 
 ## Re-design with moving tallrects {#re-design}
@@ -268,17 +276,19 @@ for(a in tallrect.dt$arclength){
     not.selected, show.val=a, show.var="arclength")
 }
 tallrect.show <- do.call(rbind, tallrect.show.list)
-viz.moving.rect <- list(
+animint(
   path=ggplot()+
     theme_bw()+
     theme(panel.margin=grid::unit(0, "lines"))+
     facet_grid(y.var ~ ., scales="free")+
     ylab("")+
     scale_color_manual(values=variable.colors)+
-    geom_line(aes(arclength, standardized.coef, color=variable, group=variable),
-              data=addY(path, "weights"))+
-    geom_line(aes(arclength, mse, linetype=set, group=set),
-              data=addY(mean.error, "error"))+
+    geom_line(aes(
+      arclength, standardized.coef, color=variable, group=variable),
+      data=addY(path, "weights"))+
+    geom_line(aes(
+      arclength, mse, linetype=set, group=set),
+      data=addY(mean.error, "error"))+
     geom_tallrect(aes(
       xmin=arclength-rect.width,
       xmax=arclength+rect.width,
@@ -295,41 +305,47 @@ viz.moving.rect <- list(
       alpha=0.5,
       data=tallrect.show),
   res=ggplot()+
-    geom_hline(aes(yintercept=residual),
-               data=hline.dt,
-               color="grey")+
+    theme_bw()+
+    geom_hline(aes(
+      yintercept=residual),
+      data=hline.dt,
+      color="grey")+
     guides(linetype="none")+
-    geom_point(aes(response, residual, 
-                   key=observation.i),
-                   showSelected=c("set", "arclength"),
-               shape=21,
-               fill=NA,
-               color="black",
-               data=lasso.res)+
-    geom_text(aes(3, 2.5, label=sprintf("L1 arclength = %.1f", arclength),
-                  key=1),
-                  showSelected="arclength",
-              data=tallrect.dt)+
-    geom_text(aes(0, -2, label=sprintf("train error = %.3f", mse),
-                  key=1),
-                  showSelected=c("set", "arclength"),
-              hjust=0,
-              data=mean.error[set=="train",])+
-    geom_text(aes(0, -2.5, label=sprintf("validation error = %.3f", mse),
-                  key=1),
-                  showSelected=c("set", "arclength"),
-              hjust=0,
-              data=mean.error[set=="validation",])+
-    geom_segment(aes(response, residual,
-                     xend=response, yend=0,
-                     linetype=set,
-                     key=observation.i),
-                     showSelected=c("set", "arclength"),
-                 size=1,
-               data=lasso.res),
+    geom_point(aes(
+      response, residual, 
+      key=observation.i),
+      showSelected=c("set", "arclength"),
+      shape=21,
+      fill=NA,
+      color="black",
+      data=lasso.res)+
+    geom_text(aes(
+      3, 2.5, label=sprintf("L1 arclength = %.1f", arclength),
+      key=1),
+      showSelected="arclength",
+      data=tallrect.dt)+
+    geom_text(aes(
+      0, -2, label=sprintf("train error = %.3f", mse),
+      key=1),
+      showSelected=c("set", "arclength"),
+      hjust=0,
+      data=mean.error[set=="train",])+
+    geom_text(aes(
+      0, -2.5, label=sprintf("validation error = %.3f", mse),
+      key=1),
+      showSelected=c("set", "arclength"),
+      hjust=0,
+      data=mean.error[set=="validation",])+
+    geom_segment(aes(
+      response, residual,
+      xend=response, yend=0,
+      linetype=set,
+      key=observation.i),
+      showSelected=c("set", "arclength"),
+      size=1,
+      data=lasso.res),
   duration=list(arclength=2000),
   time=list(variable="arclength", ms=2000))
-structure(viz.moving.rect, class="animint")
 ```
 
 ## Chapter summary and exercises {#exercises}

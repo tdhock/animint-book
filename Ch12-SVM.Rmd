@@ -44,10 +44,11 @@ getInput <- function(){
 data.dt <- data.table(
   x1=getInput(),
   x2=getInput())
-library(ggplot2)
+library(animint2)
 ggplot()+
-  geom_point(aes(x1, x2),
-             data=data.dt)
+  geom_point(aes(
+    x1, x2),
+    data=data.dt)
 ```
 
 The plot below shows the same data, after computing two additional
@@ -57,8 +58,9 @@ input features (the squares of the original two inputs).
 data.dt[, x1.sq := x1^2 ]
 data.dt[, x2.sq := x2^2 ]
 ggplot()+
-  geom_point(aes(x1.sq, x2.sq),
-             data=data.dt)
+  geom_point(aes(
+    x1.sq, x2.sq),
+    data=data.dt)
 ```
 
 In our simulation, we assume that the output score `f` is a linear
@@ -71,10 +73,11 @@ true.decision.boundary <- 0.2
 ggplot()+
   theme_bw()+
   scale_fill_gradient2(midpoint=true.decision.boundary)+
-  geom_point(aes(x1.sq, x2.sq, fill=f),
-             shape=21,
-             color="grey",
-             data=data.dt)
+  geom_point(aes(
+    x1.sq, x2.sq, fill=f),
+    shape=21,
+    color="grey",
+    data=data.dt)
 ```
 
 In particular, we assume that the label `y` is negative (-1) if

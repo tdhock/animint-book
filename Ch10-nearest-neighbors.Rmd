@@ -156,24 +156,22 @@ OneFold <- function(validation.fold){
   }#for(neighbors
   do.call(rbind, data.by.neighbors)
 }#for(validation.fold
-
 ```
 
 Below, we run the `OneFold` function in parallel using the
-`doParallel` package. Note that validation folds
+`parallel` package. Note that validation folds
 1:10 will be used to compute the validation set error. The validation
 fold 0 treats all 200 observations as a train set, and will be used
 for visualizing the learned decision boundaries of the
 K-Nearest-Neighbors classifier.
 
 ```{r}
-library(doParallel)
-registerDoParallel()
-data.all.folds <- foreach(validation.fold=0:n.folds, .combine=rbind) %dopar% {
+library(parallel)
+data.all.folds.list <- mclapply(0:n.folds, function(validation.fold){
   one.fold <- OneFold(validation.fold)
   data.table(validation.fold, one.fold)
-}
-data.all.folds
+})
+data.all.folds <- do.call(rbind, data.all.folds.list)
 ```
 
 The data table of predictions contains almost 3 million observations!
@@ -235,28 +233,34 @@ original Figure.
 
 ```{r}
 library(animint2)
-errorPlot <- ggplot()+
+errorPlotStatic <- ggplot()+
   theme_bw()+
-  geom_hline(aes(yintercept=error.prop, color=set, linetype=set),
-             data=Bayes.error)+
+  geom_hline(aes(
+    yintercept=error.prop, color=set, linetype=set),
+    data=Bayes.error)+
   scale_color_manual(
     "error type", values=set.colors, breaks=names(set.colors))+
   scale_linetype_manual(
     "error type", values=set.linetypes, breaks=names(set.linetypes))+
   ylab("Misclassification Errors")+
   xlab("Number of Neighbors")+
-  geom_linerange(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
-                     color=set),
-                 data=validation.error)+
-  geom_line(aes(neighbors, mean, linetype=set, color=set),
-            data=validation.error)+
-  geom_line(aes(neighbors, error.prop, group=set, linetype=set, color=set),
-            data=other.error)+
-  geom_point(aes(neighbors, mean, color=set),
-             data=validation.error)+
-  geom_point(aes(neighbors, error.prop, color=set),
-             data=other.error)
-errorPlot
+  geom_linerange(aes(
+    neighbors, ymin=mean-sd, ymax=mean+sd,
+    color=set),
+    data=validation.error)+
+  geom_line(aes(
+    neighbors, mean, linetype=set, color=set),
+    data=validation.error)+
+  geom_line(aes(
+    neighbors, error.prop, group=set, linetype=set, color=set),
+    data=other.error)+
+  geom_point(aes(
+    neighbors, mean, color=set),
+    data=validation.error)+
+  geom_point(aes(
+    neighbors, error.prop, color=set),
+    data=other.error)
+errorPlotStatic
 ```
 
 ### Plot of decision boundaries in the input feature space {#static-features}
@@ -338,7 +342,7 @@ the original Figure.
 label.colors <- c(
   "0"="#377EB8",
   "1"="#FF7F00")
-scatterPlot <- ggplot()+
+scatterPlotStatic <- ggplot()+
   theme_bw()+
   theme(axis.text=element_blank(),
         axis.ticks=element_blank(),
@@ -346,28 +350,34 @@ scatterPlot <- ggplot()+
   ggtitle("7-Nearest Neighbors")+
   scale_color_manual(values=label.colors)+
   scale_linetype_manual(values=classifier.linetypes)+
-  geom_point(aes(V1, V2, color=label),
-             size=0.2,
-             data=show.grid)+
-  geom_path(aes(V1, V2, group=path.i, linetype=classifier),
-            size=1,
-            data=pred.boundary)+
-  geom_path(aes(V1, V2, group=path.i, linetype=classifier),
-            color=set.colors[["Bayes"]],
-            size=1,
-            data=Bayes.boundary)+
-  geom_point(aes(V1, V2, color=label),
-             fill=NA,
-             size=3,
-             shape=21,
-             data=show.points)+
-  geom_text(aes(text.V1.error, V2.bottom, label=paste(set, "Error:")),
-            data=error.text,
-            hjust=0)+
-  geom_text(aes(text.V1.prop, V2.bottom, label=sprintf("%.3f", error.prop)),
-            data=error.text,
-            hjust=1)
-scatterPlot
+  geom_point(aes(
+    V1, V2, color=label),
+    size=0.2,
+    data=show.grid)+
+  geom_path(aes(
+    V1, V2, group=path.i, linetype=classifier),
+    size=1,
+    data=pred.boundary)+
+  geom_path(aes(
+    V1, V2, group=path.i, linetype=classifier),
+    color=set.colors[["Bayes"]],
+    size=1,
+    data=Bayes.boundary)+
+  geom_point(aes(
+    V1, V2, color=label),
+    fill=NA,
+    size=3,
+    shape=21,
+    data=show.points)+
+  geom_text(aes(
+    text.V1.error, V2.bottom, label=paste(set, "Error:")),
+    data=error.text,
+    hjust=0)+
+  geom_text(aes(
+    text.V1.prop, V2.bottom, label=sprintf("%.3f", error.prop)),
+    data=error.text,
+    hjust=1)
+scatterPlotStatic
 ```
 
 ### Combined plots {#static-combined}
@@ -375,12 +385,7 @@ scatterPlot
 Finally, we combine the two ggplots and render them as an animint.
 
 ```{r Ch10-viz-static}
-viz.static <- list(
-  error=errorPlot,
-  data=scatterPlot
-  )
-library(animint)
-structure(viz.static, class="animint")
+animint(errorPlotStatic, scatterPlotStatic)
 ```
 
 This data viz does have three interactive legends, but it is static in
@@ -438,26 +443,28 @@ We re-define the plot of the error curves below. Note that
   are not obscured by non-clickable geoms (bottom layers).
 
 ```{r}
-set.colors <-
-  c(test="#984EA3",#purple
-    validation="#4DAF4A",#green
-    Bayes="#984EA3",#purple
-    train="black")
+set.colors <- c(
+  test="#984EA3",#purple
+  validation="#4DAF4A",#green
+  Bayes="#984EA3",#purple
+  train="black")
 errorPlot <- ggplot()+
   ggtitle("Select number of neighbors")+
   theme_bw()+
   theme_animint(height=500)+
-  geom_text(aes(min.neighbors, error.prop,
-                color=set, label="Bayes"),
-                showSelected="classifier",
-            hjust=1,
-            data=Bayes.segment)+
-  geom_segment(aes(min.neighbors, error.prop, 
-                   xend=max.neighbors, yend=error.prop,
-                   color=set,
-                   linetype=classifier),
-               showSelected="classifier", 
-               data=Bayes.segment)+
+  geom_text(aes(
+    min.neighbors, error.prop,
+    color=set, label="Bayes"),
+    showSelected="classifier",
+    hjust=1,
+    data=Bayes.segment)+
+  geom_segment(aes(
+    min.neighbors, error.prop, 
+    xend=max.neighbors, yend=error.prop,
+    color=set,
+    linetype=classifier),
+    showSelected="classifier", 
+    data=Bayes.segment)+
   scale_color_manual(values=set.colors, breaks=names(set.colors))+
   scale_fill_manual(values=set.colors)+
   guides(fill="none", linetype="none")+
@@ -467,23 +474,27 @@ errorPlot <- ggplot()+
     "Number of Neighbors",
     limits=c(-1, 30),
     breaks=c(1, 10, 20, 29))+
-  geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
-                  fill=set),
-                  showSelected=c("classifier", "set"),
-              alpha=0.5,
-              data=validation.error)+
-  geom_line(aes(neighbors, mean, color=set,
-                linetype=classifier),
-            showSelected="classifier", 
-            data=validation.error)+
-  geom_line(aes(neighbors, error.prop, group=set, color=set,
-                linetype=classifier),
-            showSelected="classifier", 
-            data=other.error)+
-  geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1),
-                    clickSelects="neighbors",
-                alpha=0.5,
-                data=validation.error)
+  geom_ribbon(aes(
+    neighbors, ymin=mean-sd, ymax=mean+sd,
+    fill=set),
+    showSelected=c("classifier", "set"),
+    alpha=0.5,
+    data=validation.error)+
+  geom_line(aes(
+    neighbors, mean, color=set,
+    linetype=classifier),
+    showSelected="classifier", 
+    data=validation.error)+
+  geom_line(aes(
+    neighbors, error.prop, group=set, color=set,
+    linetype=classifier),
+    showSelected="classifier", 
+    data=other.error)+
+  geom_tallrect(aes(
+    xmin=neighbors-1, xmax=neighbors+1),
+    clickSelects="neighbors",
+    alpha=0.5,
+    data=validation.error)
 errorPlot
 ```
 
@@ -554,47 +565,56 @@ scatterPlot <- ggplot()+
   coord_equal()+
   scale_color_manual(values=label.colors)+
   scale_linetype_manual(values=classifier.linetypes)+
-  geom_point(aes(V1, V2, color=label),
-                 showSelected="neighbors",
-             size=0.2,
-             data=show.grid)+
-  geom_path(aes(V1, V2, group=path.i, linetype=classifier),
-                showSelected="neighbors",
-            size=1,
-            data=pred.boundary)+
-  geom_path(aes(V1, V2, group=path.i, linetype=classifier),
-            color=set.colors[["test"]],
-            size=1,
-            data=Bayes.boundary)+
-  geom_point(aes(V1, V2, color=label,
-                 fill=prediction),
-                 showSelected="neighbors",
-             size=3,
-             shape=21,
-             data=show.points)+
+  geom_point(aes(
+    V1, V2, color=label),
+    showSelected="neighbors",
+    size=0.2,
+    data=show.grid)+
+  geom_path(aes(
+    V1, V2, group=path.i, linetype=classifier),
+    showSelected="neighbors",
+    size=1,
+    data=pred.boundary)+
+  geom_path(aes(
+    V1, V2, group=path.i, linetype=classifier),
+    color=set.colors[["test"]],
+    size=1,
+    data=Bayes.boundary)+
+  geom_point(aes(
+    V1, V2, color=label,
+    fill=prediction),
+    showSelected="neighbors",
+    size=3,
+    shape=21,
+    data=show.points)+
   scale_fill_manual(values=c(error="black", correct="transparent"))+
-  geom_text(aes(text.V1.error, text.V2.bottom, label=paste(set, "Error:")),
-            data=Bayes.error,
-            hjust=0)+
-  geom_text(aes(text.V1.prop, text.V2.bottom, label=sprintf("%.3f", error.prop)),
-            data=Bayes.error,
-            hjust=1)+
-  geom_text(aes(text.V1.error, V2.bottom, label=paste(set, "Error:")),
-                showSelected="neighbors",
-            data=other.error,
-            hjust=0)+
-  geom_text(aes(text.V1.prop, V2.bottom, label=sprintf("%.3f", error.prop)),
-                showSelected="neighbors",
-            data=other.error,
-            hjust=1)+
-  geom_text(aes(V1, V2),
-                showSelected="neighbors",
-                label=paste0(
-                  neighbors,
-                  " nearest neighbor",
-                  ifelse(neighbors==1, "", "s"),
-                  " classifier")),
-            data=show.text)
+  geom_text(aes(
+    text.V1.error, text.V2.bottom, label=paste(set, "Error:")),
+    data=Bayes.error,
+    hjust=0)+
+  geom_text(aes(
+    text.V1.prop, text.V2.bottom, label=sprintf("%.3f", error.prop)),
+    data=Bayes.error,
+    hjust=1)+
+  geom_text(aes(
+    text.V1.error, V2.bottom, label=paste(set, "Error:")),
+    showSelected="neighbors",
+    data=other.error,
+    hjust=0)+
+  geom_text(aes(
+    text.V1.prop, V2.bottom, label=sprintf("%.3f", error.prop)),
+    showSelected="neighbors",
+    data=other.error,
+    hjust=1)+
+  geom_text(aes(
+    V1, V2,
+    label=paste0(
+      neighbors,
+      " nearest neighbor",
+      ifelse(neighbors==1, "", "s"),
+      " classifier")),
+    showSelected="neighbors",
+    data=show.text)
 ```
 
 Before compiling the interactive data viz, we print a static ggplot
@@ -612,13 +632,11 @@ Finally, we combine the two plots in a single data viz with neighbors
 as a selector variable.
 
 ```{r Ch10-viz-neighbors}
-viz.neighbors <- list(
-  error=errorPlot,
-  data=scatterPlot,
+animint(
+  errorPlot,
+  scatterPlot,
   first=list(neighbors=7),
-  time=list(variable="neighbors", ms=3000)
-  )
-structure(viz.neighbors, class="animint")
+  time=list(variable="neighbors", ms=3000))
 ```
 
 Note that neighbors is used as a time variable, so animation shows the
@@ -639,10 +657,11 @@ for(n.folds in c(3, 5, 15)){
   set.seed(2)
   mixture <- with(mixture.example, data.table(x, label=factor(y)))
   mixture$fold <- sample(rep(1:n.folds, l=nrow(mixture)))
-  only.validation <- foreach(validation.fold=1:n.folds, .combine=rbind) %dopar% {
+  only.validation.list <- mclapply(1:n.folds, function(validation.fold){
     one.fold <- OneFold(validation.fold)
-    data.table(validation.fold, one.fold[set=="validation",])
-  }
+    data.table(validation.fold, one.fold[set=="validation"])
+  })
+  only.validation <- do.call(rbind, only.validation.list)
   only.validation.error <- only.validation[, list(
     error.prop=mean(is.error)
   ), by=.(set, validation.fold, neighbors)]
@@ -669,23 +688,25 @@ The code below creates a new error curve plot with two facets.
 facets <- function(df, facet){
   data.frame(df, facet=factor(facet, c("n.folds", "Misclassification Errors")))
 }
-errorPlot <- ggplot()+
+errorPlotNew <- ggplot()+
   ggtitle("Select number of folds and neighbors")+
   theme_bw()+
   theme_animint(height=500)+
   theme(panel.margin=grid::unit(0, "cm"))+
   facet_grid(facet ~ ., scales="free")+
-  geom_text(aes(min.neighbors, error.prop,
-                color=set, label="Bayes"),
-                showSelected="classifier",
-            hjust=1,
-            data=facets(Bayes.segment, "Misclassification Errors"))+
-  geom_segment(aes(min.neighbors, error.prop, 
-                   xend=max.neighbors, yend=error.prop,
-                   color=set,
-                   linetype=classifier),
-               showSelected="classifier",                
-               data=facets(Bayes.segment, "Misclassification Errors"))+
+  geom_text(aes(
+    min.neighbors, error.prop,
+    color=set, label="Bayes"),
+    showSelected="classifier",
+    hjust=1,
+    data=facets(Bayes.segment, "Misclassification Errors"))+
+  geom_segment(aes(
+    min.neighbors, error.prop, 
+    xend=max.neighbors, yend=error.prop,
+    color=set,
+    linetype=classifier),
+    showSelected="classifier",                
+    data=facets(Bayes.segment, "Misclassification Errors"))+
   scale_color_manual(values=set.colors, breaks=names(set.colors))+
   scale_fill_manual(values=set.colors, breaks=names(set.colors))+
   guides(fill="none", linetype="none")+
@@ -695,46 +716,49 @@ errorPlot <- ggplot()+
     "Number of Neighbors",
     limits=c(-1, 30),
     breaks=c(1, 10, 20, 29))+
-  geom_ribbon(aes(neighbors, ymin=mean-sd, ymax=mean+sd,
-                  fill=set),
-                  showSelected=c("classifier", "set", "n.folds"),
-              alpha=0.5,
-              data=facets(validation.error.several, "Misclassification Errors"))+
-  geom_line(aes(neighbors, mean, color=set,
-                linetype=classifier),
-                showSelected=c("classifier", "n.folds"),
-            data=facets(validation.error.several, "Misclassification Errors"))+
-  geom_line(aes(neighbors, error.prop, group=set, color=set,
-                linetype=classifier),
-            showSelected="classifier", 
-            data=facets(other.error, "Misclassification Errors"))+
-  geom_tallrect(aes(xmin=neighbors-1, xmax=neighbors+1),
-                    clickSelects="neighbors",
-                alpha=0.5,
-                data=validation.error)+
-    geom_point(aes(neighbors, n.folds, color=set),
-               clickSelects="n.folds",
-             size=9,
-             data=facets(min.validation, "n.folds"))
+  geom_ribbon(aes(
+    neighbors, ymin=mean-sd, ymax=mean+sd,
+    fill=set),
+    showSelected=c("classifier", "set", "n.folds"),
+    alpha=0.5,
+    data=facets(validation.error.several, "Misclassification Errors"))+
+  geom_line(aes(
+    neighbors, mean, color=set,
+    linetype=classifier),
+    showSelected=c("classifier", "n.folds"),
+    data=facets(validation.error.several, "Misclassification Errors"))+
+  geom_line(aes(
+    neighbors, error.prop, group=set, color=set,
+    linetype=classifier),
+    showSelected="classifier", 
+    data=facets(other.error, "Misclassification Errors"))+
+  geom_tallrect(aes(
+    xmin=neighbors-1, xmax=neighbors+1),
+    clickSelects="neighbors",
+    alpha=0.5,
+    data=validation.error)+
+  geom_point(aes(
+    neighbors, n.folds, color=set),
+    clickSelects="n.folds",
+    size=9,
+    data=facets(min.validation, "n.folds"))
 ```
 
 The code below previews the new error curve plot, adding an additional
 facet for the showSelected variable.
 
 ```{r}
-errorPlot+facet_grid(facet ~ n.folds, scales="free")
+errorPlotNew+facet_grid(facet ~ n.folds, scales="free")
 ```
 
 The code below creates an interactive data viz using the new error
 curve plot.
 
 ```{r Ch10-viz-folds}
-viz.folds <- list(
-  error=errorPlot,
-  data=scatterPlot,
-  first=list(neighbors=7, n.folds=10)
-  )
-structure(viz.folds, class="animint")
+animint(
+  errorPlotNew,
+  scatterPlot,
+  first=list(neighbors=7, n.folds=10))
 ```
 
 ## Chapter summary and exercises {#exercises}
