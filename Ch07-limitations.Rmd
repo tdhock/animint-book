@@ -4,13 +4,13 @@ layout: default
 output: bookdown::html_chapter
 ---
 
-# Chapter 7, Limitations of animint, and workarounds
+# Chapter 7, Limitations of animint2, and workarounds
 
 ```{r setup, echo=FALSE}
 knitr::opts_chunk$set(fig.path="Ch07-figures/")
 ```
 
-This chapter explains several known limitations of animint for some
+This chapter explains several known limitations of animint2 for some
 interactive data visualization tasks. It also explains some
 workarounds that you can use in these situations. After reading this
 chapter, you will understand how to 
@@ -29,13 +29,13 @@ chapter, you will understand how to
   aesthetic mapping of an animint, or to perform computations based on
   selected values.
 
-If you have an idea for improving animint so that it overcomes one of
-these limitations, the animint developers would be more than happy to
-accept your [Pull Request](https://github.com/tdhock/animint/compare).
+If you have an idea for improving animint2 so that it overcomes one of
+these limitations, the animint2 developers would be more than happy to
+accept your [Pull Request](https://github.com/tdhock/animint2/compare).
 
 ## Use normalized variables to work with fixed scales {#normalized-variables}
 
-Animint implements axes and legends in the same way ggplot2 does, by
+We implement axes and legends in the same way ggplot2 does, by
 computing them once when the plot is first rendered. As a consequence,
 the axes and legends in each animint plot are not interactive. For
 most
@@ -47,9 +47,10 @@ There are some situations where it would be useful to have axes that
 interactively update. One example is when different showSelected
 subsets have very different values for variables that are shown with
 an axis or legend. In this case it would be useful to have interactive
-axes that update and change along with the data. We had not yet had
-time to implement this feature in animint, but it is planned for
-Google Summer of Code 2016.
+axes that update and change along with the data. We have experimental
+support for this, see [the update axes
+test](https://github.com/tdhock/animint2/blob/master/tests/testthat/test-renderer4-update-axes-multiple-ss.R)
+for details.
 
 ## Compute statistics for each showSeleted subset {#stats}
 
@@ -63,9 +64,8 @@ random.counts <- data.table(
   letter = c(replicate(4, LETTERS[1:5])),
   count = c(replicate(4, rbinom(5, 50, 0.5))),
   stack = rep(rep(1:2, each = 5), 2),
-  facet = rep(1:2, each = 10)
-  )
-library(ggplot2)
+  facet = rep(1:2, each = 10))
+library(animint2)
 ggstat <- ggplot() +
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
@@ -83,13 +83,10 @@ Using `showSelected` instead of facets does not result in what you
 may expect.
 
 ```{r Ch07-viz-stat}
-viz.stat <- list(
+animint(
   plot = ggstat,
   time = list(variable = "facet", ms = 1000),
-  duration = list(facet = 1000)
-  )
-library(animint)
-structure(viz.stat, class="animint")
+  duration = list(facet = 1000))
 ```
 
 A workaround is to compute what you want to display, and use
@@ -104,16 +101,15 @@ random.cumsums <- random.counts[, list(
 ggidentity <- ggplot() +
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
-  geom_segment(
-    aes(x=letter, xend=letter,
-        y=cumsum, yend=cumsum-count,
-        color=stack),
+  geom_segment(aes(
+    x=letter, xend=letter,
+    y=cumsum, yend=cumsum-count,
+    color=stack),
     showSelected="facet",
     data = random.cumsums,
     size=10,
     stat = "identity",
-    position="identity"
-  )
+    position="identity")
 ggidentity+facet_grid(facet ~ .)
 ```
 
@@ -121,12 +117,10 @@ Note how we used `geom_segment` instead of `geom_bar`, but their
 appearance is similar.
 
 ```{r Ch07-viz-identity}
-viz.identity <- list(
+animint(
   plot = ggidentity,
   time = list(variable = "facet", ms = 1000),
-  duration = list(facet = 1000)
-)
-structure(viz.identity, class="animint")
+  duration = list(facet = 1000))
 ```
 
 ## Add values to a multiple selection set one at a time {#multiple-selection}
@@ -159,9 +153,10 @@ gg.lines <- ggplot()+
   geom_vline(aes(xintercept=just), data=line.df, color="grey")+
   geom_hline(aes(yintercept=just), data=line.df, color="grey")
 gg.vjust <- gg.lines+
-  geom_text(aes(hjust, vjust, label="qwerty", hjust=hjust, vjust=vjust),
-            data=text.df)
-gg.vjust+ggtitle("ggplot2 respects aes(vjust)")
+  geom_text(aes(
+    hjust, vjust, label="qwerty", hjust=hjust, vjust=vjust),
+    data=text.df)
+gg.vjust+ggtitle("R graphics devices respect aes(vjust)")
 ```
 
 Note how both hjust and vjust are respected in the static ggplot
@@ -170,15 +165,15 @@ be the same as the ggplot above, but there are clear differences in
 terms of vertical placement of the text elements. 
 
 ```{r Ch07-viz-just}
-viz.just <- list(
+(viz.just <- animint(
   vjust=gg.vjust+
     ggtitle("animint does not support aes(vjust)"),
   workaround=gg.lines+
-  ggtitle("workaround: no aes(vjust), add to y")+
-  geom_text(aes(hjust, vjust + (0.5-vjust)*0.03 - 0.01,
-                label="qwerty", hjust=hjust),
-            data=text.df))
-structure(viz.just, class="animint")
+    ggtitle("workaround: no aes(vjust), add to y")+
+    geom_text(aes(
+      hjust, vjust + (0.5-vjust)*0.03 - 0.01,
+      label="qwerty", hjust=hjust),
+      data=text.df)))
 ```
 
 The workaround in animint is shown in the right panel above. You can
@@ -199,10 +194,9 @@ list. For example, compare the data viz below with the data viz from
 the previous section.
 
 ```{r Ch07-viz-order}
-viz.order <- list(
+animint(
   first=viz.just$workaround,
   second=viz.just$vjust)
-structure(viz.order, class="animint")
 ```
 
 Note how the order of plots is reversed with respect to the data viz
@@ -214,26 +208,26 @@ plot, or to the right of it.
 
 If you have an idea for a better way to define the layout of plots in
 an animint,
-[please tell us](https://github.com/tdhock/animint/issues/150)!
+[please tell us](https://github.com/tdhock/animint2/issues)!
 
 ## Avoid line breaks in text labels {#line-breaks}
 
-In ggplot2, using a line break or newline `\n` in a `geom_text` label
-results in multiple lines of text on the plot.
+When rendering a ggplot using regular R graphics devices, using a line
+break or newline `\n` in a `geom_text` label results in multiple lines
+of text on the plot.
 
 ```{r}
 gg.return <- ggplot()+
-  geom_text(aes(hjust, vjust, label=sprintf("x=%.1f\ny=%.1f", hjust, vjust)),
-            data=text.df)
+  geom_text(aes(
+    hjust, vjust, label=sprintf("x=%.1f\ny=%.1f", hjust, vjust)),
+    data=text.df)
 gg.return
 ```
 
 However, animint only supports drawing the first line of text.
 
 ```{r Ch07-viz-return}
-viz.return <- list(
-  text=gg.return)
-structure(viz.return, class="animint")
+animint(gg.return)
 ```
 
 It would be nice to support multiple lines in `geom_text` labels, but
@@ -246,13 +240,14 @@ line of text that you want to display:
 
 ```{r Ch07-viz-two-lines}
 gg.two.lines <- ggplot()+
-  geom_text(aes(hjust, vjust, label=sprintf("x=%.1f", hjust, vjust)),
-            data=text.df)+
-  geom_text(aes(hjust, vjust-0.05, label=sprintf("y=%.1f", hjust, vjust)),
-            data=text.df)
+  geom_text(aes(
+    hjust, vjust, label=sprintf("x=%.1f", hjust)),
+    data=text.df)+
+  geom_text(aes(
+    hjust, vjust-0.05, label=sprintf("y=%.1f", vjust)),
+    data=text.df)
 gg.two.lines
-viz.two.lines <- list(text=gg.two.lines)
-structure(viz.two.lines, class="animint")
+animint(gg.two.lines)
 ```
 
 ## Avoid some ggplot theme options {#theme-options}
@@ -316,9 +311,7 @@ In contrast, animint renders the same ggplot below using only one
 strip label.
 
 ```{r Ch07-viz-strips}
-viz.strips <- list(
-  strips=two.strips+ggtitle("only one strip label"))
-structure(viz.strips, class="animint")
+animint(two.strips+ggtitle("only one strip label"))
 ```
 
 It would be nice to support multiple strip labels per axis, but we

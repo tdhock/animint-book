@@ -14,10 +14,10 @@ This chapter gives a complete list of new features that animint
 introduces to the grammar of graphics. After reading this chapter, you
 will understand how to customize your animint graphics via
 
-* the `href`, `tooltip`, `id`, `clickSelects.variable`,
-  `clickSelects.value`, `showSelected.variable`, and
-  `showSelected.value` aesthetics for observation-specific
+* the `href`, `tooltip`, `id` aesthetics for observation-specific
   characteristics;
+* named elements of `clickSelects` and `showSelected` for specifying
+  several selection variables at once;
 * the `chunk_vars` geom-specific option;
 * plot-specific legends and height/width options; and
 * global data viz options.
@@ -25,42 +25,32 @@ will understand how to customize your animint graphics via
 ## Observation-specific options (new aesthetics) {#new-aesthetics}
 
 This section explains the new aesthetics that are recognized by
-animint but not ggplot2.
+animint2.
 
 ### Review of previously introduced aesthetics {#review-aesthetics}
 
 First we discuss the new aesthetics that we have already introduced in
 previous chapters.
 
-[Chapter 3](Ch03-showSelected.html#selecting-with-menus) introduced
-`aes(showSelected)` for designating a geom which shows only
-the selected subset of its data.
-
 [Chapter 3](Ch03-showSelected.html#duration-key) also introduced
 `aes(key)` to designate a variable to use for smooth transitions that
 are interpretable.
-
-[Chapter 4](Ch04-clickSelects.html#clickSelects-aes) introduced
-`aes(clickSelects)` to designate a geom which can be clicked to change
-a selection variable.
 
 ### Hyperlinks using `aes(href)` {#aes-href}
 
 The code below uses animint to draw a map of the United States. 
 
 ```{r Ch06-viz-href}
-library(animint)
+library(animint2)
 USpolygons <- map_data("state")
-viz.href <- list(
+animint(
   map=ggplot()+
     ggtitle("click a state to read its Wikipedia page")+
     coord_equal()+
-    geom_polygon(
-      aes(x=long, y=lat, group=group,
-          href=paste0("http://en.wikipedia.org/wiki/", region)),
-      data=USpolygons, fill="black", colour="grey")
-  )
-structure(viz.href, class="animint")
+    geom_polygon(aes(
+      x=long, y=lat, group=group,
+      href=paste0("http://en.wikipedia.org/wiki/", region)),
+      data=USpolygons, fill="black", colour="grey"))
 ```
 
 Try clicking a state in the data viz above. You should see the
@@ -75,15 +65,15 @@ appears. For example we use it to display the population and country
 name in the scatterplot of the World Bank data below.
 
 ```{r Ch06-viz-tooltip}
-data(WorldBank, package="animint")
+data(WorldBank)
 WorldBank1975 <- subset(WorldBank, year == 1975)
-viz.tooltip <- list(
+animint(
   scatter=ggplot()+
-  geom_point(
-    aes(x=life.expectancy, y=fertility.rate,
-        tooltip=paste(country, "population =", population)),
-    WorldBank1975))
-structure(viz.tooltip, class="animint")
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate,
+      tooltip=paste(country, "population =", population)),
+      size=5,
+      data=WorldBank1975))
 ```
 
 Try hovering the cursor over one of the data points. You should see a
@@ -105,28 +95,37 @@ page, you may want to specify a
 using `aes(id)` as below.
 
 ```{r Ch06-viz-id}
-viz.id <- list(
+animint(
   map=ggplot()+
-    ggtitle("click a state to read its Wikipedia page")+
+    ggtitle("each state/region/group has a unique id")+
     coord_equal()+
-    geom_polygon(
-      aes(x=long, y=lat, group=group,
-          id=gsub(" ", "_", paste(region, group))),
-      data=USpolygons, fill="black", colour="grey")
-  )
-structure(viz.id, class="animint")
+    geom_polygon(aes(
+      x=long, y=lat, group=group,
+      id=gsub(" ", "_", paste(region, group))),
+      data=USpolygons, fill="black", colour="grey"))
 ```
 
 Note how `gsub` is used to convert spaces to underscores, since a
 well-defined id must not include spaces. Note also that `paste` is
 used to add a group number, since there may be more than one polygon
 per state/region, and each id must be unique on a web page. The
-animint developers use this feature
+animint2 developers use this feature
 [for testing the animint JavaScript renderer code](https://github.com/tdhock/animint/wiki/Testing).
 
-### Data-driven selector names using `.variable` and `.value` aesthetics {#variable-value}
+### Data-driven selector names using named clickSelects and showSelected {#data-driven-selectors}
 
-Usually selector names are defined in `aes`, but that becomes
+[Chapter 3](Ch03-showSelected.html#selecting-with-menus) introduced
+`showSelected` for designating a geom which shows only
+the selected subset of its data.
+
+[Chapter 4](Ch04-clickSelects.html#clickSelects-keyword) introduced
+`clickSelects` to designate a geom which can be clicked to change
+a selection variable.
+
+Usually selector names are defined in  `showSelected` or
+`clickSelects`. For example, `showSelected=c("year", "country")` means
+to create two selection variables (named `year` and
+`country`). However, that method becomes
 inconvenient if you have many selectors in your data viz. To
 illustrate we consider the following theoretical example (the code in
 this section is not directly executable). Say you want to use 20
@@ -150,8 +149,7 @@ viz <- list(points=ggplot())
 for(selector.name in paste0("selector", 1:20, "value")){
   data.for.selector <- all.data.list[[selector.name]]
   viz$points <- viz$points +
-    geom_point(clickSelects=selector.name,
-               data=data.for.selector)
+    geom_point(clickSelects=selector.name, data=data.for.selector)
 }
 ```
 
@@ -165,8 +163,9 @@ variable name. For example:
 ```{r, eval=FALSE}
 viz <- list(
   points=ggplot()+
-    geom_point(clickSelects=c("selector.name"="selector.value"),
-               data=all.data)
+    geom_point(
+      clickSelects=c(selector.name="selector.value"),
+      data=all.data)
 )
 ```
 
@@ -227,17 +226,15 @@ The sketch above consists of two plots. We begin by creating the plot
 of error curves on the left.
 
 ```{r Ch06-errorPlot}
-data(breakpoints, package="animint")
+data(breakpoints)
 only.error <- subset(breakpoints$error, type=="E")
 only.segments <- subset(only.error,bases.per.probe==bases.per.probe[1])
 library(data.table)
 fp.fn.names <- rbind(
   data.table(error.type="false positives", type="FP"),
   data.table(error.type="false negatives", type=c("I", "FN")))
-setkey(fp.fn.names, type)
 error.dt <- data.table(breakpoints$error)
-setkey(error.dt, type)
-error.type.dt <- error.dt[fp.fn.names]
+error.type.dt <- error.dt[fp.fn.names, on=list(type)]
 fp.fn.dt <- error.type.dt[, list(
   error.value=sum(error)
 ), by=.(error.type, segments, bases.per.probe)]
@@ -288,17 +285,15 @@ of the two `showSelected` variables, `bases.per.probe` and
 these facets will be shown.
 
 ```{r Ch06-viz-chunk-vars}
-viz.chunk.vars <- list(
-  error=errorPlot,
+(viz.chunk.vars <- animint(
+  errorPlot,
   signal=signalPlot+
   geom_vline(aes(xintercept=base/1e5),
                  showSelected=c("segments", "bases.per.probe"),
              color="green",
              chunk_vars=character(),
              linetype="dashed",
-             data=breakpoints$breaks)
-)
-structure(viz.chunk.vars, class="animint")
+             data=breakpoints$breaks)))
 ```
 
 Click the "Show download status table" button, and you should see
@@ -325,7 +320,7 @@ tsvSizes <- function(segment.chunk.vars){
   )
   info <- animint2dir(viz, open.browser=FALSE)
   cmd <- paste("du -ks", info$out.dir)
-  kb.dt <- fread(cmd)
+  kb.dt <- fread(cmd=cmd)
   setnames(kb.dt, c("kb", "dir"))
   tsv.vec <- Sys.glob(paste0(info$out.dir, "/*.tsv"))
   is.geom6 <- grepl("geom6", tsv.vec)
@@ -371,22 +366,21 @@ pixels) of a ggplot rendered by animint. For example, consider the
 following re-design of the plot of the United States:
 
 ```{r Ch06-viz-width-height}
-viz.width.height <- list(
+animint(
   map=ggplot()+
     theme_animint(width=750, height=500)+
-    theme(axis.line=element_blank(),
-          axis.text=element_blank(), 
-          axis.ticks=element_blank(),
-          axis.title=element_blank(),
-          panel.border=element_blank(),
-          panel.background=element_blank(),
-          panel.grid.major=element_blank(),
-          panel.grid.minor=element_blank())+
-    geom_polygon(
-      aes(x=long, y=lat, group=group),
-      data=USpolygons, fill="black", colour="grey")
-)
-structure(viz.width.height, class="animint")
+    theme(
+      axis.line=element_blank(),
+      axis.text=element_blank(), 
+      axis.ticks=element_blank(),
+      axis.title=element_blank(),
+      panel.border=element_blank(),
+      panel.background=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank())+
+    geom_polygon(aes(
+      x=long, y=lat, group=group),
+      data=USpolygons, fill="black", colour="grey"))
 ```
 
 Note that the plot above was rendered with a width of 750 pixels and a
@@ -411,7 +405,7 @@ scatter1975 <- ggplot()+
     shape=21,
     color="red",
     fill="black")
-viz.scale.size <- list(
+(viz.scale.size <- animint(
   ggplotDefault=scatter1975+
     ggtitle("no scale specified"),
   animintDefault=scatter1975+
@@ -419,8 +413,7 @@ viz.scale.size <- list(
     scale_size_animint(),
   animintOptions=scatter1975+
     ggtitle("scale_size_animint(pixel.range, breaks)")+
-    scale_size_animint(pixel.range=c(5, 15), breaks=10^(10:1)))
-structure(viz.scale.size, class="animint")
+    scale_size_animint(pixel.range=c(5, 15), breaks=10^(10:1))))
 ```
 
 The first ggplot above has no scale specified, so it uses the default
@@ -483,15 +476,16 @@ not you would like to render a selection menu via
 animint will render a selection menu for every selection variable,
 with two exceptions:
 
-* selection variables that are defined using
-  [.variable and .value aesthetics](Ch06-other.html#variable-value).
+* data-driven selection variables that are defined using [named
+  clickSelects/showSelected
+  variables](Ch06-other.html#data-driven-selectors).
 * selection variables that have a lot of values (they are slow to
   render).
   
 These defaults should work well for the vast majority of animints. For
 those who are interested to see an example of how the `selectize`
 option works, please see the
-[PredictedPeaks test in the animint source code](https://github.com/tdhock/animint/blob/master/tests/testthat/test-renderer2-PredictedPeaks.R).
+[PredictedPeaks test in the animint2 source code](https://github.com/tdhock/animint2/blob/master/tests/testthat/test-renderer2-PredictedPeaks.R).
   
 ## Chapter summary and exercises {#exercises}
 
@@ -500,11 +494,6 @@ observation, geom, plot, and global level.
 
 Exercises:
 
-* Use `animint2gist` to publish a visualization of a data set from
-  your domain of expertise. Post the source code for your data viz in
-  a GitHub repository. Post links to your data viz and its source code
-  on the
-  [Animint Gallery wiki page](https://github.com/tdhock/animint/wiki/Gallery).
 * Create other versions of `viz.chunk.vars` with different values of
   `chunk_vars` for the `geom_point` and `geom_segment`. How does the
   choice of `chunk_vars` affect the appearance of the visualization?

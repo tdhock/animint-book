@@ -47,14 +47,14 @@ does two things automatically:
   `geom_point`.
 * `clickSelects=region` is assigned to the color legend.
 
-Note that `clickSelects` aesthetics are not limited to interactive
+Note that `clickSelects` keywords are not limited to interactive
 legends. Each geom has its own `clickSelects` variable, which
 determines which selection variable is updated after clicking that
 geom. In the next section we will give several examples of how
-clickSelects can be used in combination with showSelected to create
+`clickSelects` can be used in combination with `showSelected` to create
 interactive data visualizations.
 
-## Use the clickSelects aesthetic to identify points on a scatterplot {#clickSelects-aes}
+## Use clickSelects to identify points on a scatterplot {#clickSelects-keyword}
 
 The goal of this section is to create the following visualization of
 the World Bank data.
@@ -65,27 +65,25 @@ To start, consider the following R code which generates a
 scatterplot of the World Bank data:
 
 ```{r Ch04-ggplot-scatter}
-data(WorldBank, package="animint")
-library(animint)
+library(animint2)
+data(WorldBank)
 scatter <- ggplot()+
-    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                   key=country),
-                   showSelected="year",
-                   clickSelects="country"),
-               data=WorldBank)
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region,
+    key=country),
+    showSelected="year",
+    clickSelects="country",
+    data=WorldBank)
 scatter
 ```
 
-Note that ggplot2 ignores the animint aesthetics (key, showSelected,
-and clickSelects), so the plot above is not interactive. In contrast,
-rendering the same ggplot using animint results in the following
+Note that the plot above is not interactive, because it is rendered
+using the traditional R graphics device. In contrast,
+rendering the same ggplot using animint2 results in the following
 interactive plot:
 
 ```{r Ch04-viz-scatter}
-viz.scatter <- list(
-  scatter=scatter,
-  duration=list(year=2000))
-structure(viz.scatter, class="animint")
+(viz.scatter <- animint(scatter, duration=list(year=2000)))
 ```
 
 Try clicking data points in the scatterplot above. You should see the
@@ -100,16 +98,17 @@ opaque, no transparency), and the other points have alpha=0.5
 The data visualization above shows the currently selected country in
 the selection menu, but it would be better to show it as a text label
 on the scatterplot. We can do that by adding a `geom_text` layer with
-several showSelected aesthetics:
+two showSelected variables:
 
 ```{r Ch04-viz-text}
 viz.text <- viz.scatter
 viz.text$scatter <- scatter+
-  geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
-                key=country),
-                showSelected=c("year", "country"),
-            data=WorldBank)
-structure(viz.text, class="animint")
+  geom_text(aes(
+    x=life.expectancy, y=fertility.rate, label=country,
+    key=country),
+    showSelected=c("year", "country"),
+    data=WorldBank)
+viz.text
 ```
 
 After clicking a data point in the scatterplot above, you should see a
@@ -118,8 +117,8 @@ the year using the selection menu. You should see the text label move
 in a smooth transition along with the corresponding data
 point. 
 
-As explained in the last chapter, any aesthetic that contains the
-substring `showSelected` is treated as an interactive variable. In the
+As explained in the last chapter, any variable specified using the
+`showSelected` argument of a geom is treated as an interactive variable. In the
 example above, we specified two `showSelected` variables for the
 `geom_text`. This means to only draw a text label for the rows of the
 `WorldBank` data set that match the current values of both selection
@@ -132,7 +131,7 @@ clicking the North America legend entry). You should see the point
 disappear, but the text stay displayed. 
 
 **Exercise:** how can you get the text to disappear along with the
-point? Hint: you need to add an `aes` to the `geom_text`.
+point? Hint: you need to add a keyword to the `geom_text`.
 
 In the last chapter, we introduced the terms "direct manipulation" and
 "indirect manipulation" to describe interactions with legends and
@@ -172,7 +171,7 @@ viz.first$first <- list(
   year=1970,
   country="United States",
   region=c("North America", "South Asia"))
-structure(viz.first, class="animint")
+viz.first
 ```
 
 Note that in the data viz above, there is only one country selected at
@@ -206,7 +205,7 @@ a multiple selection variable.
 ```{r Ch04-viz-multiple}
 viz.multiple <- viz.first
 viz.multiple$selector.types <- list(country="multiple")
-structure(viz.multiple, class="animint")
+viz.multiple
 ```
 
 When the data viz above is first rendered, it shows data points from
@@ -220,8 +219,8 @@ this particular data viz, it is not so easy to remove them, since the
 text labels are rendered on top of the data points.
 
 **Exercise:** Re-make the data viz above so that clicking a text label
-  removes that country from the selection set. Hint: you just need to
-  add one `aes` to the `geom_text`.
+  removes that country from the selection set. Hint: you need to add
+  a `clickSelects` keyword to the `geom_text`.
 
 Note that in the data viz above, the year variable can only be changed
 via the selection menu.
@@ -256,16 +255,18 @@ Next, we add the time series ggplot to the existing data viz.
 ```{r Ch04-viz-timeSeries}
 viz.timeSeries <- viz.multiple
 viz.timeSeries$timeSeries <- ggplot()+
-  geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5),
-                    clickSelects="year",
-                alpha=0.5,
-                data=years)+
-  geom_line(aes(x=year, y=fertility.rate, group=country, color=region),
-                clickSelects="country",
-            size=3,
-            alpha=0.6,
-            data=WorldBank)
-structure(viz.timeSeries, class="animint")
+  geom_tallrect(aes(
+    xmin=year-0.5, xmax=year+0.5),
+    clickSelects="year",
+    alpha=0.5,
+    data=years)+
+  geom_line(aes(
+    x=year, y=fertility.rate, group=country, color=region),
+    clickSelects="country",
+    size=3,
+    alpha=0.6,
+    data=WorldBank)
+viz.timeSeries
 ```
 
 **Try** clicking the background of the time series in the data viz
@@ -297,16 +298,18 @@ add.x.var <- function(df, x.var){
   data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
 }
 scatterFacet <- ggplot()+
-  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                 key=country),
-                 showSelected="year",
-                 clickSelects="country",
-             data=add.x.var(WorldBank, "life expectancy"))+
-  geom_text(aes(x=life.expectancy, y=fertility.rate, label=country,
-                key=country),
-                clickSelects="country",
-                showSelected=c("year", "country", "region"),
-            data=add.x.var(WorldBank, "life expectancy"))+
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region,
+    key=country),
+    showSelected="year",
+    clickSelects="country",
+    data=add.x.var(WorldBank, "life expectancy"))+
+  geom_text(aes(
+    x=life.expectancy, y=fertility.rate, label=country,
+    key=country),
+    clickSelects="country",
+    showSelected=c("year", "country", "region"),
+    data=add.x.var(WorldBank, "life expectancy"))+
   facet_grid(. ~ x.var, scales="free")+
   xlab("")+
   theme_bw()+
@@ -323,15 +326,17 @@ axis.
 
 ```{r Ch04-ggplot-scatterTS}
 scatterTS <- scatterFacet+
-  geom_tallrect(aes(xmin=year-0.5, xmax=year+0.5),
-                    clickSelects="year",
-                alpha=0.5,
-                data=add.x.var(years, "year"))+
-  geom_line(aes(x=year, y=fertility.rate, group=country, color=region),
-                clickSelects="country",
-            size=3,
-            alpha=0.6,
-            data=add.x.var(WorldBank, "year"))
+  geom_tallrect(aes(
+    xmin=year-0.5, xmax=year+0.5),
+    clickSelects="year",
+    alpha=0.5,
+    data=add.x.var(years, "year"))+
+  geom_line(aes(
+    x=year, y=fertility.rate, group=country, color=region),
+    clickSelects="country",
+    size=3,
+    alpha=0.6,
+    data=add.x.var(WorldBank, "year"))
 scatterTS
 ```
 
@@ -358,8 +363,7 @@ Finally, we use the R code below to render the new aligned scatterplot
 and time series using animint.
 
 ```{r Ch04-viz-facets}
-viz.facets <- list(scatter=scatterTS)
-structure(viz.facets, class="animint")
+(viz.facets <- animint(scatterTS))
 ```
 
 The interactive data viz above contains a new panel with lines that
@@ -390,12 +394,12 @@ Exercises:
   clicking data with `clickSelects`. Order these three techniques in
   terms from most to least direct manipulation. Which technique is
   preferable in what circumstances?
-* When `geom_point(aes(clickSelects=something), alpha=0.75)` is
-  rendered with ggplot2, how much opacity/transparency is present for
-  all data points? When animint renders the same geom, some points
-  will be selected and others not. What is the opacity/transparency of
-  selected points? What is the opacity/transparency of points which
-  are not selected?
+* When `geom_point(clickSelects=something, alpha=0.75)` is rendered
+  with the usual R graphics device, how much opacity/transparency is
+  present for all data points? When animint2 renders the same geom,
+  some points will be selected and others not. What is the
+  opacity/transparency of selected points? What is the
+  opacity/transparency of points which are not selected?
 * Add `aes(size=population)` to the points in the World Bank
   scatterplot. Is the size legend interactive? Why?
 * Add a `geom_text` to the World Bank scatterplot that shows the

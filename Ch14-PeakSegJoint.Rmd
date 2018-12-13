@@ -11,7 +11,7 @@ knitr::opts_chunk$set(fig.path="Ch14-figures/")
 ```
 
 This chapter explains how to use
-[.variable and .value](Ch06-other.html#variable-value) aesthetics for
+[named clickSelects/showSelected variables](Ch06-other.html#data-driven-selectors) aesthetics for
 creating data-driven selector names. This feature makes it easier to
 write animint code, and makes it faster to compile.
 

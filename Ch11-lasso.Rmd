@@ -255,7 +255,7 @@ specify a `duration` for the `arclength` variable, and the same
 grey tallrect. The second tallrect has `clickSelects=arclength` and so
 clicking it has the effect of changing the selected value of
 `arclength`. We specify a another data set with more rows, and use the
-[.variable and .value](Ch06-other.html#variable-value) aesthetics to
+[named clickSelects/showSelected variables](Ch06-other.html#data-driven-selectors) to
 indicate that `arclength` should also be used as a `showSelected`
 variable.
 
