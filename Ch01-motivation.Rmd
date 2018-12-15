@@ -156,7 +156,7 @@ by simple visual inspection of the data table. Instead, we will create
 a static data visualization:
 
 ```{r, echo=FALSE}
-library(ggplot2)
+library(animint2)
 extremes <- co2.details[month.int %in% c(5, 10),]
 ggplot()+
   geom_line(aes(year.month.POSIXct, ppm),
@@ -228,12 +228,9 @@ is not desirable to plot all of the data at once. We can solve this
 problem using the following interactive plot.
 
 ```{r Ch01-viz, echo=FALSE}
-viz <- list(
-  TimeSeries=TimeSeries,
-  first=list(month=c("May", "October"))
-  )
-library(animint)
-structure(viz, class="animint")
+animint(
+  TimeSeries,
+  first=list(month=c("May", "October")))
 ```
 
 In the plot above, the default emphasis is May and October, but the

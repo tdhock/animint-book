@@ -339,7 +339,7 @@ case, it would be better to use shiny.
 
 ## Chapter summary and exercises {#exercises}
 
-We discussed limitations of the current implementation of Animint, and
+We discussed limitations of the current implementation of animint2, and
 explained several workarounds.
 
 Exercises:

@@ -424,9 +424,8 @@ print(timing.named.construct <- system.time({
 ### For every problem there is a selector (called problem.name) for
 ### the number of peaks in that problem. The animint2dir compiler
 ### creates a selection variable for every unique value of
-### clickSelects.variable and showSelected.variable (and it uses
-### clickSelects.value and showSelected.value to set/update the
-### selected value/geoms).
+### clickSelects/showSelected names (and it uses corresponding values
+### to set/update the selected value/geoms).
 }))
 ```
 
@@ -478,7 +477,7 @@ data.frame(
   compile.seconds=c(
     timing.for.compile[["elapsed"]],
     timing.named.compile[["elapsed"]]),
-  row.names=c("for.loop", "variable.value"))
+  row.names=c("for", "named"))
 ```
 
 Exercises:

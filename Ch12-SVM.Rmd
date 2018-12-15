@@ -396,8 +396,9 @@ the plot below, we show the learned `alpha` coefficients, and add a
 `geom_segment` to visualize the slack.
 
 ```{r}
-train.dt$alpha <- 0
-train.dt[as.integer(rownames(xmatrix(fit)[[1]])), alpha := alpha(fit)[[1]]]
+train.dt[, alpha := 0]
+train.row.vec <- as.integer(rownames(xmatrix(fit)[[1]]))
+train.dt[train.row.vec, alpha := kernlab::alpha(fit)[[1]] ]
 train.dt[, status := ifelse(
   alpha==0, "alpha=0",
   ifelse(alpha==1, "alpha=C", "0<alpha<C"))]
@@ -522,7 +523,8 @@ for(cost.param in 10^seq(-1, 1, by=cost.by)){
   inputBoundaries.list[[paste(cost.param)]] <- data.table(
     cost.param, boundaries)
   train.dt$alpha <- 0
-  train.dt[as.integer(rownames(xmatrix(fit)[[1]])), alpha := alpha(fit)[[1]]]
+  train.row.vec <- as.integer(rownames(xmatrix(fit)[[1]]))
+  train.dt[train.row.vec, alpha := kernlab::alpha(fit)[[1]] ]
   train.dt[, status := ifelse(
     alpha==0, "alpha=0",
     ifelse(alpha==cost.param, "alpha=C", "0<alpha<C"))]
@@ -565,6 +567,11 @@ grid.sq.dt$boundary <- "true"
 setErrors$variable <- "errors"
 inputBoundaries[, boundary := ifelse(level.num==0, "decision", "margin")]
 slackSegs$boundary <- "margin"
+set.label.select <- data.table(
+  cost.param=range(setErrors$cost.param),
+  set=c("test", "train"),
+  hjust=c(1, 0))
+set.labels <- setErrors[set.label.select, on=list(cost.param, set)]
 animint(
   selectModel=ggplot()+
     ggtitle("select regularization parameter")+
@@ -583,9 +590,9 @@ animint(
       data=setErrors)+
     geom_text(aes(
       log10(cost.param), errors-1, label=set,
+      hjust=hjust,
       color=set),
-      hjust=0,
-      data=setErrors[cost.param==max(cost.param),])+
+      data=set.labels)+
     guides(color="none")+
     geom_line(aes(
       log10(cost.param), log10(value)),
@@ -690,7 +697,7 @@ for(cost.param in 10^seq(-1, 3, by=cost.by)){
     }
     train.dt[, alpha := 0]
     train.row.vec <- as.integer(rownames(xmatrix(fit)[[1]]))
-    train.dt[train.row.vec, alpha := alpha(fit)[[1]] ]
+    train.dt[train.row.vec, alpha := kernlab::alpha(fit)[[1]] ]
     train.dt[, status := ifelse(
       alpha==0, "alpha=0",
       ifelse(alpha==cost.param, "alpha=C", "0<alpha<C"))]

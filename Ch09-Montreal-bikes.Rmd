@@ -30,7 +30,7 @@ accidents data table.
 library(animint2)
 data(montreal.bikes)
 ## Tell R on windows that these factor levels are UTF-8 encoded.
-if("Brébeuf" %in% montreal.bikes$counter.counts$location){
+if(! "Brébeuf" %in% montreal.bikes$counter.counts$location){
   Encoding(levels(montreal.bikes$counter.counts$location)) <- "UTF-8"
   print(table(montreal.bikes$counter.counts$location))
 }
@@ -278,8 +278,8 @@ counter.locations[, lon := coord_X]
 counter.locations[, lat := coord_Y]
 loc.name.code <- c(
   "Berri1"="Berri",
-  "Brebeuf"="Br�beuf",
-  CSC="C�te-Sainte-Catherine",
+  "Brebeuf"="Brébeuf",
+  CSC="Côte-Sainte-Catherine",
   "Maisonneuve_1"="Maisonneuve 1",
   "Maisonneuve_2"="Maisonneuve 2",
   "Parc"="du Parc",
