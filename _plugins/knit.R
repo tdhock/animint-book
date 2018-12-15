@@ -3,10 +3,11 @@ works_with_R(
   htmltools="0.3.6",
   RJSONIO="1.3.0",
   maps="3.3.0",
-  LambertW="0.6.4",
+  LambertW="0.6.4", #depends/attaches ggplot2
   kernlab="0.9.27",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
-  "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d")
+  "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
+  "tdhock/animint2@806abaee50833e11ed0aa9dde49d256e3e02fe83")
              
 library(methods)
 
