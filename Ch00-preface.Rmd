@@ -25,7 +25,7 @@ code.
 
 Starting with [chapter 2](Ch02-ggplot2.html), we will show how plot
 sketches can be translated into R code. Chapter 2 explains the basics
-of plotting using ggplot2 and animint, and should be most useful for
+of plotting using ggplots and animint, and should be most useful for
 readers who have never used ggplot2. It explains how standard ggplots
 can be rendered on web pages using animint.
 
