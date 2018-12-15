@@ -27,7 +27,7 @@ Chapter outline:
 We begin by loading the `intreg` data set.
 
 ```{r intreg}
-library(animint)
+library(animint2)
 data(intreg)
 str(intreg)
 ```
@@ -184,7 +184,8 @@ the plot below we show the model selection function $S^*(\lambda)$ for
 this data set:
 
 ```{r selection}
-sig.selection <- data.table(intreg$selection)[signal == sig.name & segments <= show.segs]
+sig.selection <- data.table(
+  intreg$selection)[signal == sig.name & segments <= show.segs]
 gg.selection <- ggplot()+
   theme_bw()+
   geom_segment(aes(
@@ -225,20 +226,20 @@ model geoms:
 interactive.models <- gg.one+
   geom_segment(aes(
     first.base/1e6, mean,
-    showSelected="segments",
     xend=last.base/1e6, yend=mean),
+    showSelected="segments",
     color=model.color,
     data=sig.segs)+
   geom_vline(aes(
-    showSelected="segments",
     xintercept=base/1e6),
+    showSelected="segments",
     color=model.color,
     linetype="dashed",
     data=sig.breaks)+
   geom_tallrect(aes(
-    showSelected="segments",
     xmin=first.base/1e6, xmax=last.base/1e6,
     linetype=status),
+    showSelected="segments",
     data=sig.errors$label.errors,
     size=2,
     color="black",
@@ -257,12 +258,11 @@ interactive. Below we combine the two interactive ggplots in a single
 linked animint:
 
 ```{r interactiveOne}
-viz <- list(
+animint(
   models=interactive.models+
     ggtitle("Selected model"),
   selection=interactive.selection+
     ggtitle("Click to select number of segments"))
-structure(viz, class="animint")
 ```
 
 Note that in the data viz above the model with 6 segments is not
