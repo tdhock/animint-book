@@ -56,19 +56,16 @@ regions.
 
 Note that the code we used in chapter 2 did not explicitly specify
 `showSelected=region`. Instead, we specified `aes(color=region)`, and
-animint automatically assigned
-`aes(showSelectedLegendColor=region)`. In general, animint will assign
-a showSelected aesthetic for each variable that is used in a
+animint automatically assigned a showSelected keyword. In general, animint will assign
+a showSelected keyword for each variable that is used in a
 categorical legend.
 
 However, the showSelected keyword is not limited to use with
 categorical legends. You can use showSelected keywords for any data
-variables you like, by explicitly specifying them in the aesthetic
-mapping. The animint package recognizes any aesthetic that contains
-the substring `showSelected`, for example `aes(showSelected=year,
-showSelected2=country, showSelectedRegion=region)`.
+variables you like, by explicitly specifying the variable names in the
+showSelected argument of the geom. 
 
-Each variable that is used with a showSelected aesthetic is treated by
+Each variable that is used with showSelected is treated by
 animint as a *selection variable*. For example, the Keeling Curve data
 viz has one selection variable (month), and so does the WorldBank data
 viz (region). For each selection variable, animint keeps track of the
@@ -94,29 +91,27 @@ one will be shown at a time due to `showSelected=year`). Below, we
 translate this sketch into R code.
 
 ```{r}
-data(WorldBank, package="animint")
-library(ggplot2)
+library(animint2)
+data(WorldBank)
 scatter <- ggplot()+
-  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                 showSelected=year),
+  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+             showSelected="year",
              data=WorldBank)
 scatter
 ```
 
-Note that the ggplot above contains the `showSelected` aesthetic, one
-of the two main features introduced in animint. The `showSelected`
-aesthetic is ignored by ggplot2, which produced a scatterplot with one
-point for every country and year. Note that since `color=region` was
-specified, animint automatically uses `region` as a `showSelected`
-variable.
+Note that the ggplot above contains the `showSelected` argument, one
+of the two main features introduced in animint2. The `showSelected`
+keyword is ignored when rendering the plot using the usual R graphics
+devices, which produce a scatterplot with one point for every country
+and year. Note that since `color=region` was specified, animint also
+automatically uses `region` as a `showSelected` variable.
 
 In constrast, rendering the same ggplot using animint yields the
 interactive data visualization below.
 
 ```{r Ch03-viz-scatter}
-library(animint)
-viz.scatter <- list(scatter=scatter)
-structure(viz.scatter, class="animint")
+animint(scatter)
 ```
 
 Note that the data viz above has two selection variables: region and
@@ -217,23 +212,21 @@ used to match data points before and after changing the selection.
 ```{r}
 scatter.key <- ggplot()+
   geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                 key=country,
-                 showSelected=year),
+                 key=country),
+             showSelected="year",
              data=WorldBank)
 ```
 
-Like `showSelected`, the `key` aesthetic is only meaningful for
-interactive data visualization, so ggplot2 ignores it. However, if we
-render this ggplot using animint, the `country` variable will be used
+The `key` aesthetic in the ggplot above is only meaningful for
+interactive data visualization, so it ignored when rendering with the
+usual R graphics devices. However, if we
+render this ggplot using animint2, the `country` variable will be used
 to make sure transtion durations are meaningful. To specify a default
 transition duration for the `year` variable, we use the `duration`
 option in the data viz below.
 
 ```{r Ch03-viz-duration}
-viz.duration <- list(
-  scatter=scatter.key,
-  duration=list(year=2000))
-structure(viz.duration, class="animint")
+(viz.duration <- animint(scatter.key, duration=list(year=2000)))
 ```
 
 The `duration` option must be a named list. Each name should be a
@@ -260,7 +253,7 @@ The `time` option is used to specify a variable to use for animation.
 ```{r Ch03-viz-duration-time}
 viz.duration.time <- viz.duration
 viz.duration.time$time <- list(variable="year", ms=2000)
-structure(viz.duration.time, class="animint")
+viz.duration.time
 ```
 
 **Exercise:** make an animated data visualization that does NOT use
@@ -276,7 +269,7 @@ Exercises:
 
 * Make an improved version of `viz.aligned` from the previous
   chapter. Instead of fixing the year at 1975, use
-  `aes(showSelected=year)` so that the user can select a year. Add
+  `showSelected=year` so that the user can select a year. Add
   geoms that show the selected year: a `geom_text` on the scatterplot,
   and a `geom_vline` on the time series.
 * Translate one of the
@@ -286,7 +279,7 @@ Exercises:
   plotting function inside the for loop, use the
   [list of data tables idiom](Ch17-appendix.html#list-of-data-tables)
   to store the data that should be plotted. Then use those data along
-  with `showSelected` aesthetics to create ggplots, and render them
+  with `showSelected` to create ggplots, and render them
   using animint.
 
 Next, [Chapter 4](Ch04-clickSelects.html) explains the `clickSelects`

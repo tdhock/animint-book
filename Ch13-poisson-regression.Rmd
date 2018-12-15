@@ -68,18 +68,22 @@ mean.tallrects <- data.table(
   poisson.mean=poisson.mean.vec,
   min=poisson.mean.vec - poisson.mean.diff/2,
   max=poisson.mean.vec + poisson.mean.diff/2)
-library(animint)
+library(animint2)
 prob.mass <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "cm"))+
-  geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
-                alpha=0.6,
-                data=mean.tallrects)+
-  geom_point(aes(label, probability, showSelected=poisson.mean,
-                 tooltip=sprintf("prob(label = %d) = %f", label, probability)),
-             color="red",
-             size=5,
-             data=poisson.prob)
+  geom_tallrect(aes(
+    xmin=min, xmax=max),
+    clickSelects="poisson.mean",
+    alpha=0.6,
+    data=mean.tallrects)+
+  geom_point(aes(
+    label, probability, 
+    tooltip=sprintf("prob(label = %d) = %f", label, probability)),
+    color="red",
+    showSelected="poisson.mean",
+    size=5,
+    data=poisson.prob)
 prob.mass+
   facet_wrap("poisson.mean")
 ```
@@ -92,8 +96,7 @@ grey background, and to hover the cursor over the points to see the
 tooltip. We next create an interactive version with animint.
 
 ```{r Ch13-viz-prob}
-viz.prob <- list(prob=prob.mass)
-structure(viz.prob, class="animint")
+animint(prob.mass)
 ```
 
 You can click the viz above to change the mean of the Poisson
@@ -120,31 +123,36 @@ addPanel <- function(dt, panel){
   data.table(dt, panel=factor(panel, c("probability", "cum prob")))
 }
 quantile.max.dt <- data.table(quantile.max)
-viz.cum.prob <- list(
+animint(
   prob=ggplot()+
     theme_bw()+
     theme(panel.margin=grid::unit(0, "cm"))+
     facet_grid(panel ~ ., scales="free")+
-    geom_hline(aes(yintercept=quantile.max),
-               color="grey",
-               data=addPanel(quantile.max.dt, "cum prob"))+
-    geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
-                  alpha=0.6,
-                  data=mean.tallrects)+
-    geom_point(aes(label, probability, showSelected=poisson.mean,
-                   tooltip=sprintf(
-                     "prob(label = %d) = %f", label, probability)),
-               color="red",
-               size=5,
-               data=addPanel(poisson.prob, "probability"))+
-    geom_point(aes(label, cum.prob, showSelected=poisson.mean,
-                   tooltip=sprintf(
-                     "prob(label <= %d) = %f", label, cum.prob)),
-               color="red",
-               size=5,
-               data=addPanel(poisson.prob, "cum prob"))
-)
-structure(viz.cum.prob, class="animint")
+    geom_hline(aes(
+      yintercept=quantile.max),
+      color="grey",
+      data=addPanel(quantile.max.dt, "cum prob"))+
+    geom_tallrect(aes(
+      xmin=min, xmax=max),
+      clickSelects="poisson.mean",
+      alpha=0.6,
+      data=mean.tallrects)+
+    geom_point(aes(
+      label, probability,
+      tooltip=sprintf(
+        "prob(label = %d) = %f", label, probability)),
+      showSelected="poisson.mean",
+      color="red",
+      size=5,
+      data=addPanel(poisson.prob, "probability"))+
+    geom_point(aes(
+      label, cum.prob, 
+      tooltip=sprintf(
+        "prob(label <= %d) = %f", label, cum.prob)),
+      showSelected="poisson.mean",
+      color="red",
+      size=5,
+      data=addPanel(poisson.prob, "cum prob")))
 ```
 
 Note how we used `addPanel` to add a `panel` variable to all the data
@@ -222,47 +230,62 @@ label.text <- data.table(
 Next we make a data viz with an additional panel.
 
 ```{r Ch13-viz-loss}
-viz.loss <- list(
+(viz.loss <- animint(
   prob=ggplot()+
     theme_bw()+
     theme(panel.margin=grid::unit(0, "cm"))+
     facet_grid(panel ~ ., scales="free")+
-    geom_text(aes(label, probability, showSelected=poisson.mean, label=sprintf(
+    geom_text(aes(
+      label, probability, label=sprintf(
       "Poisson mean = %.2f", poisson.mean)),
       color="red",
+      showSelected="poisson.mean", 
       data=addPanel(mean.text, "probability"))+
-    geom_hline(aes(yintercept=quantile.max),
-               color="grey",
-               data=addPanel(quantile.max.dt, "cum prob"))+
-    geom_point(aes(label, probability, showSelected=poisson.mean,
-                   clickSelects=label,
-                   tooltip=sprintf(
-                     "prob(label = %d) = %f", label, probability)),
-               color="red",
-               size=5,
-               alpha=0.7,
-               data=addPanel(poisson.prob, "probability"))+
-    geom_point(aes(label, cum.prob, showSelected=poisson.mean,
-                   clickSelects=label,
-                   tooltip=sprintf(
-                     "prob(label <= %d) = %f", label, cum.prob)),
-               color="red",
-               size=5,
-               alpha=0.7,
-               data=addPanel(poisson.prob, "cum prob")),
+    geom_hline(aes(
+      yintercept=quantile.max),
+      color="grey",
+      data=addPanel(quantile.max.dt, "cum prob"))+
+    geom_point(aes(
+      label, probability,
+      tooltip=sprintf(
+        "prob(label = %d) = %f", label, probability)),
+      showSelected="poisson.mean",
+      clickSelects="label",
+      color="red",
+      size=5,
+      alpha=0.7,
+      data=addPanel(poisson.prob, "probability"))+
+    geom_point(aes(
+      label, cum.prob,
+      tooltip=sprintf(
+        "prob(label <= %d) = %f", label, cum.prob)),
+      color="red",
+      showSelected="poisson.mean",
+      clickSelects="label",
+      size=5,
+      alpha=0.7,
+      data=addPanel(poisson.prob, "cum prob")),
   loss=ggplot()+
-    geom_text(aes(poisson.mean, loss, showSelected=label, label=sprintf(
-      "label = %d", label)),
+    theme_bw()+
+    geom_text(aes(
+      poisson.mean, loss,
+      label=sprintf("label = %d", label)),
+      showSelected="label",
       hjust=0,
       data=label.text)+
-    geom_line(aes(poisson.mean, loss, showSelected=label),
-              data=loss.fun)+
-    geom_point(aes(label, loss, showSelected=label),
-               data=loss.min)+
-    geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
-                  alpha=0.6,
-                  data=mean.tallrects))
-structure(viz.loss, class="animint")
+    geom_line(aes(
+      poisson.mean, loss),
+      showSelected="label",
+      data=loss.fun)+
+    geom_point(aes(
+      label, loss),
+      showSelected="label",
+      data=loss.min)+
+    geom_tallrect(aes(
+      xmin=min, xmax=max),
+      clickSelects="poisson.mean",
+      alpha=0.6,
+      data=mean.tallrects)))
 ```
 
 The data viz above shows the probability on the left and the Poisson
@@ -283,26 +306,39 @@ viz.log.loss$loss <- ggplot()+
   facet_grid(. ~ x.var, scales="free")+
   xlab("")+
   coord_cartesian(ylim=c(0, loss.max))+
-    geom_text(aes(poisson.mean, loss, showSelected=label, label=sprintf(
-      "label = %d", label)),
-      hjust=0,
-      data=addX(label.text, "poisson mean"))+
-  geom_line(aes(poisson.mean, loss, showSelected=label),
-            data=addX(finite.loss, "poisson mean"))+
-  geom_point(aes(label, loss, showSelected=label),
-             data=addX(loss.min, "poisson mean"))+
-  geom_tallrect(aes(xmin=min, xmax=max, clickSelects=poisson.mean),
-                alpha=0.6,
-                data=addX(mean.tallrects, "poisson mean"))+
-  geom_line(aes(log.poisson.mean, loss, showSelected=label),
-            data=addX(finite.log.loss, "log(poisson mean)"))+
-  geom_point(aes(log(label), loss, showSelected=label),
-             data=addX(loss.min[0<label,], "log(poisson mean)"))+
-  geom_tallrect(aes(xmin=log.min, xmax=log(max),
-                    clickSelects=poisson.mean),
-                alpha=0.6,
-                data=addX(mean.tallrects, "log(poisson mean)"))
-structure(viz.log.loss, class="animint")
+  geom_text(aes(
+    poisson.mean, loss, label=sprintf(
+                          "label = %d", label)),
+    showSelected="label",
+    hjust=0,
+    data=addX(label.text, "poisson mean"))+
+  geom_line(aes(
+    poisson.mean, loss),
+    showSelected="label",
+    data=addX(finite.loss, "poisson mean"))+
+  geom_point(aes(
+    label, loss),
+    showSelected="label",
+    data=addX(loss.min, "poisson mean"))+
+  geom_tallrect(aes(
+    xmin=min, xmax=max),
+    clickSelects="poisson.mean",
+    alpha=0.6,
+    data=addX(mean.tallrects, "poisson mean"))+
+  geom_line(aes(
+    log.poisson.mean, loss),
+    showSelected="label",
+    data=addX(finite.log.loss, "log(poisson mean)"))+
+  geom_point(aes(
+    log(label), loss),
+    showSelected="label",
+    data=addX(loss.min[0<label,], "log(poisson mean)"))+
+  geom_tallrect(aes(
+    xmin=log.min, xmax=log(max)),
+    clickSelects="poisson.mean",
+    alpha=0.6,
+    data=addX(mean.tallrects, "log(poisson mean)"))
+viz.log.loss
 ```
 
 ## Chapter summary and exercises {#exercises}
@@ -317,5 +353,5 @@ Exercises:
   model.
 
 Next, [Chapter 14](Ch14-PeakSegJoint.html) explains how to use the
-`.variable` and `.value` aesthetics to visualize the PeakSegJoint
-machine learning model.
+named clickSelects/showSelected to visualize the PeakSegJoint
+machine learning model with data-driven selector variables.

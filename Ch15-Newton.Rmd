@@ -61,7 +61,7 @@ opt.dt <- data.table(
   mean=mean.at.optimum,
   loss=loss.at.optimum,
   point="minimum")
-library(ggplot2)
+library(animint2)
 gg.loss <- ggplot()+
   geom_point(aes(mean, loss, color=point), data=opt.dt)+
   geom_line(aes(mean, loss), data=loss.dt)
@@ -172,16 +172,21 @@ ggplot()+
     slope=deriv.value, intercept=fun.value-possible.root*deriv.value,
     color=fun),
     data=data.table(solution, fun="approximation", step=1))+
-  geom_point(aes(new.root, 0, color=fun),
-             data=data.table(solution, fun="approximation"))+
-  geom_point(aes(new.root, new.value, color=fun),
-             data=data.table(solution, fun="function", step=2))+
-  geom_vline(aes(xintercept=new.root, color=fun),
-             data=data.table(solution, fun="approximation", step=2))+
-  geom_point(aes(possible.root, fun.value, color=fun),
-             data=data.table(solution, fun="function", step=1))+
-  geom_line(aes(mean, loss, color=fun),
-            data=data.table(loss.dt, fun="function"))+
+  geom_point(aes(
+    new.root, 0, color=fun),
+    data=data.table(solution, fun="approximation"))+
+  geom_point(aes(
+    new.root, new.value, color=fun),
+    data=data.table(solution, fun="function", step=2))+
+  geom_vline(aes(
+    xintercept=new.root, color=fun),
+    data=data.table(solution, fun="approximation", step=2))+
+  geom_point(aes(
+    possible.root, fun.value, color=fun),
+    data=data.table(solution, fun="function", step=1))+
+  geom_line(aes(
+    mean, loss, color=fun),
+    data=data.table(loss.dt, fun="function"))+
   ylab("")
 ```
 
@@ -189,14 +194,13 @@ It is clear that the algorithm quickly converges to the root. The
 following is an animated interactive version of the same data viz.
 
 ```{r Ch15-viz}
-library(animint)
-viz <- list(
+animint(
   time=list(variable="iteration", ms=2000),
   iterations=gg.it+
     geom_tallrect(aes(
       xmin=iteration-0.5,
-      xmax=iteration+0.5,
-      clickSelects=iteration),
+      xmax=iteration+0.5),
+      clickSelects="iteration",
       alpha=0.5,
       data=solution),
   loss=ggplot()+
@@ -204,22 +208,30 @@ viz <- list(
     scale_color_manual(values=c("function"="black", approximation="red"))+
     geom_abline(aes(
       slope=deriv.value, intercept=fun.value-possible.root*deriv.value,
-      showSelected=iteration,
       color=fun),
+      showSelected="iteration",
       data=data.table(solution, fun="approximation"))+
-    geom_point(aes(new.root, 0, color=fun, showSelected=iteration),
-               size=4,
-               data=data.table(solution, fun="approximation"))+
-    geom_point(aes(new.root, new.value, color=fun, showSelected=iteration),
-               data=data.table(solution, fun="function"))+
-    geom_vline(aes(xintercept=new.root, color=fun, showSelected=iteration),
-               data=data.table(solution, fun="approximation"))+
-    geom_point(aes(possible.root, fun.value, color=fun, showSelected=iteration),
-               data=data.table(solution, fun="function"))+
-    geom_line(aes(mean, loss, color=fun),
-              data=data.table(loss.dt, fun="function"))+
+    geom_point(aes(
+      new.root, 0, color=fun),
+      showSelected="iteration",
+      size=4,
+      data=data.table(solution, fun="approximation"))+
+    geom_point(aes(
+      new.root, new.value, color=fun),
+      showSelected="iteration",
+      data=data.table(solution, fun="function"))+
+    geom_vline(aes(
+      xintercept=new.root, color=fun),
+      showSelected="iteration",
+      data=data.table(solution, fun="approximation"))+
+    geom_point(aes(
+      possible.root, fun.value, color=fun),
+      showSelected="iteration",
+      data=data.table(solution, fun="function"))+
+    geom_line(aes(
+      mean, loss, color=fun),
+      data=data.table(loss.dt, fun="function"))+
     ylab(""))
-structure(viz, class="animint")
 ```
 
 ## Comparison with Lambert W solution {#lambert}
@@ -252,10 +264,12 @@ log.loss.fun <- function(log.mean){
 log.loss.dt <- data.table(log.mean=seq(-1, 3, l=400))
 log.loss.dt[, loss := log.loss.fun(log.mean)]
 ggplot()+
-  geom_line(aes(log.mean, loss),
-            data=log.loss.dt)+
-  geom_point(aes(log(mean), loss, color=point),
-             data=opt.dt)
+  geom_line(aes(
+    log.mean, loss),
+    data=log.loss.dt)+
+  geom_point(aes(
+    log(mean), loss, color=point),
+    data=opt.dt)
 ```
 
 **Exercise:** derive and implement the Newton method for this

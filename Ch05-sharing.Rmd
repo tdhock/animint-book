@@ -30,11 +30,9 @@ compiling animints to a local directory.
 
 So far in previous chapters we have only discussed one method for
 creating interactive data visualizations. If `viz` is an animint (list
-of ggplots and options), then running `structure(viz,
-class="animint")` on the R command line compiles that animint to a
-temporary directory. After `structure` attaches the `"animint"` class
-to the `viz` list, R calls the `print.animint` S3 method, which
-compiles the animint to a new temporary directory on your personal
+of ggplots and options with class animint), then printing it on the R command line compiles that animint to a
+temporary directory. Internally, R calls the `print.animint` S3 method, which
+calls `animint2dir` to compile it to a new temporary directory on your personal
 computer.
 
 Rather than saving each animint to a separate temporary directory, you
@@ -81,12 +79,12 @@ methods below.
 
 ## Publish in R Markdown {#Rmd}
 
-To include an animint in an R Markdown document, use `structure(viz,
-class="animint")` inside of an R code chunk. R will run the
-`knit_print.animint` S3 method, which compiles the animint to a local
-directory, named based on the name of the R code chunk. For example a
-code chunk named `viz-facets` will be saved in the directory
-`vizfacets`. Make sure to put each animint in its own code chunk.
+To include an animint in an R Markdown document, use `animint(...)`
+inside of an R code chunk. R will run the `knit_print.animint` S3
+method, which compiles the animint to a local directory, named based
+on the name of the R code chunk. For example a code chunk named
+`viz-facets` will be saved in the directory `vizfacets`. Make sure to
+put each animint in its own code chunk.
 
 ## Publish on a web server {#web-server}
 
@@ -99,7 +97,7 @@ https://github.com/tdhock/animint/blob/master/inst/examples/WorldBank-facets.R
 to create the `WorldBank-facets` directory on my personal computer. I
 copied that directory to my lab web server using `rsync -r
 WorldBank-facets/ cbio.ensmp.fr:public_html/WorldBank-facets/` and so
-I can view it on http://cbio.ensmp.fr/~thocking/WorldBank-facets/
+I can view it on http://members.cbio.mines-paristech.fr/~thocking/WorldBank-facets/
 
 If you don't have access to a personal web server, try using
 [GitHub pages](https://pages.github.com/).

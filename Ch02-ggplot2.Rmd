@@ -16,9 +16,9 @@ reading this chapter, you will be able to
 
 * State the advantages of the grammar of graphics relative to previous
   plotting systems
-* Install the animint R package from GitHub
+* Install the animint2 R package from GitHub
 * Translate plot sketches into ggplot code in R
-* Render ggplots on web pages using animint
+* Render ggplots on web pages using animint2
 * Create multi-layer ggplots
 * Create multi-panel ggplots
 
@@ -70,26 +70,26 @@ plotting systems.
 Finally, all of the previously discussed plotting systems are intended
 for creating *static* graphics, which can be viewed equally well on a
 computer screen or on paper. However, the main topic of this manual is
-`animint`, an R package for *interactive* graphics. In contrast to
+`animint2`, an R package for *interactive* graphics. In contrast to
 static graphics, interactive graphics are best viewed on a computer
 with a mouse and keyboard that can be used to interact with the plot.
 
 Since many concepts from static graphics are also useful in
-interactive graphics, the `animint` package is implemented as an
-extension of `ggplot2`. In this chapter we will introduce the main
+interactive graphics, the `animint2` package is implemented as an
+extension/fork of `ggplot2`. In this chapter we will introduce the main
 features of `ggplot2` which will also be useful for interactive plot
 design in later chapters.
 
-## Installing animint {#installing}
+## Installing animint2 {#installing}
 
-The `animint` R package is hosted on GitHub, so you can install
-`animint` by using the `devtools` package. To make sure that `animint`
+The `animint2` R package is hosted on GitHub, so you can install
+`animint2` by using the `devtools` package. To make sure that `animint2`
 is installed, open R and execute the following code.
 
 ```{r}
-if(!require(animint)){
+if(!require(animint2)){
   install.packages("devtools")
-  devtools::install_github("tdhock/animint", upgrade_dependencies=FALSE)
+  devtools::install_github("tdhock/animint2", upgrade_dependencies=FALSE)
 }
 ```
 
@@ -100,7 +100,7 @@ code. We use a data set from the World Bank as an example, and we
 begin by loading and looking at these data.
 
 ```{r}
-data(WorldBank, package="animint")
+data(WorldBank, package="animint2")
 tail(WorldBank)
 dim(WorldBank)
 ```
@@ -138,7 +138,6 @@ use the notes in the sketch to code a ggplot with a corresponding
 `aes` or aesthetic mapping of data variables to visual properties:
 
 ```{r}
-library(ggplot2)
 scatter <- ggplot()+
   geom_point(
     mapping=aes(x=life.expectancy, y=fertility.rate, color=region),
@@ -157,38 +156,23 @@ system automatically shows a `region` color legend.
 
 ## Rendering ggplots on web pages using animint {#rendering-with-animint}
 
-This section explains how the `animint` package can be used to render
-ggplots on web pages. The first step is to load the `animint` package:
+This section explains how the `animint2` package can be used to render
+ggplots on web pages. The ggplot from the previous section can be
+rendered with animint2, by using the `animint` function.
 
 ```{r}
-library(animint)
+animint(scatter)
 ```
 
-The ggplot from the previous section can be rendered with animint, by
-first assigning it to a named element of a list. The R code below
-assigns the ggplot `scatter` to a named element of the `scatter.viz`
-list.
-
-```{r}
-scatter.viz <- list(scatter=scatter)
-```
-
-In this manual we use `viz` (short for data visualization) to indicate
-variables that are lists that contain ggplots. The `animint` package
-implements a compiler that takes a `viz` list as input, and outputs a
-web page with a data visualization. To activate the `animint`
-compiler, we give that list the class `"animint"` in the R code below.
-
-```{r Ch02-scatter-viz}
-structure(scatter.viz, class="animint")
-```
-
-When executing this code on the R command line, R will run the
-`print.animint` function via the
-[S3 object system](http://adv-r.had.co.nz/OO-essentials.html#s3). That
-will run the `animint2dir` function, which compiles the animint
+Internally, the `animint` function creates a list of class animint,
+and then R runs the `print.animint` function via the [S3 object
+system](http://adv-r.had.co.nz/OO-essentials.html#s3). The `animint2`
+package implements a compiler that takes the list as input, and
+outputs a web page with a data visualization. 
+The compiler is the `animint2dir` function, which compiles the animint
 `scatter.viz` list to a directory of data and code files that can be
 rendered in a web browser.
+It is activated automatically by the `print.animint` function.
 
 When viewed in a web browser, the animint plot should look mostly the
 same as static versions produced by standard R graphics devices. One
@@ -220,11 +204,16 @@ two.layers <- scatter+
   geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
                 group=country),
             data=WorldBankBefore1975)
-viz.two.layers <- list(scatter=two.layers)
-structure(viz.two.layers, class="animint")
+(viz.two.layers <- animint(two.layers))
 ```
 
-This plot shows a data visualization with 2 geoms/layers: 
+Note that we save the return value of the `animint` function to the
+`viz.two.layers` object (which is also printed due to the
+parentheses). In this manual we will often use variable names that
+start with `viz` to denote animint data visualization objects, which
+are in fact lists of ggplots and options.
+
+The plot above shows a data visualization with 2 geoms/layers: 
 
 * the `geom_point` shows the life expectancy, fertility rate, and
   region of all countries in 1975.
@@ -243,7 +232,8 @@ an increased fertility rate.
   specification for all geoms. You may want to use
   `scale_color_manual` with a sequential color palette, see
   `RColorBrewer::display.brewer.all(type="seq")` and
-  [read the appendix for more details](Ch17-appendix.html#manual-color-legends).
+  [read the appendix for more
+  details](Ch17-appendix.html#manual-color-legends).
   
 Can we add the names of the countries to the data viz? Below, we add
 another layer with a text label for each country's name.
@@ -253,8 +243,7 @@ three.layers <- two.layers+
   geom_text(aes(x=life.expectancy, y=fertility.rate, color=region,
                 label=country),
             data=WorldBank1975)
-three.layer.viz <- list(scatter=three.layers)
-structure(three.layer.viz, class="animint")
+animint(three.layers)
 ```
 
 This data viz is not so easy to read, since there are so many
@@ -292,18 +281,18 @@ viz.two.plots$timeSeries <- ggplot()+
 ```
 
 That results in a named list of two elements (both elements are
-ggplots).
+ggplots with class `gg`).
 
 ```{r}
 summary(viz.two.plots)
 ```
 
-Like usual, attaching the `"animint"` class to this list 
-renders the data viz. Since the list contains two ggplots, animint
+This data visualization list can be printed/rendered by typing its
+name. Since the list contains two ggplots, `animint2`
 renders the data viz as two linked plots.
 
 ```{r Ch02-viz-two-plots}
-structure(viz.two.plots, class="animint")
+viz.two.plots
 ```
 
 The data visualization above contains two ggplots, which each map
@@ -372,7 +361,7 @@ this sketch to the R code below.
 add.x.var <- function(df, x.var){
   data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
 }
-viz.aligned <- list(
+(viz.aligned <- animint(
   scatter=ggplot()+
     geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
                data=add.x.var(WorldBank1975, "life expectancy"))+
@@ -385,8 +374,7 @@ viz.aligned <- list(
     facet_grid(. ~ x.var, scales="free")+
     theme_bw()+
     theme(panel.margin=grid::unit(0, "lines"))
-  )
-structure(viz.aligned, class="animint")
+  ))
 ```
 
 The data visualization above contains a single ggplot with two panels
