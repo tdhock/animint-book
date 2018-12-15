@@ -61,19 +61,19 @@ The remaining chapters can be read in any order, since each
 chapter explains how to make data visualizations for a particular data
 set. 
 
-Chapter 8 explains how to create a multi-panel interactive World Bank
+[Chapter 8](Ch08-WorldBank-facets.html) explains how to create a multi-panel interactive World Bank
 data visualization.
 
-Chapter 9 shows a visualization of data from cyclists in Montreal.
+[Chapter 9](Ch09-Montreal-bikes.html) shows a visualization of data from cyclists in Montreal.
 
 [Chapter 10](Ch10-nearest-neighbors.html) explains how to create an
 interactive re-design of the nearest neighbors data visualization from
 the Elements of Statistical Learning book by Hastie et al.
 
-Chapter 11 shows a data visualization that explains the Lasso, a
+[Chapter 11](Ch11-lasso.html) shows a data visualization that explains the Lasso, a
 machine learning model for regularized regression.
 
-Chapter 12 shows a data visualization that explains support vector
+[Chapter 12](Ch12-SVM.html) shows a data visualization that explains support vector
 machines (SVM), a machine learning model for binary classification.
 
 [Chapter 13](Ch13-poisson-regression.html) explains how to create an
@@ -82,6 +82,12 @@ interactive visualization that explains the Poisson regression model.
 [Chapter 14](Ch14-PeakSegJoint.html) explains how to use the
 `.variable` and `.value` aesthetics to create an interactive
 visualization of a peak detection model.
+
+[Chapter 15](Ch15-Newton.html) explains how to create an interactive
+visualization of the Newton root-finding algorithm.
+
+[Chapter 16](Ch16-change-point.html) explains how to create an interactive
+visualization of an optimal changepoint detection model.
 
 ## Appendix {#appendix}
 

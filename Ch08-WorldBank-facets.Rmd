@@ -184,7 +184,7 @@ Note that `TS.ABOVE` was used to specify facet columns `top` and
 `side`. We render an interactive version below.
 
 ```{r Ch08-viz-scatter-both}
-animint(
+viz.scatter.both <- list(
   title="World Bank data (multiple selection, facets)",
   scatterBoth=scatter.both+
     theme_animint(width=1000, height=800),
@@ -192,6 +192,7 @@ animint(
   time=list(variable="year", ms=3000),
   first=list(year=1975, country=c("United States", "Vietnam")),
   selector.types=list(country="multiple"))
+structure(viz.scatter.both, class="animint")
 ```
 
 ## Chapter summary and exercises {#exercises}

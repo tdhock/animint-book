@@ -171,7 +171,7 @@ data.all.folds.list <- mclapply(0:n.folds, function(validation.fold){
   one.fold <- OneFold(validation.fold)
   data.table(validation.fold, one.fold)
 })
-data.all.folds <- do.call(rbind, data.all.folds.list)
+(data.all.folds <- do.call(rbind, data.all.folds.list))
 ```
 
 The data table of predictions contains almost 3 million observations!
