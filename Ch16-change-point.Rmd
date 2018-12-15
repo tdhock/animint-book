@@ -368,7 +368,7 @@ Exercises:
   to select the number of segments for each signal. For each signal in
   the facetted plot of the data, show the currently selected model for
   that signal (there should be a separate selection variable for each
-  signal -- you can use .variable and .value aes as explained in
+  signal -- you can use named clickSelects/showSelected as explained in
   [Chapter 14](Ch14-PeakSegJoint.html)). The result should look
   something
   [like this](http://bl.ocks.org/tdhock/raw/9311ca39d643d127e04a088814c81ee1/).

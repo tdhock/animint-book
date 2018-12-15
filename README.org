@@ -70,7 +70,7 @@ animint: a grammar for animated and interactive data visualization
   - aes(id)
   - selectize option
   - theme_animint height width
-  - .variable and .value aesthetics
+  - named clickSelects/showSelected
 - Ch 7, limitations of animint
   - shiny. WorldBank-facets, changing aesthetic mappings.
   - updating axes. workaround: normalize data to a common scale.
