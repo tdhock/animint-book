@@ -1,6 +1,11 @@
 name: Animint
 markdown: redcarpet
-#highlighter: pygments
 highlighter: rouge
 
-exclude: ["pandoc", "reviews", "CONTRIBUTING.md", "README.org", "book", "extras"]
+exclude: ["pandoc", "reviews", "CONTRIBUTING.md", "README.org", "book", "extras", "library"]
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
