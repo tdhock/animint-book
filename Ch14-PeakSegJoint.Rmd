@@ -477,7 +477,7 @@ data.frame(
   compile.seconds=c(
     timing.for.compile[["elapsed"]],
     timing.named.compile[["elapsed"]]),
-  row.names=c("for.loop", "variable.value"))
+  row.names=c("for", "named"))
 ```
 
 Exercises:

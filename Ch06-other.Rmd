@@ -342,10 +342,10 @@ files and the disk space usage. Since `chunk_vars` was only specified
 for `geom6_vline_signal`, the number of TSV files for the other geoms
 does not change. When both `segments` and `bases.per.probe` are
 specified for `chunk_vars`, there are 76 TSV files for
-`geom6_vline_signal`, and the data viz takes over `r
-sizes["both", "kb"]` kilobytes. In contrast, `chunk_vars=character()`
-produces only one TSV file for `geom6_vline_signal`, and the data viz
-uses under `r sizes["neither", "kb"]` kilobytes.
+`geom6_vline_signal`, and the data viz takes `r sizes["both", "kb"]`
+kilobytes. In contrast, `chunk_vars=character()` produces only one TSV
+file for `geom6_vline_signal`, and the data viz uses 
+`r sizes["neither", "kb"]` kilobytes.
 
 In conclusion, the geom-specific `chunk_vars` option defines the
 number of TSV files created for each geom. When deciding the value of
@@ -500,4 +500,4 @@ Exercises:
   The disk space? The loading time?
 
 Next, [Chapter 7](Ch07-limitations.html) explains the limitations of
-the current implementation of animint.
+the current implementation of animint2.

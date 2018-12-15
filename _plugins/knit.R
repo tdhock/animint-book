@@ -7,7 +7,7 @@ works_with_R(
   kernlab="0.9.27",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "tdhock/animint2@806abaee50833e11ed0aa9dde49d256e3e02fe83")
+  "tdhock/animint2@7ac92dcc31ea35af6a6cd016e352e7c980e08198")
              
 library(methods)
 

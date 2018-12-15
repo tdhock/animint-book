@@ -100,9 +100,10 @@ is installed, open R and execute the following code.
 
 ```{r install}
 if(!require(animint2)){
-  ainstall.packages("devtools")
-  devtools::install_github("tdhock/animint2", upgrade_dependencies=FALSE)
-}
+  install.packages("devtools")
+  devtools::install_github(
+    "tdhock/animint2@7ac92dcc31ea35af6a6cd016e352e7c980e08198")
+} 
 ```
 
 ## Translating plot sketches into ggplots {#sketching}

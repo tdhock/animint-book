@@ -20,7 +20,9 @@ Chapter outline:
 * We then create an interactive visualization in which one plot can be
   click to select the number of changepoints/segments, and the other
   plot shows the corresponding model.
-* We end by showing a static visualization of the 
+* We end by showing a static visualization of the max margin linear
+  regression model, and suggesting exercises about creating an
+  interactive version.
 
 ## Static figures {#static}
 
