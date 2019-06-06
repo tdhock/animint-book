@@ -348,6 +348,13 @@ are used for the Poisson regression model.
 
 Exercises:
 
+* The code above used `addPanel` and `addX` helper functions with
+  several geoms to create multi-panel plots, which results in
+  repetition. To avoid that repetition, create a new data viz which
+  uses a single geom with a larger data set. For example, the red
+  points in the two panels of the first plot could be defined using
+  one `geom_point` with a larger data set (Hint: use
+  `data.table::melt` with `measure.vars=c("cum.prob", "probability")`.
 * Create a similar sequence of data visualizations for the
   [Binomial regression](https://en.wikipedia.org/wiki/Binomial_regression)
   model.
