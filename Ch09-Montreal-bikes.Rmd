@@ -29,7 +29,6 @@ accidents data table.
 ```{r accidents}
 library(animint2)
 data(montreal.bikes)
-## Tell R on windows that these factor levels are UTF-8 encoded.
 if(! "Brébeuf" %in% montreal.bikes$counter.counts$location){
   Encoding(levels(montreal.bikes$counter.counts$location)) <- "UTF-8"
   print(table(montreal.bikes$counter.counts$location))
@@ -147,7 +146,6 @@ ggplot()+
 ```
 
 ```{r}
-## dots for each accident.
 accidents.dt[, severity.str := ifelse(
   0 < deaths, "deaths", ifelse(
     0 < people.severely.injured,
@@ -179,7 +177,7 @@ As shown above, some months do not have observations for all days.
 
 ## Interactive viz of accident frequency {#regression}
 
-```{r regression}
+```{r Ch09-viz-regression}
 complete.months <- counts.per.month[days == days.in.month]
 month.labels <- counts.per.month[, {
   .SD[which.max(count), ]
@@ -316,7 +314,6 @@ some.paths <- bike.paths[
     lon < scale.mat[2, "range.lon"]]
 mtl.map <- ggplot()+
   theme_bw()+
-  theme_animint(width=600)+
   theme(
     panel.margin=grid::unit(0, "lines"),
     axis.line=element_blank(), axis.text=element_blank(), 
@@ -333,22 +330,13 @@ mtl.map <- ggplot()+
     group=paste(feature.i, path.i)),
     color="grey",
     data=some.paths)+
-  geom_point(aes(
-    lon, lat,
-    color=location,
-    size=count,
-    key=location),
-    showSelected="month",
-    clickSelects="location",
-    data=counts.per.month.loc)+
-  scale_size_animint()+
   guides(color="none")+
   geom_text(aes(
     lon, lat,
     label=location),
     clickSelects="location",
     data=show.locations)
-mtl.map+facet_wrap("month")
+mtl.map
 ```
 
 The plot below shows the time period that each counter was in
@@ -366,15 +354,11 @@ accidents.range <- accidents.dt[, data.table(
   max=max(date.POSIXct))]
 MonthSummary <- ggplot()+
   theme_bw()+
-  theme_animint(width=400)+
+  theme_animint(width=400, height=200)+
   xlab("range of dates in data")+
   ylab("data type")+
   scale_color_manual(values=location.colors)+
   guides(color="none")+
-  geom_tallrect(aes(
-    xmin=month01.POSIXct, xmax=next01.POSIXct),
-    clickSelects="month",
-    data=months, alpha=1/2)+
   geom_segment(aes(
     min, location,
     xend=max, yend=location,
@@ -401,7 +385,6 @@ dates[, max.date := date+one.day/2]
 location.labels <- counts.dt[, .SD[which.max(count)], by=list(location)]
 TimeSeries <- ggplot()+
   theme_bw()+
-  theme_animint(width=1000)+
   geom_tallrect(aes(xmin=date-one.day/2, xmax=date+one.day/2,
                     clickSelects=date),
                 data=dates, alpha=1/2)+
@@ -427,7 +410,6 @@ The plot below shows the same data but for each month.
 MonthSeries <- ggplot()+
   guides(color="none", fill="none")+
   theme_bw()+
-  theme_animint(width=1000)+
   geom_tallrect(aes(
     xmin=month01.POSIXct, xmax=next01.POSIXct),
     clickSelects="month",    
@@ -470,7 +452,6 @@ MonthFacet <- ggplot()+
   theme_bw()+
   facet_grid(facet ~ ., scales="free")+
   theme(panel.margin=grid::unit(0, "lines"))+
-  theme_animint(width=600)+
   geom_tallrect(aes(
     xmin=month01.POSIXct, xmax=next01.POSIXct),
     clickSelects="month",
@@ -558,7 +539,6 @@ DaysFacet <- ggplot()+
   theme_bw()+
   facet_grid(facet ~ ., scales="free")+
   theme(panel.margin=grid::unit(0, "lines"))+
-  theme_animint(width=400)+
   geom_line(aes(
     day.of.the.month, count, group=location,
     key=location,
@@ -584,7 +564,7 @@ DaysFacet <- ggplot()+
     data=data.table(counts.dt, facet=counter.title))+
   scale_fill_manual(values=severity.colors, breaks=names(severity.colors))+
   geom_text(aes(
-    15, 23, label=month),
+    15, 23, label=month, key=1),
     showSelected="month",
     data=data.table(months, facet=accidents.title))+
   scale_x_continuous("day of the month", breaks=c(1, 10, 20, 30))+
@@ -620,26 +600,32 @@ DaysFacet <- ggplot()+
 DaysFacet
 ```
 
-```{r mtlviz}
+```{r Ch09-viz-mtl}
 animint(
   MonthFacet,
   DaysFacet,
   MonthSummary,
-  mtl.map,
-  selector.types=list(location="multiple", severity="multiple"),
+  selector.types=list(severity="multiple"),
   duration=list(month=2000),
   first=list(
-    location=c("Berri", "Rachel"),
+    location="Berri",
     month="September 2012"),
-  time=list(variable="month", ms=5000),
-  title="Montreal cyclists and accidents, 2009-2014")
+  time=list(variable="month", ms=5000))
 ```
 
 ## Chapter summary and exercises {#exercises}
 
 Exercises:
 
-* TODO
+* Change location to a multiple selection variable.
+* Add a plot for the map to the data viz.
+* On the map, draw a circle for each location, with size that changes
+  based on the `count` of the accidents in the currently selected
+  `month`.
+* On the `MonthSummary` plot, add a background
+  rectangle that can be used to select the `month`.
+* Remove the `MonthSummary` plot and add a similar visualization as a
+  third panel in the `MonthFacet` plot.
 
 Next, [Chapter 10](Ch10-nearest-neighbors.html) explains how to visualize the
 K-Nearest-Neighbors machine learning model.
