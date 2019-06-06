@@ -236,7 +236,7 @@ that some plots/facets have a common `x1` or `x1.sq` axis. Note that
 we also hid the color legend in the first plot, since it is sufficient
 to just have one color legend.
 
-### Linear SVM {#linear-svm}
+## Linear SVM {#linear-svm}
 
 ```{r}
 train.i <- 1:N
@@ -664,7 +664,7 @@ animint(
       data=slackSegs))
 ```
 
-### Non-linear polynomial kernel SVM {#nonlinear-polynomial-kernel-svm}
+## Non-linear polynomial kernel SVM {#nonlinear-polynomial-kernel-svm}
 
 In the previous section we fit a linear kernel in the squared feature
 space, which resulted in learning a function which is non-linear in
