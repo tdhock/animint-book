@@ -86,7 +86,7 @@ changes that were incompatible with the interactive grammar of
 animint. Therefore in 2018 we created the animint2 package which
 copies/forks the relevant parts of the ggplot2 package. Now animint2
 can be used without having ggplot2 installed. In fact, it is
-recommended to use animint2 without attaching (via library)
+recommended to use animint2 without attaching (via library) 
 ggplot2. However it is fine to use animint2 along with packages that
 import/load ggplot2. For an example, see
 [Chapter 16](Ch16-change-point.html), which uses the penaltyLearning
@@ -94,16 +94,11 @@ package (which imports ggplot2).
 
 ## Installing animint2 {#installing}
 
-The `animint2` R package is hosted on GitHub, so you can install
-`animint2` by using the `devtools` package. To make sure that `animint2`
-is installed, open R and execute the following code.
+The `animint2` R package is hosted on CRAN, so you can install it via
+the following R code:
 
 ```{r install}
-if(!require(animint2)){
-  install.packages("devtools")
-  devtools::install_github(
-    "tdhock/animint2@7ac92dcc31ea35af6a6cd016e352e7c980e08198")
-} 
+install.packages("animint2")
 ```
 
 ## Translating plot sketches into ggplots {#sketching}
