@@ -40,10 +40,10 @@ Since the legend has `clickSelects=region`, clicking an entry of that
 legend updates the `region` selection variable. Note that animint
 automatically makes every discrete legend interactive, so you do not
 need to explicitly specify `clickSelects=region` for the legend. In
-fact, when we specified `color=region` for the `geom_point`, animint
+fact, when we specified `color=region` for the `geom_point`, animint2
 does two things automatically:
 
-* `showSelectedLegendColor=region` is assigned to the same
+* `showSelected=region` is assigned to the same
   `geom_point`.
 * `clickSelects=region` is assigned to the color legend.
 
