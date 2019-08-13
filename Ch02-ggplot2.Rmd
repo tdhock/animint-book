@@ -16,7 +16,7 @@ reading this chapter, you will be able to
 
 * State the advantages of the grammar of graphics relative to previous
   plotting systems
-* Install the animint2 R package from GitHub
+* Install the animint2 R package 
 * Translate plot sketches into ggplot code in R
 * Render ggplots on web pages using animint2
 * Create multi-layer ggplots
