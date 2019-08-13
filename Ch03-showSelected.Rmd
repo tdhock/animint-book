@@ -273,7 +273,7 @@ Exercises:
   geoms that show the selected year: a `geom_text` on the scatterplot,
   and a `geom_vline` on the time series.
 * Translate one of the
-  [animation package examples](http://vis.supstat.com/categories.html#animation-ref)
+  [animation package examples](https://yihui.name/animation/examples/)
   to an animint. Hint: in the code for the animation package there is
   always a for loop over the time variable. Instead of calling a
   plotting function inside the for loop, use the
