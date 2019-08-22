@@ -91,8 +91,7 @@ modelSelection.labels <- unique(all.modelSelection[, data.table(
 
 ## Define data viz using for loops {#define-using-for-loops}
 
-The R code below constructs a data viz using for loops. TODO break up
-into pieces and comment each piece to explain what we are doing?
+The R code below constructs a data viz using for loops. 
 
 ```{r Ch14-for-construct}
 library(animint2)

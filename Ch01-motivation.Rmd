@@ -10,7 +10,7 @@ output: bookdown::html_chapter
 knitr::opts_chunk$set(fig.path="Ch01-figures/")
 ```
 
-The purpose of this manual is to explain the usage of animint, an R
+The purpose of this manual is to explain the usage of animint2, an R
 package for interactive data visualization. This introductory chapter
 answers the following questions:
 

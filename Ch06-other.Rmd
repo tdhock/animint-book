@@ -220,7 +220,7 @@ for every file.
 To illustrate the usage of `chunk_vars`, consider the following
 visualization of the `breakpoints` data set.
 
-TODO: sketch.
+![Breakpoints data viz](Ch06-viz-breakpoints.png)
 
 The sketch above consists of two plots. We begin by creating the plot
 of error curves on the left.

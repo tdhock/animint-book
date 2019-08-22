@@ -14,7 +14,7 @@ manual are organized as follows.
 
 The first seven chapters should be read sequentially, since they give
 a step by step guide to interactive data visualization using
-animint.
+animint2.
 
 [Chapter 1](Ch01-motivation.html) gives an overview of data analysis
 and visualization. It provides motivation and a theoretical foundation
@@ -25,20 +25,20 @@ code.
 
 Starting with [chapter 2](Ch02-ggplot2.html), we will show how plot
 sketches can be translated into R code. Chapter 2 explains the basics
-of plotting using ggplots and animint, and should be most useful for
+of plotting using ggplots and animint2, and should be most useful for
 readers who have never used ggplot2. It explains how standard ggplots
-can be rendered on web pages using animint.
+can be rendered on web pages using animint2.
 
 [Chapter 3](Ch03-showSelected.html) introduces showSelected, one of
-the two main keywords that animint introduces for interactive data
+the two main keywords that animint2 introduces for interactive data
 visualization design. Chapter 3 begins by explaining selection
 variables, which provide the mechanism of interaction in
-animint. Chapter 3 then explains how the showSelected keyword makes it
+animint2. Chapter 3 then explains how the showSelected keyword makes it
 possible to plot data subsets. Chapter 3 also explains how to use
 smooth transitions and animation.
 
 [Chapter 4](Ch04-clickSelects.html) introduces clickSelects, the other
-main keyword that animint introduces for interactive data
+main keyword that animint2 introduces for interactive data
 visualization design. The clickSelects keyword makes it possible for
 the user to change a selection variable by directly clicking on a plot
 element.
@@ -46,14 +46,14 @@ element.
 [Chapter 5](Ch05-sharing.html) explains several different ways to
 share your interactive data visualizations on the web.
 
-[Chapter 6](Ch06-other.html) covers some other features of animint,
+[Chapter 6](Ch06-other.html) covers some other features of animint2,
 including how to specify hyperlinks, tooltips, data-driven selector
 variable names.
 
 [Chapter 7](Ch07-limitations.html) covers the limitations of the
-current implementation of the animint R package, and explains
+current implementation of the animint2 R package, and explains
 workarounds for some common issues. It also includes some ideas for
-improvements, for those who would like to contribute to animint.
+improvements, for those who would like to contribute to animint2.
 
 ## Examples {#examples}
 

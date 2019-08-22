@@ -98,7 +98,7 @@ The `animint2` R package is hosted on CRAN, so you can install it via
 the following R code:
 
 ```{r install}
-install.packages("animint2")
+if(!requireNamespace("animint2"))install.packages("animint2")
 ```
 
 ## Translating plot sketches into ggplots {#sketching}

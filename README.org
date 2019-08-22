@@ -1,4 +1,4 @@
-View this manual online at http://cbio.ensmp.fr/~thocking/animint-book/Ch00-preface.html
+View this manual online at http://cbio.ensmp.fr/~thocking/animint2-manual/Ch02-ggplot2.html
 
 Compile this manual by typing =jekyll build= on the command line. I use
 
@@ -21,67 +21,10 @@ https://github.com/tdhock/dotfiles/blob/master/.emacs
 - use http://rstudio.github.io/tufte/ or https://bookdown.org/ ?
 - https://bitpay.com for accepting donations? or just create a bitcoin wallet?
 
-** Overview
+** How to add a chapter
 
-animint: a grammar for animated and interactive data visualization
-
-- Ch 1, Motivation
-  - big, complex data sets. 
-    - big => interactive (too many subsets to show at once)
-    - complex => multi-layer (data, labels, model, and errors)
-  - understanding, communicating, teaching.
-  - limitation of ggplot2: link between plots unclear, too many
-    details to show at once.
-  - limitation of d3: no high-level grammar for describing plots and
-    interactions.
-- Ch 2, static data visualization with ggplot2
-  - Sketching: plot idea => sketch => code
-  - why grammar of graphics? multi-layer, multi-panel graphics easy.
-  - why multi-layer? anything more complicated than basic plots.
-  - why multi-panel? aligned axes or data subsets. motivation for
-    animint: what if there are too many subsets than you would like to
-    display at once?
-  - limitation: summarizing data rather than showing details.
-  - e.g. one frame of WorldBank-facets data viz.
-  - e.g. WorldBank data facet(year).
-  - e.g. change-point data viz + facet(segments ~ profile).
-- Ch 3, the showSelected keyword
-  - animation package examples?
-  - time option
-  - duration option
-  - WorldBank scatterplot example (point + year text), how to
-    emphasize different countries?
-  - change-point data viz, how to show different samples? facets?
-    model selection curves?
-- Ch 4, the clickSelects keyword
-  - WorldBank scatterplot with time series.
-- Ch 5, sharing animints
-  - animint2dir
-  - any web server
-  - animint2gist
-  - rmarkdown
-  - github pages
-- Ch 6, other features
-  - review: aes(key), selector.types, first, duration, time.
-  - scale_size_animint
-  - chunk_vars
-  - aes(href)
-  - aes(tooltip)
-  - aes(id)
-  - selectize option
-  - theme_animint height width
-  - named clickSelects/showSelected
-- Ch 7, limitations of animint
-  - shiny. WorldBank-facets, changing aesthetic mappings.
-  - updating axes. workaround: normalize data to a common scale.
-  - brush / lasso. workaround: click individual data points.
-  - ggplot2 stats/positions/exotic geoms. compute it yourself.
-  - ggplot2 theme options.
-  - vjust!
-- Ch 8, the WorldBank-facets example
-- Ch 9, montreal bike data?
-- Ch 10, knn example
-- Ch 11, lasso example
-- Ch 12, SVM example
-- Ch 13, Poisson regression
-- Ch 14, PSJ
+- Create ChXX-foo.Rmd
+- Add a link in [[file:_layouts/default.html]]
+- Add a paragraph/link in [[file:Ch00-preface.Rmd]]
+- Add a paragraph/link the preceding chapter.
+- Rename following chapters and update links if necessary.

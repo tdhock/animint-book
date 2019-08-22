@@ -126,10 +126,6 @@ of the root as a function of the number of iterations.
 solution <- do.call(rbind, solution.list)
 solution$new.value <- c(solution$fun.value[-1], fun.value)
 gg.it <- ggplot()+
-  geom_hline(aes(
-    yintercept=log10(thresh)),
-    color="grey",
-    data=data.table(thresh.dt, y="log10(abs(fun.value))"))+
   geom_point(aes(
     iteration, fun.value, color=fun),
     data=data.table(solution, y="fun.value", fun="function"))+
@@ -283,12 +279,23 @@ method for finding roots of smooth functions.
 
 Exercises:
 
+* Add a `geom_hline` to emphasize the loss=0 value in the second plot.
+* Add a `geom_hline` to emphasize the stopping threshold in the first
+  plot.
+* Turn off one of the two legends, to save space.
+* How to specify smooth transitions between iterations?
+* Instead of using iteration as the animation/time variable, create a
+  new one in order to show two distinct states/steps for each
+  iteration, i.e. the `step` variable in the facetted plot above.
 * What happens to the rate of convergence when you try to find the
   larger root in the log space, or the smaller root in the original
   space? Theoretically it should not converge as fast, since the
   functions are more nonlinear for those roots. Make a data
-  visualization that shows the root finding and different rates of
-  convergence.
+  visualization that allows you to select the starting value, and
+  shows how many iterations it takes to converge to within the
+  threshold.
+* Create another plot that allows you to select the threshold. Plot
+  the number of iterations as a function of threshold.
 * Derive the loss function for
   [Binomial regression](https://en.wikipedia.org/wiki/Binomial_regression),
   and visualize the corresponding Newton root finding method.
