@@ -14,6 +14,8 @@ https://github.com/tdhock/dotfiles/blob/master/.emacs
 
 ** TODOs
 
+- chapter with geom_abline + coord_equal for comparing baseline +
+  proposed algos.
 - setup travis?
 - what to do about slow loading? split Rmd files so that there is only
   one animint in each? or recode the renderer so that it only loads
