@@ -1,6 +1,7 @@
 View this manual online at http://cbio.ensmp.fr/~thocking/animint2-manual/Ch02-ggplot2.html
 
-Compile this manual by typing =jekyll build= on the command line. I use
+Compile this manual by typing =jekyll build= on the command
+line. Jekyll/ruby versions tested include
 
 #+BEGIN_SRC shell
 thocking@silene:~/projects/animint-book(master)$ jekyll --version
@@ -8,6 +9,15 @@ jekyll 3.1.2
 thocking@silene:~/projects/animint-book(master*)$ ruby --version
 ruby 2.1.1p76 (2014-02-24 revision 45161) [x86_64-linux]
 #+END_SRC
+
+#+BEGIN_SRC shell
+(base) tdhock@maude-MacBookPro:~/R/animint2(geom-oop)$ jekyll --version
+jekyll 3.1.6
+(base) tdhock@maude-MacBookPro:~/R/animint2(geom-oop)$ ruby --version
+ruby 2.5.1p57 (2018-03-29 revision 63029) [x86_64-linux-gnu]
+#+END_SRC
+
+Versions of R and packages are documented in [[file:_plugins/knit.R]]
 
 To edit Rmd in emacs try https://github.com/vspinu/polymode via
 https://github.com/tdhock/dotfiles/blob/master/.emacs

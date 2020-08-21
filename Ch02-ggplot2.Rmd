@@ -94,11 +94,19 @@ package (which imports ggplot2).
 
 ## Installing and attaching animint2 {#installing}
 
-The `animint2` R package is hosted on CRAN, so you can install it via
-the following R code:
+To install the most recent release of `animint2` from CRAN,
 
-```{r install}
+```{r installCRAN}
 if(!requireNamespace("animint2"))install.packages("animint2")
+```
+
+To install an even more recent development version of `animint2` from GitHub,
+
+```{r installGitHub}
+if(!requireNamespace("animint2")){
+  if(!requireNamespace("remotes"))install.packages("remotes")
+  remotes::install_github("tdhock/animint2")
+}
 ```
 
 Once you have installed animint2, you can load and attach all of its

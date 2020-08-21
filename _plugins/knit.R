@@ -1,13 +1,19 @@
 works_with_R(
-  "3.6.0",
-  htmltools="0.3.6",
-  RJSONIO="1.3.0",
+  "4.0.2",
+  penaltyLearning="2020.5.13",
+  future="1.18.0",
+  future.apply="1.6.0",
+  htmltools="0.5.0",
+  RJSONIO="1.3.1.4",
   maps="3.3.0",
-  LambertW="0.6.4", #depends/attaches ggplot2
-  kernlab="0.9.27",
+  lars="1.2",
+  LambertW="0.6.5", #depends/attaches ggplot2
+  kernlab="0.9.29",
+  caTools="1.18.0",
+  data.table="1.13.0",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "tdhock/animint2@8a7327e66fa65f31ccc17508f914aaaee41909ef")
+  "tdhock/animint2@e1ac35531487e5ae1bc3d63697accd96ceff68a2")
              
 library(methods)
 

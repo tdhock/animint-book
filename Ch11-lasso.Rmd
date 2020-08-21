@@ -28,7 +28,12 @@ Chapter outline:
 We begin by loading the prostate cancer data set.
 
 ```{r}
-data(prostate, package="ElemStatLearn")
+if(!file.exists("prostate.data")){
+  download.file(
+    "https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data",
+    "prostate.data")
+}
+prostate <- data.table::fread("prostate.data")
 head(prostate)
 ```
 
@@ -38,11 +43,11 @@ We construct a train inputs `x` and outputs `y` using the code below.
 input.cols <- c(
   "lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason", 
   "pgg45")
-is.validation <- prostate$train == FALSE
-train.df <- prostate[!is.validation, ]
-x <- as.matrix(train.df[input.cols])
+prostate.inputs <- prostate[, ..input.cols]
+is.train <- prostate$train == "T"
+x <- as.matrix(prostate.inputs[is.train])
 head(x)
-y <- train.df$lpsa
+y <- prostate[is.train, lpsa]
 head(y)
 ```
 
@@ -61,10 +66,9 @@ pred.nox <- predict(fit, type="coef")
 beta <- scale(pred.nox$coefficients, FALSE, 1/fit$normx)
 arclength <- rowSums(abs(beta))
 path.list <- list()
-library(data.table)
 for(variable in colnames(beta)){
   standardized.coef <- beta[, variable]
-  path.list[[variable]] <- data.table(
+  path.list[[variable]] <- data.table::data.table(
     step=seq_along(standardized.coef),
     lambda=c(fit$lambda, 0),
     variable,
@@ -98,7 +102,7 @@ ordinary least squares solution, we add dots in the plot below.
 ```{r}
 x.scaled <- with(fit, scale(x, meanx, normx))
 lfit <- lm.fit(x.scaled, y)
-lpoints <- data.table(
+lpoints <- data.table::data.table(
   variable=colnames(x),
   standardized.coef=lfit$coefficients,
   arclength=sum(abs(lfit$coefficients)))
@@ -116,13 +120,13 @@ will use later for animation.
 fraction <- sort(unique(c(
   seq(0, 1, l=21))))
 pred.fraction <- predict(
-  fit, prostate[input.cols],
+  fit, prostate.inputs,
   type="coef", mode="fraction", s=fraction)
 coef.grid.list <- list()
 coef.grid.mat <- scale(pred.fraction$coefficients, FALSE, 1/fit$normx)
 for(fraction.i in seq_along(fraction)){
   standardized.coef <- coef.grid.mat[fraction.i,]
-  coef.grid.list[[fraction.i]] <- data.table(
+  coef.grid.list[[fraction.i]] <- data.table::data.table(
     fraction=fraction[[fraction.i]],
     variable=colnames(x),
     standardized.coef,
@@ -163,23 +167,23 @@ error plot.
 
 ```{r}
 pred.list <- predict(
-  fit, prostate[input.cols],
+  fit, prostate.inputs,
   mode="fraction", s=fraction)
 residual.mat <- pred.list$fit - prostate$lpsa
 squares.mat <- residual.mat * residual.mat
 mean.error.list <- list()
 for(set in c("train", "validation")){
-  val <- if(set=="validation")TRUE else FALSE
-  is.set <- is.validation == val
+  val <- if(set=="train")TRUE else FALSE
+  is.set <- is.train == val
   mse <- colMeans(squares.mat[is.set, ])
-  mean.error.list[[paste(set)]] <- data.table(
+  mean.error.list[[paste(set)]] <- data.table::data.table(
     set, mse, fraction,
     arclength=rowSums(abs(coef.grid.mat)))
 }
 mean.error <- do.call(rbind, mean.error.list)
 rect.width <- diff(mean.error$arclength[1:2])/2
 addY <- function(dt, y){
-  data.table(dt, y.var=factor(y, c("error", "weights")))
+  data.table::data.table(dt, y.var=factor(y, c("error", "weights")))
 }
 tallrect.dt <- coef.grid[variable==variable[1],]
 gg.path <- ggplot()+
@@ -208,7 +212,7 @@ Finally, we add a plot of residuals versus actual values.
 ```{r}
 lasso.res.list <- list()
 for(fraction.i in seq_along(fraction)){
-  lasso.res.list[[fraction.i]] <- data.table(
+  lasso.res.list[[fraction.i]] <- data.table::data.table(
     observation.i=1:nrow(prostate),
     fraction=fraction[[fraction.i]],
     residual=residual.mat[, fraction.i],
@@ -217,7 +221,7 @@ for(fraction.i in seq_along(fraction)){
     set=ifelse(prostate$train, "train","validation"))
 }
 lasso.res <- do.call(rbind, lasso.res.list)
-hline.dt <- data.table(residual=0)
+hline.dt <- data.table::data.table(residual=0)
 gg.res <- ggplot()+
   theme_bw()+
   geom_hline(aes(
@@ -271,8 +275,8 @@ variable.
 tallrect.show.list <- list()
 for(a in tallrect.dt$arclength){
   is.selected <- tallrect.dt$arclength == a
-  not.selected <- tallrect.dt[!is.selected, ]
-  tallrect.show.list[[paste(a)]] <- data.table(
+  not.selected <- tallrect.dt[!is.selected]
+  tallrect.show.list[[paste(a)]] <- data.table::data.table(
     not.selected, show.val=a, show.var="arclength")
 }
 tallrect.show <- do.call(rbind, tallrect.show.list)
@@ -329,13 +333,13 @@ animint(
       key=1),
       showSelected=c("set", "arclength"),
       hjust=0,
-      data=mean.error[set=="train",])+
+      data=mean.error[set=="train"])+
     geom_text(aes(
       0, -2.5, label=sprintf("validation error = %.3f", mse),
       key=1),
       showSelected=c("set", "arclength"),
       hjust=0,
-      data=mean.error[set=="validation",])+
+      data=mean.error[set=="validation"])+
     geom_segment(aes(
       response, residual,
       xend=response, yend=0,

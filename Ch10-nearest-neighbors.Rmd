@@ -56,9 +56,13 @@ feature space.
 We begin by loading the data set.
 
 ```{r}
-library(ElemStatLearn)
-data(mixture.example)
-str(mixture.example)
+if(!file.exists("ESL.mixture.rda")){
+  download.file(
+    "https://web.stanford.edu/~hastie/ElemStatLearn/datasets/ESL.mixture.rda",
+    "ESL.mixture.rda")
+}
+load("ESL.mixture.rda")
+str(ESL.mixture)
 ```
 
 We will use the following components of this data set:
@@ -80,7 +84,7 @@ We will use the following components of this data set:
   model (20 centers x 2 input features).
 
 First, we create a test set, following the example code from
-`help(mixture.example)`. Note that we use a `data.table` rather than a
+`help(ESL.mixture)`. Note that we use a `data.table` rather than a
 `data.frame` to store these big data, since `data.table` is often
 faster and more memory efficient for big data sets.
 
@@ -92,7 +96,7 @@ centers <- c(sample(1:10, 5000, replace=TRUE),
                sample(11:20, 5000, replace=TRUE))
 mix.test <- mvrnorm(10000, c(0,0), 0.2*diag(2))
 test.points <- data.table(
-  mix.test + mixture.example$means[centers,],
+  mix.test + ESL.mixture$means[centers,],
   label=factor(c(rep(0, 5000), rep(1, 5000))))
 test.points
 ```  
@@ -101,7 +105,7 @@ We then create a data table which includes all test points and grid
 points, which we will use in the test argument to the knn function.
 
 ```{r}
-pred.grid <- data.table(mixture.example$xnew, label=NA)
+pred.grid <- data.table(ESL.mixture$xnew, label=NA)
 input.cols <- c("V1", "V2")
 names(pred.grid)[1:2] <- input.cols
 test.and.grid <- rbind(
@@ -117,7 +121,7 @@ ten folds.
 ```{r}
 n.folds <- 10
 set.seed(2)
-mixture <- with(mixture.example, data.table(x, label=factor(y)))
+mixture <- with(ESL.mixture, data.table(x, label=factor(y)))
 mixture$fold <- sample(rep(1:n.folds, l=nrow(mixture)))
 mixture
 ```
@@ -129,7 +133,6 @@ each of the data points in all sets (train, validation, test, and
 grid).
 
 ```{r}
-library(class)
 OneFold <- function(validation.fold){
   set <- ifelse(mixture$fold == validation.fold, "validation", "train")
   fold.data <- rbind(test.and.grid, data.table(mixture, set))
@@ -137,14 +140,15 @@ OneFold <- function(validation.fold){
   only.train <- subset(fold.data, set == "train")
   data.by.neighbors <- list()
   for(neighbors in seq(1, 30, by=2)){
-    cat(sprintf("n.folds=%4d validation.fold=%d neighbors=%d\n",
-                n.folds, validation.fold, neighbors))
-    pred.label <- 
-      knn(only.train[, input.cols, with=FALSE],
-          fold.data[, input.cols, with=FALSE],
-          only.train$label,
-          k=neighbors,
-          prob=TRUE)
+    cat(sprintf(
+      "n.folds=%4d validation.fold=%d neighbors=%d\n",
+      n.folds, validation.fold, neighbors))
+    pred.label <- class::knn(
+      only.train[, input.cols, with=FALSE],
+      fold.data[, input.cols, with=FALSE],
+      only.train$label,
+      k=neighbors,
+      prob=TRUE)
     prob.winning.class <- attr(pred.label, "prob")
     fold.data$probability <- ifelse(
       pred.label=="1", prob.winning.class, 1-prob.winning.class)
@@ -159,18 +163,19 @@ OneFold <- function(validation.fold){
 ```
 
 Below, we run the `OneFold` function in parallel using the
-`parallel` package. Note that validation folds
+`future` package. Note that validation folds
 1:10 will be used to compute the validation set error. The validation
 fold 0 treats all 200 observations as a train set, and will be used
 for visualizing the learned decision boundaries of the
 K-Nearest-Neighbors classifier.
 
 ```{r}
-library(parallel)
-data.all.folds.list <- mclapply(0:n.folds, function(validation.fold){
-  one.fold <- OneFold(validation.fold)
-  data.table(validation.fold, one.fold)
-})
+future::plan("multiprocess")
+data.all.folds.list <- future.apply::future_lapply(
+  0:n.folds, function(validation.fold){
+    one.fold <- OneFold(validation.fold)
+    data.table(validation.fold, one.fold)
+  })
 (data.all.folds <- do.call(rbind, data.all.folds.list))
 ```
 
@@ -297,7 +302,7 @@ decision boundaries.
 ```{r}
 getBoundaryDF <- function(prob.vec){
   stopifnot(length(prob.vec) == 6831)
-  several.paths <- with(mixture.example, contourLines(
+  several.paths <- with(ESL.mixture, contourLines(
     px1, px2,
     matrix(prob.vec, length(px1), length(px2)),
     levels=0.5))
@@ -319,7 +324,7 @@ boundary.grid <- show.data[set=="grid",]
 boundary.grid[, label := pred.label]
 pred.boundary <- getBoundaryDF(boundary.grid$probability)
 pred.boundary$classifier <- "KNN"
-Bayes.boundary <- getBoundaryDF(mixture.example$prob)
+Bayes.boundary <- getBoundaryDF(ESL.mixture$prob)
 Bayes.boundary$classifier <- "Bayes"
 Bayes.boundary
 ```
@@ -540,7 +545,8 @@ Below we compute the position of the text in the bottom left, which we
 will use to display the error rate of the selected model.
 
 ```{r}
-other.error[, V2.bottom := text.V2.bottom + text.height * 1:2]
+other.error[, V2.bottom := rep(
+  text.V2.bottom + text.height * 1:2, l=.N)]
 ```
 
 Below we re-define the Bayes error data without a neighbors column, so
@@ -655,12 +661,13 @@ error.by.folds <- list()
 error.by.folds[["10"]] <- data.table(n.folds=10, validation.error)
 for(n.folds in c(3, 5, 15)){
   set.seed(2)
-  mixture <- with(mixture.example, data.table(x, label=factor(y)))
+  mixture <- with(ESL.mixture, data.table(x, label=factor(y)))
   mixture$fold <- sample(rep(1:n.folds, l=nrow(mixture)))
-  only.validation.list <- mclapply(1:n.folds, function(validation.fold){
-    one.fold <- OneFold(validation.fold)
-    data.table(validation.fold, one.fold[set=="validation"])
-  })
+  only.validation.list <- future.apply::future_lapply(
+    1:n.folds, function(validation.fold){
+      one.fold <- OneFold(validation.fold)
+      data.table(validation.fold, one.fold[set=="validation"])
+    })
   only.validation <- do.call(rbind, only.validation.list)
   only.validation.error <- only.validation[, list(
     error.prop=mean(is.error)

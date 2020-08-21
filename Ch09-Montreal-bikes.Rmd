@@ -29,6 +29,7 @@ accidents data table.
 ```{r accidents}
 library(animint2)
 data(montreal.bikes)
+Sys.setlocale(locale="en_US.UTF-8")
 if(! "Brébeuf" %in% montreal.bikes$counter.counts$location){
   Encoding(levels(montreal.bikes$counter.counts$location)) <- "UTF-8"
   print(table(montreal.bikes$counter.counts$location))
@@ -46,7 +47,8 @@ death and slight/severe injury. Some of the values are in French
 We calculate the time period of the accidents below.
 
 ```{r timeRange}
-accidents.dt[, date.POSIXct := suppressWarnings(strptime(date.str, "%Y-%m-%d"))]
+accidents.dt[, date.POSIXct := suppressWarnings(strptime(
+  date.str, "%Y-%m-%d"))]
 accidents.dt[, month.str := strftime(date.POSIXct, "%Y-%m")]
 range(accidents.dt$month.str)
 ```
@@ -78,7 +80,8 @@ Plotting with `geom_point` makes it easy to see the difference between
 zeros and missing values.
 
 We will compute a summary of all accidents per month in this time
-period, so we first create a data table for each month below.
+period, so we first create a data table for each month below. (and
+make sure to set the locale to C for English month names)
 
 ```{r months}
 uniq.month.vec <- unique(c(
@@ -90,7 +93,8 @@ months[, month01.POSIXct := suppressWarnings(strptime(month01.str, "%Y-%m-%d"))]
 one.day <- 60 * 60 * 24
 months[, next.POSIXct := month01.POSIXct + one.day * 31]
 months[, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")]
-months[, next01.POSIXct := suppressWarnings(strptime(next01.str, "%Y-%m-%d"))]
+months[, next01.POSIXct := suppressWarnings(strptime(
+  next01.str, "%Y-%m-%d"))]
 months[, month.str := strftime(month01.POSIXct, "%B %Y")]
 month.levs <- months[order(month01.POSIXct), month.str]
 months[, month := factor(month.str, month.levs)]
@@ -522,6 +526,7 @@ days.dt <- data.table(day.POSIXct=with(months, seq(
   max(next01.POSIXct),
   by="day")))
 days.dt[, day.of.the.week := strftime(day.POSIXct, "%a")]
+## The following only works in locales with English days of the week.
 weekend.dt <- days.dt[day.of.the.week %in% c("Sat", "Sun"),]
 weekend.dt[, month.text := strftime(day.POSIXct, "%B %Y")]
 weekend.dt[, month := factor(month.text, month.levs)]
@@ -610,7 +615,7 @@ animint(
   first=list(
     location="Berri",
     month="September 2012"),
-  time=list(variable="month", ms=5000))
+  time=list(variable="month", ms=5000))#buggy.
 ```
 
 ## Chapter summary and exercises {#exercises}
