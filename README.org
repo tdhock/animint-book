@@ -1,4 +1,4 @@
-View this manual online at http://cbio.ensmp.fr/~thocking/animint2-manual/Ch02-ggplot2.html
+View this manual online at https://rcdata.nau.edu/genomic-ml/animint2-manual/Ch00-preface.html
 
 Compile this manual by typing =jekyll build= on the command
 line. Jekyll/ruby versions tested include
