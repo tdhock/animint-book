@@ -269,6 +269,11 @@ Exercises:
 * Make centers always show up in front (on top) of the data.
 * Add smooth transitions.
 * Add animation on iteration variable.
+* Current code has fixed max number of iterations, so it is possible
+  for the last few iterations to make no progress. For example in the
+  viz above, iteration=16 was the last one that resulted in a decrease
+  in error (iterations 17-20 resulted in no decrease). Modify the code
+  so that it stops iterating if there is no decrease in error.
 * Current viz has only one animation frame (showSelected subset) per
   iteration (the mean shown is before it is updated). Add another
   animation frame that shows the mean after the update.
