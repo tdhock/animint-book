@@ -15,7 +15,12 @@ K-means clustering, which is an unsupervised learning algorithm.
 
 Chapter outline:
 
-* TODO
+* We begin by visualizing two features of the iris data.
+* We choose three random data points to use as cluster centers.
+* We show how all distances between data points and cluster centers
+  can be computed and visualized.
+* We end by showing a visualization of how the k-means model
+  parameters change with each iteration.
 
 ## Visualize iris data with labels {#viz-iris}
 
@@ -67,14 +72,12 @@ centers.dt
 gg.centers <- ggplot()+
   scale_color_manual(values=color.code)+
   geom_point(aes(
-    Petal.Length, Petal.Width, color=cluster),
-    size=5,
-    data=centers.dt)+
-  geom_point(aes(
     Petal.Length, Petal.Width),
-    size=3,
     color="grey50",
     data=data.dt)+
+  geom_point(aes(
+    Petal.Length, Petal.Width, color=cluster),
+    data=centers.dt)+
   coord_equal()
 gg.centers
 ```
@@ -109,7 +112,7 @@ interactivity would be useful to emphasize the segments connected to a
 particular data point. To do that we create a `data.i` selection
 variable,
 
-```{r viz-kmeans-distances}
+```{r Ch17-kmeans-distances}
 animint(
   ggplot()+
     scale_color_manual(values=color.code)+
@@ -235,7 +238,7 @@ gg.err <- ggplot()+
   geom_point(aes(
     iteration, error),
     data=iteration.error)+
-  make_tallrect(iteration.error, "iteration")
+  make_tallrect(iteration.error, "iteration", alpha=0.3)
 gg.err
 ```
 
@@ -244,8 +247,8 @@ We also make a plot which will show the current iteration,
 ```{r}
 gg.iteration <- ggplot()+
   scale_fill_manual(values=color.code)+
-  scale_color_manual(values=c(centers="black", data="grey"))+
-  scale_size_manual(values=c(centers=5, data=3))+
+  scale_color_manual(values=c(centers="black", data=NA))+
+  scale_size_manual(values=c(centers=5, data=2))+
   geom_point(aes(
     Petal.Length, Petal.Width, fill=cluster, size=type, color=type),
     shape=21,
@@ -258,7 +261,7 @@ gg.iteration
 
 Combining the two plots results in an interactive data viz,
 
-```{r viz-kmeans-iterations}
+```{r Ch17-kmeans-iterations}
 animint(gg.err, gg.iteration)
 ```
 
