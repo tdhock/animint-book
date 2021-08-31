@@ -256,7 +256,7 @@ an increased fertility rate.
   `scale_color_manual` with a sequential color palette, see
   `RColorBrewer::display.brewer.all(type="seq")` and
   [read the appendix for more
-  details](Ch17-appendix.html#manual-color-legends).
+  details](Ch99-appendix.html#manual-color-legends).
   
 Can we add the names of the countries to the data viz? Below, we add
 another layer with a text label for each country's name.
@@ -410,7 +410,7 @@ paths in the scatterplot panel.
 Note that we used the `add.x.var` function to add a
 `x.var` variable to each data set, and then we used that
 variable in `facet_grid(scales="free")`. We call this the
-[addColumn then facet idiom](Ch17-appendix.html#addColumn-then-facet),
+[addColumn then facet idiom](Ch99-appendix.html#addColumn-then-facet),
 which is generally useful for creating a multi-panel data
 visualization with aligned axes. In particular, if we wanted to change
 the order of the panels in the data visualization, we would only need
@@ -422,7 +422,7 @@ panel backgrounds, and `panel.margin=0` means to use no space between
 panels. Eliminating the space between panels means that more space
 will be used for the panels, which serves to emphasize the data. We
 call this the
-[Space saving facets idiom](Ch17-appendix.html#space-saving-facets), 
+[Space saving facets idiom](Ch99-appendix.html#space-saving-facets), 
 which is generally useful in any ggplot with facets.
 
 ### Same geoms in each panel (compare data subsets) {#compare-data-subsets}
@@ -467,7 +467,7 @@ which we will use later in `facet_grid`. For each value of
 `show.year`, we store a data subset as a named element of a
 list. After the for loop, we use `do.call` with `rbind` to combine the
 data subsets. This is an example of the
-[list of data tables idiom](Ch17-appendix.html#list-of-data-tables),
+[list of data tables idiom](Ch99-appendix.html#list-of-data-tables),
 which is generally useful for interactive data visualization.
 
 Below, we facet on the `show.year` variable to create a data

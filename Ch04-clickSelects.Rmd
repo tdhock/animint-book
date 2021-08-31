@@ -289,7 +289,7 @@ that can be clicked to change the selected year.
 ![World Bank scatter facet](Ch04-ggplot-scatterFacet.png)
 
 First, we re-create the scatterplot from the previous section using the
-[addColumn then facet idiom](Ch17-appendix.html#addColumn-then-facet), 
+[addColumn then facet idiom](Ch99-appendix.html#addColumn-then-facet), 
 which is useful for creating ggplots
 with aligned axes.
 

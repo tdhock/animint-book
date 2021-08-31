@@ -75,7 +75,7 @@ FACETS <- function(df, top, side){
 
 Note that the factor levels will specify the order of the facets in
 the ggplot. This is an example of the
-[addColumn then facet idiom](Ch17-appendix.html#addColumn-then-facet).
+[addColumn then facet idiom](Ch99-appendix.html#addColumn-then-facet).
 Below, we define three helper functions, one for each facet.
 
 ```{r}
@@ -130,9 +130,9 @@ ts.facet
 ```
 
 We set the `panel.margin` to 0, which is always a good idea to
-[save space in a ggplot with facets](Ch17-appendix.html#space-saving-facets).
+[save space in a ggplot with facets](Ch99-appendix.html#space-saving-facets).
 We use `scales="free"` and hide the axis labels, in an example of the
-[addColumn then facet idiom](Ch17-appendix.html#addColumn-then-facet). Instead,
+[addColumn then facet idiom](Ch99-appendix.html#addColumn-then-facet). Instead,
 we use the facet label to show the variable encoded on each
 axis. Below, we add a scatterplot facet with a point for each year and
 country.

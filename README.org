@@ -1,4 +1,4 @@
-View this manual online at http://cbio.ensmp.fr/~thocking/animint2-manual/Ch02-ggplot2.html
+View this manual online at https://rcdata.nau.edu/genomic-ml/animint2-manual/Ch00-preface.html
 
 Compile this manual by typing =jekyll build= on the command
 line. Jekyll/ruby versions tested include
@@ -38,5 +38,5 @@ https://github.com/tdhock/dotfiles/blob/master/.emacs
 - Create ChXX-foo.Rmd
 - Add a link in [[file:_layouts/default.html]]
 - Add a paragraph/link in [[file:Ch00-preface.Rmd]]
-- Add a paragraph/link the preceding chapter.
+- Add a paragraph/link in the preceding chapter.
 - Rename following chapters and update links if necessary.

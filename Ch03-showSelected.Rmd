@@ -277,7 +277,7 @@ Exercises:
   to an animint. Hint: in the code for the animation package there is
   always a for loop over the time variable. Instead of calling a
   plotting function inside the for loop, use the
-  [list of data tables idiom](Ch17-appendix.html#list-of-data-tables)
+  [list of data tables idiom](Ch99-appendix.html#list-of-data-tables)
   to store the data that should be plotted. Then use those data along
   with `showSelected` to create ggplots, and render them
   using animint.

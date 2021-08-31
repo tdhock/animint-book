@@ -7,7 +7,7 @@ output: bookdown::html_chapter
 # Appendix, useful idioms
 
 ```{r setup, echo=FALSE}
-knitr::opts_chunk$set(fig.path="Ch17-figures/")
+knitr::opts_chunk$set(fig.path="Ch99-figures/")
 ```
 
 This appendix describes several idioms which are useful for creating
