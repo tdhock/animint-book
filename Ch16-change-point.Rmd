@@ -375,6 +375,5 @@ Exercises:
   something
   [like this](http://bl.ocks.org/tdhock/raw/9311ca39d643d127e04a088814c81ee1/).
 
-Next, [Chapter 17](Ch17-appendix.html) explains some R programming
-idioms that are generally useful for interactive data visualization
-design.
+Next, [Chapter 17](Ch17-k-means-clustering.html) explains how to
+visualize the K-means clustering algorithm.

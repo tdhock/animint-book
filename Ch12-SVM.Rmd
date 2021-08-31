@@ -230,7 +230,7 @@ animint(
 ```
 
 Note how we used two multi-panel plots with the
-[addColumn then facet](Ch17-appendix.html#addColumn-then-facet) idiom,
+[addColumn then facet](Ch99-appendix.html#addColumn-then-facet) idiom,
 rather than creating four separate plots. This emphasizes the fact
 that some plots/facets have a common `x1` or `x1.sq` axis. Note that
 we also hid the color legend in the first plot, since it is sufficient

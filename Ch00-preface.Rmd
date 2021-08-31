@@ -89,9 +89,12 @@ visualization of the Newton root-finding algorithm.
 [Chapter 16](Ch16-change-point.html) explains how to create an interactive
 visualization of an optimal changepoint detection model.
 
+[Chapter 17](Ch17-k-means-clustering.html) explains how to create an
+interactive visualization of the k-means clustering algorithm.
+
 ## Appendix {#appendix}
 
-[The appendix](Ch17-appendix.html) contains detailed explanations of
+[The appendix](Ch99-appendix.html) contains detailed explanations of
 several R code idioms that are used throughout this manual.
 
 

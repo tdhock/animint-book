@@ -38,5 +38,5 @@ https://github.com/tdhock/dotfiles/blob/master/.emacs
 - Create ChXX-foo.Rmd
 - Add a link in [[file:_layouts/default.html]]
 - Add a paragraph/link in [[file:Ch00-preface.Rmd]]
-- Add a paragraph/link the preceding chapter.
+- Add a paragraph/link in the preceding chapter.
 - Rename following chapters and update links if necessary.

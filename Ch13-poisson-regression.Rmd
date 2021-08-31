@@ -115,7 +115,7 @@ re-make the ggplot based on the sketch below.
 ![Poisson regression viz cum prob](Ch13-viz-cum-prob.png)
 
 When we specify the data sets, we will use the
-[addColumn then facet](Ch17-appendix.html#addColumn-then-facet) idiom
+[addColumn then facet](Ch99-appendix.html#addColumn-then-facet) idiom
 to add a `panel` variable.
 
 ```{r Ch13-viz-cum-prob}
@@ -194,7 +194,7 @@ PoissonLoss <- function(label, seg.mean){
 ```
 
 Below we compute the loss for several label values, using the
-[list of data tables idiom](Ch17-appendix.html#list-of-data-tables).
+[list of data tables idiom](Ch99-appendix.html#list-of-data-tables).
 
 ```{r}
 label.vec <- unique(poisson.prob$label)
