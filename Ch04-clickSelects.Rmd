@@ -359,6 +359,12 @@ above, the un-selected lines will have `alpha=0.1`un-selected
 tallrects will have `alpha=0` (completely transparent), and the
 un-selected tallrects will have `alpha=0` (completely transparent).
 
+As of release `2022.6.15`, it is also possible to specify the opacity
+for objects which are not currently selected using the `alpha_off` 
+parameter. Using this parameter allows different emphasis to be 
+placed on selected and un-selected items freely, instead of being
+forced to rely on the behavior described above.
+
 Finally, we use the R code below to render the new aligned scatterplot
 and time series using animint.
 
