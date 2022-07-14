@@ -19,6 +19,36 @@ ruby 2.5.1p57 (2018-03-29 revision 63029) [x86_64-linux-gnu]
 
 Versions of R and packages are documented in [[file:_plugins/knit.R]]
 
+pandoc known to work is version=1.19.2.4, does not work with 2.14.2
+
+#+begin_src shell-script
+(base) tdhock@maude-MacBookPro:~/projects/animint2-manual(master*)$ /usr/bin/pandoc --version
+pandoc 1.19.2.4
+Compiled with pandoc-types 1.17.0.5, texmath 0.9.4.4, skylighting 0.3.3.1
+Default user data directory: /home/tdhock/.pandoc
+Copyright (C) 2006-2016 John MacFarlane
+Web:  http://pandoc.org
+This is free software; see the source for copying conditions.
+There is no warranty, not even for merchantability or fitness
+for a particular purpose.
+
+(base) tdhock@maude-MacBookPro:~/projects/animint2-manual(master*)$ pandoc --version
+pandoc 2.14.2
+Compiled with pandoc-types 1.22, texmath 0.12.3.1, skylighting 0.11,
+citeproc 0.5, ipynb 0.1.0.1
+User data directory: /home/tdhock/.local/share/pandoc
+Copyright (C) 2006-2021 John MacFarlane. Web:  https://pandoc.org
+This is free software; see the source for copying conditions. There is no
+warranty, not even for merchantability or fitness for a particular purpose.
+#+end_src
+
+~/bin/pandoc is too new, created ./bin/pandoc symlink to old
+/usr/bin/pandoc and then compile via 
+
+#+begin_src shell-script
+PATH=bin:$PATH jekyll b
+#+end_src
+
 To edit Rmd in emacs try https://github.com/vspinu/polymode via
 https://github.com/tdhock/dotfiles/blob/master/.emacs
 
