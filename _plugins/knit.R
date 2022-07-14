@@ -13,7 +13,7 @@ works_with_R(
   data.table="1.13.0",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "tdhock/animint2@e1ac35531487e5ae1bc3d63697accd96ceff68a2")
+  "tdhock/animint2@0a2988ff02f73aab7ec6c3fb70d14439092bee27")
              
 library(methods)
 
