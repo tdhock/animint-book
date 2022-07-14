@@ -446,12 +446,12 @@ scatter1975 <- ggplot()+
   animintAxesOptions=scatter1975+
     theme_animint(width=500, height=500)+
     theme(axis.text=element_text(size=20))+
-    ggtitle("axis.text=element_text(size=18)"),
+    ggtitle("axis.text=element_text(size=20)"),
   animintLegendOptions=scatter1975+
     theme_animint(width=500, height=500)+
     theme(legend.title=element_text(size=24),
         legend.text=element_text(size=rel(2.5)))+
-    ggtitle("legend.text=element_text(size=rel(2)")))
+    ggtitle("legend.text=element_text(size=rel(2.5)")))
 ```
 
 This allows you to change the font size while changing the size of 
