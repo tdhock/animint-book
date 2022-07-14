@@ -427,6 +427,39 @@ plot above, by manually specifying the `breaks` to use for legend
 entries. Note that the `pixel.range` argument can also be used to
 specify the radius of the largest and smallest circles.
 
+### Axes and legend text size {#axes-legend-text-size}
+
+The syntax of defining axes and legend text size(in pixels) is almost
+the same as ggplot2. Inside `theme`, you can use numbers directly to
+change the font size, or you can use `rel()` to define the relative
+size.
+
+```{r Ch06-text-size}
+scatter1975 <- ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, color=region),
+      data=WorldBank1975)
+(viz.text.size <- animint(
+  animintDefault=scatter1975+
+    theme_animint(width=500, height=500)+
+    ggtitle("no axes and legend size specified"),
+  animintAxesOptions=scatter1975+
+    theme_animint(width=500, height=500)+
+    theme(axis.text=element_text(size=20))+
+    ggtitle("axis.text=element_text(size=18)"),
+  animintLegendOptions=scatter1975+
+    theme_animint(width=500, height=500)+
+    theme(legend.title=element_text(size=24),
+        legend.text=element_text(size=rel(2.5)))+
+    ggtitle("legend.text=element_text(size=rel(2)")))
+```
+
+This allows you to change the font size while changing the size of 
+the plot to make it look more coherent.
+
+Note that the default font size in animint is 11px for the axes and 
+16px for the legend.
+
 ## Global data viz options {#global-options}
 
 Global data viz options any named elements of the `viz` list that are
