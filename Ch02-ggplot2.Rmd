@@ -187,6 +187,10 @@ rendered with animint2, by using the `animint` function.
 animint(scatter)
 ```
 
+If, when you run the code above, the animint does not render in your web 
+browser for some reason (for example if you see a blank web page), then
+please consult our [wiki FAQ](https://github.com/tdhock/animint2/wiki/FAQ#web-browser-on-local-indexhtml-file-is-blank)
+which will help you find a solution.
 Internally, the `animint` function creates a list of class animint,
 and then R runs the `print.animint` function via the [S3 object
 system](http://adv-r.had.co.nz/OO-essentials.html#s3). The `animint2`
