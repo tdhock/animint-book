@@ -19,6 +19,8 @@ will understand how to customize your animint graphics via
 * named elements of `clickSelects` and `showSelected` for specifying
   several selection variables at once;
 * the `chunk_vars` geom-specific option;
+* the `color_off` and `alpha_off` geom parameters for specifying how
+  selection state is displayed;
 * plot-specific legends and height/width options; and
 * global data viz options.
 
@@ -352,6 +354,57 @@ number of TSV files created for each geom. When deciding the value of
 `chunk_vars`, you should consider both disk usage and loading time. A
 few large files take up less disk space but are slower to download
 than many small files.
+
+### Specifying how selection state is displayed {#display-selection-state}
+
+Animint has sensible defaults for displaying selection state. In
+particular, 
+
+* when there is a rect or tile with clickSelects, we use black
+  color/border to show items which are selected, and transparent for
+  items which are not selected.
+* for any other geom with clickSelects, we use full opacity `alpha` to
+  show items which are selected, and `alpha-0.5` opacity to show items
+  which are not selected.
+  
+The defaults explained above are illustrated in the first plot
+below. Those defaults may be customized by using the `alpha_off` and
+`color_off` geom parameters as in the code below,
+
+```{r}
+N <- 3
+set.seed(1)
+demo_df <- data.frame(i=1:N, num=rnorm(N,2))
+animint(
+  defaults=ggplot()+
+    ggtitle("Defaults, no color_off nor alpha_off")+
+    geom_tile(aes(
+      i, 0, fill=num),
+      clickSelects="i",
+      size=5,
+      data=demo_df)+
+    geom_point(aes(
+      i, num),
+      size=5,
+      clickSelects="i",
+      data=demo_df),
+  off=ggplot()+
+    ggtitle("User specified alpha_off and color_off")+
+    geom_tile(aes(
+      i, 0, fill=num),
+      clickSelects="i",
+      color_off="pink",
+      color="red",
+      size=5,
+      data=demo_df)+
+    geom_point(aes(
+      i, num),
+      size=5,
+      alpha=0.5,
+      alpha_off=0.1,
+      clickSelects="i",
+      data=demo_df))
+```
 
 ## Plot-specific options {#plot-options}
 

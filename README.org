@@ -43,7 +43,7 @@ warranty, not even for merchantability or fitness for a particular purpose.
 #+end_src
 
 ~/bin/pandoc is too new, created ./bin/pandoc symlink to old
-/usr/bin/pandoc and then compile via 
+/usr/bin/pandoc and then compile via =bash build.sh= which contains:
 
 #+begin_src shell-script
 PATH=bin:$PATH jekyll b

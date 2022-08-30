@@ -777,6 +777,8 @@ Exercises:
 * By default ggplot2 uses the same two colors for the **y** and
   **set** legends, which could be confusing. Change the colors in one
   of the two legends so that they are different.
+* Use `color` and `color_off` parameters to change the appearance of
+  the `geom_tile` when selected or not.
 
 Next, [Chapter 13](Ch13-poisson-regression.html) explains how to
 visualize the Poisson regression model.
