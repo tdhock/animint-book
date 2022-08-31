@@ -763,6 +763,16 @@ animint(
       data=predictions))
 ```
 
+From version `2022.08.30`, animint supports specifying the color of
+clickSelects variable, where parameter `color/colour` stands for the
+color value for selected items and `color_off/colour_off` value for
+non-selected items. For this SVM example, we can now change the
+color/stroke of geom_tile by `...clickSelects="degree.num", colour="grey50"...`.
+
+Also, `color_off` can be used with `alpha_off`(introduced in
+Ch04-clickSelects) together, which can be helpful to emphasize
+selected data in some big dataset visualizations.
+
 ## Chapter summary and exercises {#exercises}
 
 We used ggplots to visualize the Support Vector Machine model for
