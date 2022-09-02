@@ -140,7 +140,7 @@ OneFold <- function(validation.fold){
   only.train <- subset(fold.data, set == "train")
   data.by.neighbors <- list()
   for(neighbors in seq(1, 30, by=2)){
-    cat(sprintf(
+    if(interactive())cat(sprintf(
       "n.folds=%4d validation.fold=%d neighbors=%d\n",
       n.folds, validation.fold, neighbors))
     pred.label <- class::knn(
