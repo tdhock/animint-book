@@ -23,12 +23,24 @@ Chapter outline:
 
 ## Static figures {#static}
 
-We begin by loading the `montreal.bikes` data set and examining the
-accidents data table.
+We begin by loading the `montreal.bikes` data set, which is not
+available in the CRAN release of animint2, in order to save space on
+CRAN. Therefore to access this data set, you will need to install
+animint2 from GitHub:
+
+```{r ghinstall}
+tryCatch({
+  data(montreal.bikes, package="animint2")
+}, warning=function(w){
+  devtools::install_github("tdhock/animint2")
+})
+```
+
+We begin by examining the accidents data table.
 
 ```{r accidents}
 library(animint2)
-data(montreal.bikes)
+data(montreal.bikes) #only present if installed from github
 Sys.setlocale(locale="en_US.UTF-8")
 if(! "Brébeuf" %in% montreal.bikes$counter.counts$location){
   Encoding(levels(montreal.bikes$counter.counts$location)) <- "UTF-8"
@@ -221,7 +233,7 @@ scatter.max[, pred.accidents := predict(fit)]
 animint(
   regression=ggplot()+
     theme_bw()+
-    ggtitle("Accidents grows with number of cyclists")+
+    ggtitle("Numbers of accidents and cyclists")+
     geom_line(aes(
       count, pred.accidents),
       color="grey",
@@ -233,8 +245,8 @@ animint(
       size=5,
       alpha=0.75,
       data=scatter.max)+
-    ylab("Total number of bike accidents in all Montreal locations")+
-    xlab("Total number of cyclists counted in all Montreal locations"),
+    ylab("Total bike accidents (all Montreal locations)")+
+    xlab("Total cyclists (all Montreal locations)"),
   timeSeries=ggplot()+
     theme_bw()+
     ggtitle("Time series of accident frequency")+
