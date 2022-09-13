@@ -53,7 +53,7 @@ works_with_R <- function(Rvers,...){
   }
 }
 works_with_R(
-  "4.0.2",
+  "4.2.1",
   penaltyLearning="2020.5.13",
   future="1.18.0",
   future.apply="1.6.0",
@@ -67,7 +67,7 @@ works_with_R(
   data.table="1.13.0",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "tdhock/animint2@987cd905fbcc97f1cd7db998e81926ac57be3674")
+  "tdhock/animint2@e02af23fa42759d53bfdd38c58ac5488cafc2fed")
              
 library(methods)
 
