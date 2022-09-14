@@ -188,8 +188,10 @@ timings and disk space measurements, see
 
 ## Geom options {#geom-options}
 
-In animint there is only one option for customization at the geom
-level: `chunk_vars`. 
+In animint there are several options for customization at the geom
+level: `chunk_vars` is used to specify how to split data sets for
+storage on disk, and `*_off` parameters are used to specify how a
+clickSelects geom should be displayed when it is not selected.
 
 ### The `chunk_vars` geom-specific compilation option {#chunk-vars}
 

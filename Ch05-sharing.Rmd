@@ -30,18 +30,66 @@ compiling animints to a local directory.
 
 So far in previous chapters we have only discussed one method for
 creating interactive data visualizations. If `viz` is an animint (list
-of ggplots and options with class animint), then printing it on the R command line compiles that animint to a
-temporary directory. Internally, R calls the `print.animint` S3 method, which
-calls `animint2dir` to compile it to a new temporary directory on your personal
-computer.
+of ggplots and options with class animint), then printing it on the R
+command line compiles that animint to a temporary
+directory, using code like this,
 
-Rather than saving each animint to a separate temporary directory, you
-can specify an output directory using the `animint2dir` function. If
-you want to save `viz` in the `"path/to/figure-2"` directory, use
-`animint2dir(viz, "path/to/figure-2")`. If that directory does not
-exist, then it will be created. If that directory does exist, then any
+```{r}
+set.seed(1)
+ten.points <- data.frame(x=0:9, y=rnorm(10))
+animint(
+  point=ggplot()+
+    geom_point(aes(
+      x, y), 
+      data=ten.points)
+)
+```
+
+The code above saves the animint to a new temporary directory. Rather
+than saving each animint to a separate temporary directory, you can
+specify an output directory via the `out.dir` argument to
+`animint`. If you want to save the animint in the
+`"Ch05-sharing-ten-points"` directory, use:
+
+```{r}
+animint(
+  point=ggplot()+
+    geom_point(aes(
+      x, y), 
+      data=ten.points),
+  out.dir="Ch05-sharing-ten-points"
+)
+```
+
+If the parent of `out.dir` does not exist, that is an error (you can
+use `dir.create` to create the parent if necessary). If `out.dir` does
+not exist, then it will be created. If `out.dir` does exist, then any
 files in that directory will be overwritten. To view the data viz,
-navigate to `path/to/figure-2/index.html` in a web browser.
+navigate to `Ch05-sharing-ten-points/index.html` in a web browser
+(which should be done automatically / by default). If the web page is
+blank, you may need to configure your browser to allow execution of
+local JavaScript code, [as explained on our
+FAQ](https://github.com/tdhock/animint2/wiki/FAQ#web-browser-on-local-indexhtml-file-is-blank).
+
+Internally, R calls the `print.animint` S3 method, which calls
+`animint2dir` to compile it to a new temporary directory on your
+personal computer. Generally we advise to avoid calling `animint2dir`
+directly, but it is useful if you want to avoid opening lots of
+similar browser windows when repeatedly revising and rendering an
+animint. You can prevent the default behavior of opening a browser
+window via:
+
+```{r eval=F}
+viz <- animint(
+  point=ggplot()+
+    geom_point(aes(
+      x, y), 
+      data=ten.points))
+animint2dir(
+  viz, 
+  out.dir="Ch05-sharing-ten-points-again", 
+  open.browser=FALSE)
+```
 
 ## Publish on GitHub Gist {#animint2gist}
 
