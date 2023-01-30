@@ -1,0 +1,408 @@
+---
+title: Neural networks
+author: Toby Dylan Hocking
+output: bookdown::html_chapter
+---
+
+# Chapter 18, Neural networksx
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch18-figures/")
+```
+
+In this chapter we will explore several data visualizations of
+the gradient descent learning algorithm for Neural networks.
+
+Chapter outline:
+
+* TODO
+
+## Visualize simulated data {#viz-sim}
+
+```{r}
+set.seed(1)
+sim.col <- 2
+sim.row <- 100
+features.hidden <- matrix(runif(sim.row*sim.col), sim.row, sim.col)
+hidden.dt <- data.table(type="hidden", features.hidden)
+bayes <- function(DT)DT[, V1>0.4 & V2<0.7]
+label.vec <- ifelse(bayes(hidden.dt), 1, -1)
+features.noisy <- features.hidden+rnorm(sim.row*sim.col, sd=0.1)
+label.fac <- factor(label.vec)
+hidden.dt[, label.fac := label.fac]
+library(data.table)
+sim.dt <- rbind(
+  data.table(type="noisy", features.noisy, label.fac),
+  hidden.dt)
+library(animint2)
+ggplot()+
+  facet_grid(. ~ type)+
+  geom_point(aes(
+    V1, V2, color=label.fac),
+    data=sim.dt)+
+  coord_equal()
+```
+
+```{r}
+grid01 <- seq(0,1,l=100)
+grid.dt <- CJ(V1=grid01,V2=grid01)
+grid.dt[, bayes.fac := factor(ifelse(bayes(grid.dt), 1, -1))]
+ggplot()+
+  facet_grid(. ~ type)+
+  geom_tile(aes(
+    V1, V2, fill=bayes.fac),
+    data=grid.dt)+
+  geom_point(aes(
+    V1, V2, fill=label.fac),
+    color="black",
+    shape=21,
+    data=sim.dt)+
+  coord_equal()
+```
+
+## Visualize spam data {#viz-spam}
+
+```{r}
+data("spam", package="kernlab")
+names(spam)
+dim(spam)
+```
+
+It can be seen above that the spam data have 4601 rows and 58 columns,
+of which the first 57 are the inputs/features, and the last one (type)
+is the output/label to predict.
+
+```{r}
+library(data.table)
+spam.dt <- data.table(spam)
+is.label <- names(spam.dt)=="type"
+features.dt <- spam.dt[,!is.label,with=FALSE]
+(features.tall <- melt(features.dt,measure=names(features.dt)))
+```
+
+The table above is the long/tall form of the spam features, which we
+plot using a histogram below.
+
+```{r}
+ggplot()+
+  geom_histogram(aes(
+    value),
+    data=features.tall)+
+  facet_wrap("variable", scales="free")
+```
+
+The histogram above shows that the min value seems to be zero, which
+is verified by the code below,
+
+```{r}
+min(features.tall$value)
+```
+
+What do the histograms look like without the zeros?
+
+```{r}
+ggplot()+
+  geom_histogram(aes(
+    value),
+    data=features.tall[value != 0])+
+  facet_wrap("variable", scales="free")
+```
+
+They look skewed/asymmetric (lots of density on small values, little
+density on large values).
+
+```{r}
+features.tall[, log.value := log(value+1)]
+ggplot()+
+  geom_histogram(aes(
+    log.value),
+    data=features.tall[value != 0])+
+  facet_wrap("variable", scales="free")
+```
+
+The histograms above seem much less skewed, which may be beneficial
+for learning (exercise for the reader, compare learning with and
+without the log transform).
+
+## Visualize neural network units {#viz-units}
+
+A fully connected feed-forward neural network consists of one or more
+matrix multiplications, each followed by a non-linear activation. The
+sizes of the matrix are constrained by the first/input layer (number
+of features), and the last/output layer (number of labels to
+predict). In the case of the spam data, there are 57 inputs, and 1
+output (for binary classification we need only one score, larger
+values mean more likely to predict positive class). The other (hidden)
+layers in between the inputs and the outputs may be of any
+size. Typically they are chosen so that the first hidden layer is
+relatively large, and the last hidden layer is relatively small, for
+example:
+
+```{r}
+(units.per.layer <- c(ncol(features.dt), 20, 10, 1))
+```
+
+The neural network diagram for the network is shown below,
+
+```{r}
+node.dt.list <- list()
+edge.dt.list <- list()
+for(layer.i in seq_along(units.per.layer)){
+  n.units <- units.per.layer[[layer.i]]
+  layer.nodes <- data.table(
+    layer.i, unit.i=seq(1, n.units)
+  )[, y := unit.i*2-n.units-1]
+  node.dt.list[[layer.i]] <- layer.nodes
+  if(1 < layer.i){
+    prev.i <- layer.i-1
+    prev.nodes <- node.dt.list[[prev.i]]
+    edge.dt.list[[layer.i]] <- CJ(
+      prev.i=1:nrow(prev.nodes), 
+      this.i=1:nrow(layer.nodes)
+    )[, data.table(
+      data.table(this=layer.nodes[this.i]),
+      data.table(prev=prev.nodes[prev.i])
+    )]
+  }
+}
+node.dt <- do.call(rbind, node.dt.list)
+edge.dt <- do.call(rbind, edge.dt.list)
+text.dt <- node.dt[, .(
+  max.y=max(y),
+  units=.N
+), by=layer.i]
+
+width <- 0.02
+height <- 1
+ggplot()+
+  scale_y_continuous(
+    "", breaks=c())+
+  geom_text(aes(
+    layer.i, max.y+height*2, label=units),
+    vjust=0,
+    data=text.dt)+
+  geom_segment(aes(
+    this.layer.i, this.y,
+    xend=prev.layer.i, yend=prev.y),
+    size=0.1,
+    data=edge.dt)+
+  geom_rect(aes(
+    xmin=layer.i-width,
+    xmax=layer.i+width,
+    ymin=y-height,
+    ymax=y+height),
+    data=node.dt,
+    color="black",
+    fill="grey")
+```
+
+## Visualize weight matrices {#viz-weights}
+
+The weights in the neural network can be defined and initialized as
+follows,
+
+```{r}
+weight.mat.list <- list()
+for(input.layer.i in seq(1, length(units.per.layer)-1)){
+  output.layer.i <- input.layer.i+1
+  input.units <- units.per.layer[[input.layer.i]]
+  output.units <- units.per.layer[[output.layer.i]]
+  weight.mat.list[[input.layer.i]] <- matrix(
+    rnorm(input.units*output.units), input.units, output.units)
+}
+str(weight.mat.list)
+```
+
+The list of random weight matrices above can be converted to a data
+table for plotting via the code below,
+
+```{r}
+(init.weight.dt <- data.table(input.layer.i=seq_along(weight.mat.list))[, {
+  mat <- weight.mat.list[[input.layer.i]]
+  data.table(
+    input.unit.i=as.integer(row(mat)),
+    output.unit.i=as.integer(col(mat)),
+    weight=as.numeric(mat))
+}, by=input.layer.i])
+```
+
+They can be plotted via the code below,
+
+```{r}
+ggplot()+
+  geom_tile(aes(
+    output.unit.i, input.unit.i, fill=weight),
+    color="grey50",
+    data=init.weight.dt)+
+  facet_grid(. ~ input.layer.i, labeller=label_both)+
+  scale_y_reverse()+
+  coord_equal()+
+  scale_fill_gradient2()
+```
+
+Another way to visualize the weights would be in the same panel,
+
+```{r}
+not.first <- units.per.layer[-c(1,length(units.per.layer))]
+offset.vec <- c(0,cumsum(not.first+1))
+dim.dt <- data.table(
+  x=offset.vec, 
+  rows=sapply(weight.mat.list, nrow),
+  cols=sapply(weight.mat.list, ncol))
+init.weight.dt[, offset := offset.vec[input.layer.i] ]
+ggplot()+
+  geom_text(aes(
+    x, 0, label=sprintf(
+      "%dx%d",
+      rows, cols)),
+    hjust=0,
+    data=dim.dt)+
+  geom_tile(aes(
+    output.unit.i+offset, input.unit.i, fill=weight),
+    color="grey50",
+    data=init.weight.dt)+
+  scale_y_reverse()+
+  coord_equal()+
+  scale_fill_gradient2()
+```
+
+## Gradient descent {#grad-desc}
+
+Forward and back propagation are implemented below,
+
+```{r}
+max.iterations <- 100
+scale_vec <- function(x){
+  m <- min(x)
+  (x-m)/(max(x)-m)
+}
+scale_mat <- function(mat)apply(mat, 2, scale_vec)
+features.unsc <- as.matrix(features.dt)
+features.noise <- cbind(
+  features.unsc,
+  matrix(
+    runif(length(features.unsc)),
+    nrow(features.unsc),
+    ncol(features.unsc)))
+features.sc <- scale_mat(log(features.noise+1))
+features.sc <- scale(features.unsc)
+label.fac <- spam.dt[[which(is.label)]]
+label.vec <- ifelse(label.fac=="spam", 1, -1)
+if(FALSE){
+}
+table(label.vec)
+is.set.list <- list(
+  validation=rep(c(TRUE,FALSE), l=nrow(features.sc)))
+is.set.list$subtrain <- !is.set.list$validation
+n.subtrain <- sum(is.set.list$subtrain)
+new_node <- function(value, gradient=NULL, ...){
+  node <- new.env()
+  node$value <- value
+  node$parent.list <- list(...)
+  node$backward <- function(){
+    grad.list <- gradient(node)
+    for(parent.name in names(grad.list)){
+      parent.node <- node$parent.list[[parent.name]]
+      parent.node$grad <- grad.list[[parent.name]]
+      parent.node$backward()
+    }
+  }
+  node
+}
+initial_node <- function(mat){
+  new_node(mat, gradient=function(...)list())
+}
+mm <- function(feature.node, weight.node)new_node(
+  feature.node$value %*% weight.node$value,
+  features=feature.node, 
+  weights=weight.node,
+  gradient=function(node)list(
+    features=node$grad %*% t(weight.node$value),
+    weights=t(feature.node$value) %*% node$grad))
+relu <- function(before.node)new_node(
+  ifelse(before.node$value < 0, 0, before.node$value),
+  before=before.node,
+  gradient=function(node)list(
+    before=ifelse(before.node$value < 0, 0, node$grad)))
+sigmoid <- function(before.node)new_node(
+  1/(1+exp(before.node$value)),
+  before=before.node,
+  gradient=function(node)list(
+    before=node$value*(1-node$value)))
+log_loss <- function(pred.node, label.node)new_node(
+  mean(log(1+exp(-label.node$value*pred.node$value))),
+  pred=pred.node,
+  label=label.node,
+  gradient=function(...)list(
+    pred=-label.node$value/(
+      1+exp(label.node$value*pred.node$value)
+    )/length(label.node$value)))
+weight.node.list <- list()
+set.seed(1)
+units.per.layer <- c(ncol(features.sc), 100, 1)
+for(layer.i in seq(1, length(units.per.layer)-1)){
+  input.units <- units.per.layer[[layer.i]]
+  output.units <- units.per.layer[[layer.i+1]]
+  weight.mat <- matrix(
+    rnorm(input.units*output.units), input.units, output.units)
+  weight.node.list[[layer.i]] <- initial_node(weight.mat)
+}
+pred_node <- function(set.features){
+  feature.node <- initial_node(set.features)
+  for(layer.i in seq_along(weight.node.list)){
+    weight.node <- weight.node.list[[layer.i]]
+    before.node <- mm(feature.node, weight.node)
+    feature.node <- if(layer.i < length(weight.node.list)){
+      sigmoid(before.node)
+    }else{
+      before.node
+    }
+  }
+  feature.node
+}
+loss.dt.list <- list()
+step.size <- 0.1
+for(iteration in 1:max.iterations){
+  loss.node.list <- list()
+  for(set.name in names(is.set.list)){
+    is.set <- is.set.list[[set.name]]
+    set.label.node <- initial_node(label.vec[is.set])
+    set.pred.node <- pred_node(features.sc[is.set,])
+    set.loss.node <- log_loss(set.pred.node, set.label.node)
+    loss.node.list[[set.name]] <- set.loss.node
+    set.pred.num <- ifelse(set.pred.node$value<0, -1, 1)
+    is.error <- set.pred.num != set.label.node$value
+    loss.dt.list[[paste(iteration, set.name)]] <- data.table(
+      iteration, set.name, 
+      mean.log.loss=set.loss.node$value,
+      error.percent=100*mean(is.error))
+  }
+  loss.node.list$subtrain$backward()
+  for(layer.i in seq_along(weight.node.list)){
+    weight.node <- weight.node.list[[layer.i]]
+    weight.node$value <- weight.node$value-step.size*weight.node$grad
+  }  
+}
+(loss.dt <- rbindlist(loss.dt.list))
+ggplot()+
+  geom_line(aes(
+    iteration, mean.log.loss, color=set.name),
+    data=loss.dt)
+```
+
+## Using torch {#torch}
+
+```{r}
+library(torch)
+
+```
+
+## Chapter summary and exercises {#exercises}
+
+Exercises:
+
+* TODO
+
+Next, [Chapter 99](Ch99-appendix.html) explains some R
+programming idioms that are generally useful for interactive data
+visualization design.
