@@ -133,4 +133,6 @@ gg <- ggplot()+
   ylab("")+
   scale_x_continuous(limits=c(0, 1400))
 dl <- direct.label(gg, "last.polygons")
+png("Ch18-neural-networks-debug.png", width=7, height=7, units="in", res=200)
 print(dl)
+dev.off()
