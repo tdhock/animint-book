@@ -295,6 +295,6 @@ Exercises:
 * Make a similar visualization using another data set such as
   `data("penguins", package="palmerpenguins")`.
 
-Next, [Chapter 99](Ch99-appendix.html) explains some R
-programming idioms that are generally useful for interactive data
-visualization design.
+Next, [Chapter 18](Ch18-neural-networks.html) explains how to
+visualize the gradient descent learning algorithm for neural network
+learning.
