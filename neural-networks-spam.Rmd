@@ -4,7 +4,7 @@ author: Toby Dylan Hocking
 output: bookdown::html_chapter
 ---
 
-# Chapter 18, Neural networksx
+# Chapter 18, Neural networks
 
 ```{r setup, echo=FALSE}
 knitr::opts_chunk$set(fig.path="Ch18-figures/")
@@ -24,13 +24,13 @@ set.seed(1)
 sim.col <- 2
 sim.row <- 100
 features.hidden <- matrix(runif(sim.row*sim.col), sim.row, sim.col)
+library(data.table)
 hidden.dt <- data.table(type="hidden", features.hidden)
 bayes <- function(DT)DT[, V1>0.4 & V2<0.7]
 label.vec <- ifelse(bayes(hidden.dt), 1, -1)
 features.noisy <- features.hidden+rnorm(sim.row*sim.col, sd=0.1)
 label.fac <- factor(label.vec)
 hidden.dt[, label.fac := label.fac]
-library(data.table)
 sim.dt <- rbind(
   data.table(type="noisy", features.noisy, label.fac),
   hidden.dt)
@@ -44,9 +44,10 @@ ggplot()+
 ```
 
 ```{r}
-grid01 <- seq(0,1,l=100)
+grid01 <- seq(0,1,l=25)
 grid.dt <- CJ(V1=grid01,V2=grid01)
-grid.dt[, bayes.fac := factor(ifelse(bayes(grid.dt), 1, -1))]
+grid.dt[, bayes.num := ifelse(bayes(grid.dt), 1, -1)]
+grid.dt[, bayes.fac := factor(bayes.num)]
 ggplot()+
   facet_grid(. ~ type)+
   geom_tile(aes(
@@ -59,6 +60,164 @@ ggplot()+
     data=sim.dt)+
   coord_equal()
 ```
+
+```{r}
+ggplot()+
+  facet_grid(. ~ type)+
+  geom_contour(aes(
+    V1, V2, z=bayes.num),
+    data=grid.dt)+
+  geom_point(aes(
+    V1, V2, fill=label.fac),
+    color="black",
+    shape=21,
+    data=sim.dt)+
+  coord_equal()
+```
+
+## Gradient descent {#grad-desc-sim}
+
+Forward and back propagation are implemented below,
+
+```{r}
+max.iterations <- 1000
+features.sc <- features.noisy
+table(label.vec)
+is.set.list <- list(
+  validation=rep(c(TRUE,FALSE), l=nrow(features.sc)))
+is.set.list$subtrain <- !is.set.list$validation
+n.subtrain <- sum(is.set.list$subtrain)
+new_node <- function(value, gradient=NULL, ...){
+  node <- new.env()
+  node$value <- value
+  node$parent.list <- list(...)
+  node$backward <- function(){
+    grad.list <- gradient(node)
+    for(parent.name in names(grad.list)){
+      parent.node <- node$parent.list[[parent.name]]
+      parent.node$grad <- grad.list[[parent.name]]
+      parent.node$backward()
+    }
+  }
+  node
+}
+initial_node <- function(mat){
+  new_node(mat, gradient=function(...)list())
+}
+mm <- function(feature.node, weight.node)new_node(
+  cbind(1, feature.node$value) %*% weight.node$value,
+  features=feature.node, 
+  weights=weight.node,
+  gradient=function(node)list(
+    features=node$grad %*% t(weight.node$value),
+    weights=t(cbind(1, feature.node$value)) %*% node$grad))
+relu <- function(before.node)new_node(
+  ifelse(before.node$value < 0, 0, before.node$value),
+  before=before.node,
+  gradient=function(node)list(
+    before=ifelse(before.node$value < 0, 0, node$grad)))
+sigmoid <- function(before.node)new_node(
+  1/(1+exp(before.node$value)),
+  before=before.node,
+  gradient=function(node)list(
+    before=node$value*(1-node$value)))
+log_loss <- function(pred.node, label.node)new_node(
+  mean(log(1+exp(-label.node$value*pred.node$value))),
+  pred=pred.node,
+  label=label.node,
+  gradient=function(...)list(
+    pred=-label.node$value/(
+      1+exp(label.node$value*pred.node$value)
+    )/length(label.node$value)))
+weight.node.list <- list()
+set.seed(1)
+units.per.layer <- c(ncol(features.sc), 50, 1)
+for(layer.i in seq(1, length(units.per.layer)-1)){
+  input.units <- units.per.layer[[layer.i]]+1
+  output.units <- units.per.layer[[layer.i+1]]
+  weight.mat <- matrix(
+    rnorm(input.units*output.units), input.units, output.units)
+  weight.node.list[[layer.i]] <- initial_node(weight.mat)
+}
+pred_node <- function(set.features){
+  feature.node <- initial_node(set.features)
+  for(layer.i in seq_along(weight.node.list)){
+    weight.node <- weight.node.list[[layer.i]]
+    before.node <- mm(feature.node, weight.node)
+    feature.node <- if(layer.i < length(weight.node.list)){
+      relu(before.node)
+    }else{
+      before.node
+    }
+  }
+  feature.node
+}
+loss.dt.list <- list()
+step.size <- 3
+step.size <- 0.5
+grid.mat <- grid.dt[, cbind(V1,V2)]
+pred.dt.list <- list()
+err.dt.list <- list()
+for(iteration in 1:max.iterations){
+  loss.node.list <- list()
+  for(set.name in names(is.set.list)){
+    is.set <- is.set.list[[set.name]]
+    set.label.node <- initial_node(label.vec[is.set])
+    set.features <- features.sc[is.set,]
+    set.pred.node <- pred_node(set.features)
+    set.loss.node <- log_loss(set.pred.node, set.label.node)
+    loss.node.list[[set.name]] <- set.loss.node
+    set.pred.num <- ifelse(set.pred.node$value<0, -1, 1)
+    is.error <- set.pred.num != set.label.node$value
+    err.dt.list[[paste(iteration, set.name)]] <- data.table(
+      iteration, set.name,
+      set.features,
+      label=set.label.node$value,
+      pred.num=as.numeric(set.pred.num))
+    loss.dt.list[[paste(iteration, set.name)]] <- data.table(
+      iteration, set.name, 
+      mean.log.loss=set.loss.node$value,
+      error.percent=100*mean(is.error))
+  }
+  grid.node <- pred_node(grid.mat)
+  pred.dt.list[[iteration]] <- data.table(
+    iteration,
+    grid.dt,
+    pred=as.numeric(grid.node$value))
+  loss.node.list$subtrain$backward()
+  for(layer.i in seq_along(weight.node.list)){
+    weight.node <- weight.node.list[[layer.i]]
+    weight.node$value <- weight.node$value-step.size*weight.node$grad
+  }  
+}
+(loss.dt <- rbindlist(loss.dt.list))
+(err.dt <- rbindlist(err.dt.list))
+(pred.dt <- rbindlist(pred.dt.list))
+ggplot()+
+  geom_line(aes(
+    iteration, mean.log.loss, color=set.name),
+    data=loss.dt)
+
+some <- function(DT)DT[iteration%in%c(1,5,10,50,100, 500, 1000)]
+some.pred <- some(pred.dt)
+some.err <- some(err.dt)
+ggplot()+
+  facet_wrap("iteration")+
+  geom_tile(aes(
+    V1, V2, fill=pred),
+    data=some.pred)+
+  scale_fill_gradient2()+
+  geom_point(aes(
+    V1, V2),
+    size=2,
+    data=some.err[label!=pred.num])+
+  geom_point(aes(
+    V1, V2, color=label.fac),
+    size=1,
+    data=sim.dt[type=="noisy"])+
+  coord_equal()
+```
+
 
 ## Visualize spam data {#viz-spam}
 
