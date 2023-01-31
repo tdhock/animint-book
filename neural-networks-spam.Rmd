@@ -22,21 +22,30 @@ Chapter outline:
 ```{r}
 set.seed(1)
 sim.col <- 2
-sim.row <- 100
+sim.row <- 200
 features.hidden <- matrix(runif(sim.row*sim.col), sim.row, sim.col)
 library(data.table)
 hidden.dt <- data.table(type="hidden", features.hidden)
-bayes <- function(DT)DT[, V1>0.4 & V2<0.7]
+bayes <- function(DT)DT[, (V1>0.45 & V1<0.9 & V2<0.8)|(V1<0.3 & V2>0.4)]
+bayes <- function(DT)DT[, (V1>0.2 & V2<0.8)]
 label.vec <- ifelse(bayes(hidden.dt), 1, -1)
-features.noisy <- features.hidden+rnorm(sim.row*sim.col, sd=0.1)
+features.noisy <- features.hidden+rnorm(sim.row*sim.col, sd=0.05)
 label.fac <- factor(label.vec)
-hidden.dt[, label.fac := label.fac]
-sim.dt <- rbind(
-  data.table(type="noisy", features.noisy, label.fac),
-  hidden.dt)
+table(label.vec)
+is.set.list <- list(
+  validation=rep(c(TRUE,FALSE), l=nrow(features.noisy)))
+set.vec <- ifelse(is.set.list$validation, "validation", "subtrain")
+is.set.list$subtrain <- !is.set.list$validation
+n.subtrain <- sum(is.set.list$subtrain)
+sim.dt <- data.table(
+  rbind(
+    data.table(type="noisy", features.noisy),
+    hidden.dt),
+  set=set.vec, 
+  label.fac)
 library(animint2)
 ggplot()+
-  facet_grid(. ~ type)+
+  facet_grid(set ~ type, labeller=label_both)+
   geom_point(aes(
     V1, V2, color=label.fac),
     data=sim.dt)+
@@ -44,8 +53,10 @@ ggplot()+
 ```
 
 ```{r}
-grid01 <- seq(0,1,l=25)
-grid.dt <- CJ(V1=grid01,V2=grid01)
+n.grid <- 20
+V1.seq <- sim.dt[, seq(min(V1), max(V1), l=n.grid)]
+V2.seq <- sim.dt[, seq(min(V2), max(V2), l=n.grid)]
+grid.dt <- CJ(V1=V1.seq, V2=V2.seq)
 grid.dt[, bayes.num := ifelse(bayes(grid.dt), 1, -1)]
 grid.dt[, bayes.fac := factor(bayes.num)]
 ggplot()+
@@ -62,11 +73,18 @@ ggplot()+
 ```
 
 ```{r}
+contour.list <- contourLines(
+  V1.seq, V2.seq, 
+  matrix(grid.dt$bayes.num, length(V1.seq), length(V2.seq), byrow=TRUE),
+  levels=0)
+contour.dt <- data.table(contour.i=seq_along(contour.list))[, {
+  with(contour.list[[contour.i]], data.table(level, x, y))
+}, by=contour.i]
 ggplot()+
   facet_grid(. ~ type)+
-  geom_contour(aes(
-    V1, V2, z=bayes.num),
-    data=grid.dt)+
+  geom_path(aes(
+    x, y, group=contour.i),
+    data=contour.dt)+
   geom_point(aes(
     V1, V2, fill=label.fac),
     color="black",
@@ -81,12 +99,6 @@ Forward and back propagation are implemented below,
 
 ```{r}
 max.iterations <- 1000
-features.sc <- features.noisy
-table(label.vec)
-is.set.list <- list(
-  validation=rep(c(TRUE,FALSE), l=nrow(features.sc)))
-is.set.list$subtrain <- !is.set.list$validation
-n.subtrain <- sum(is.set.list$subtrain)
 new_node <- function(value, gradient=NULL, ...){
   node <- new.env()
   node$value <- value
@@ -131,7 +143,7 @@ log_loss <- function(pred.node, label.node)new_node(
     )/length(label.node$value)))
 weight.node.list <- list()
 set.seed(1)
-units.per.layer <- c(ncol(features.sc), 50, 1)
+units.per.layer <- c(ncol(features.noisy), 50, 1)
 for(layer.i in seq(1, length(units.per.layer)-1)){
   input.units <- units.per.layer[[layer.i]]+1
   output.units <- units.per.layer[[layer.i+1]]
@@ -153,7 +165,6 @@ pred_node <- function(set.features){
   feature.node
 }
 loss.dt.list <- list()
-step.size <- 3
 step.size <- 0.5
 grid.mat <- grid.dt[, cbind(V1,V2)]
 pred.dt.list <- list()
@@ -163,7 +174,7 @@ for(iteration in 1:max.iterations){
   for(set.name in names(is.set.list)){
     is.set <- is.set.list[[set.name]]
     set.label.node <- initial_node(label.vec[is.set])
-    set.features <- features.sc[is.set,]
+    set.features <- features.noisy[is.set,]
     set.pred.node <- pred_node(set.features)
     set.loss.node <- log_loss(set.pred.node, set.label.node)
     loss.node.list[[set.name]] <- set.loss.node
@@ -193,10 +204,19 @@ for(iteration in 1:max.iterations){
 (loss.dt <- rbindlist(loss.dt.list))
 (err.dt <- rbindlist(err.dt.list))
 (pred.dt <- rbindlist(pred.dt.list))
+loss.tall <- melt(loss.dt, measure=c("mean.log.loss", "error.percent"))
+min.dt <- loss.tall[, .SD[which.min(value)], by=.(set.name, variable)]
 ggplot()+
+  facet_grid(variable ~ ., scales="free")+
+  scale_y_continuous("")+
   geom_line(aes(
-    iteration, mean.log.loss, color=set.name),
-    data=loss.dt)
+    iteration, value, color=set.name),
+    data=loss.tall)+
+  geom_point(aes(
+    iteration, value, fill=set.name),
+    shape=21,
+    color="black",
+    data=min.dt)
 
 some <- function(DT)DT[iteration%in%c(1,5,10,50,100, 500, 1000)]
 some.pred <- some(pred.dt)
@@ -520,13 +540,13 @@ pred_node <- function(set.features){
   feature.node
 }
 loss.dt.list <- list()
-step.size <- 0.1
+step.size <- 0.2
 for(iteration in 1:max.iterations){
   loss.node.list <- list()
   for(set.name in names(is.set.list)){
     is.set <- is.set.list[[set.name]]
     set.label.node <- initial_node(label.vec[is.set])
-    set.pred.node <- pred_node(features.sc[is.set,])
+    set.pred.node <- pred_node(features.noisy[is.set,])
     set.loss.node <- log_loss(set.pred.node, set.label.node)
     loss.node.list[[set.name]] <- set.loss.node
     set.pred.num <- ifelse(set.pred.node$value<0, -1, 1)
