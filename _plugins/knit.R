@@ -67,7 +67,7 @@ works_with_R(
   data.table="1.13.0",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "tdhock/animint2@e02af23fa42759d53bfdd38c58ac5488cafc2fed")
+  "tdhock/animint2@30caecf0c912af8d32b163b99cab243500314498")
              
 library(methods)
 
