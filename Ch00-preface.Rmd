@@ -92,6 +92,10 @@ visualization of an optimal changepoint detection model.
 [Chapter 17](Ch17-k-means-clustering.html) explains how to create an
 interactive visualization of the k-means clustering algorithm.
 
+[Chapter 18](Ch18-neural-networks.html) explains how to create an
+interactive visualization of the gradient descent algorithm for
+learning neural network weight matrices.
+
 ## Appendix {#appendix}
 
 [The appendix](Ch99-appendix.html) contains detailed explanations of
