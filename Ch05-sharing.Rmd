@@ -109,12 +109,16 @@ if(!require(gistr))install.packages("gistr")
 
 Now you should be able to use `animint2gist(viz)` to publish `viz` as
 a new gist. That command will post the files to a new gist, for
-example https://gist.github.com/tdhock/2b029fe9abc8eb300f9f/. It will
-then open a new web browser window at the corresponding bl.ocks.org
-URL, for example http://bl.ocks.org/tdhock/raw/2b029fe9abc8eb300f9f/
+example https://gist.github.com/tdhock/2b029fe9abc8eb300f9f/. 
 
-You can use the bl.ocks.org URL to share your data visualization with
-others.
+It will then open a new web browser window at the corresponding
+bl.ocks.org URL, for example
+http://bl.ocks.org/tdhock/raw/2b029fe9abc8eb300f9f/ In the past you
+could use the bl.ocks.org URL to share your data visualization with
+others. But since Jan 2023, bl.ocks.org is redirecting to gist, and is
+not rendering, so it would be better to use one of the other options,
+or try to get gist rendering working using [another
+method](https://stackoverflow.com/questions/10717169).
 
 Beware that Gist imposes some limits. In March 2016 Gist imposed a
 maximum of 300 files per gist, and a maximum of 1 megabyte per
