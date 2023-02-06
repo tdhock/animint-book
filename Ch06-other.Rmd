@@ -272,6 +272,7 @@ to select the data and model in the plot below.
 signalPlot <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
+  theme_animint(height=800)+
   geom_point(aes(position/1e5, signal),
                  showSelected="bases.per.probe",
              shape=1,

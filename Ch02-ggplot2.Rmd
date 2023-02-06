@@ -124,6 +124,7 @@ begin by loading and looking at these data.
 
 ```{r data}
 data(WorldBank, package="animint2")
+WorldBank$Region <- sub(" (all income levels)", "", WorldBank$region, fixed=TRUE)
 tail(WorldBank)
 dim(WorldBank)
 ```
@@ -163,7 +164,7 @@ use the notes in the sketch to code a ggplot with a corresponding
 ```{r scatter}
 scatter <- ggplot()+
   geom_point(
-    mapping=aes(x=life.expectancy, y=fertility.rate, color=region),
+    mapping=aes(x=life.expectancy, y=fertility.rate, color=Region),
     data=WorldBank1975)
 scatter
 ```
@@ -228,9 +229,12 @@ this sketch into R code.
 ```{r Ch02-two-layer-viz}
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
 two.layers <- scatter+
-  geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
-                group=country),
-            data=WorldBankBefore1975)
+  geom_path(aes(
+    x=life.expectancy, 
+    y=fertility.rate, 
+    color=Region,
+    group=country),
+    data=WorldBankBefore1975)
 (viz.two.layers <- animint(two.layers))
 ```
 
@@ -267,9 +271,12 @@ another layer with a text label for each country's name.
 
 ```{r Ch02-three-layer-viz}
 three.layers <- two.layers+
-  geom_text(aes(x=life.expectancy, y=fertility.rate, color=region,
-                label=country),
-            data=WorldBank1975)
+  geom_text(aes(
+    x=life.expectancy, 
+    y=fertility.rate, 
+    color=Region,
+    label=country),
+    data=WorldBank1975)
 animint(three.layers)
 ```
 
@@ -303,8 +310,12 @@ then we assign a ggplot to a new element named `timeSeries`.
 ```{r vizTwoPlots}
 viz.two.plots <- viz.two.layers
 viz.two.plots$timeSeries <- ggplot()+
-  geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
-            data=WorldBank)
+  geom_line(aes(
+    x=year, 
+    y=fertility.rate, 
+    color=Region, 
+    group=country),
+    data=WorldBank)
 ```
 
 That results in a named list of two elements (both elements are
@@ -331,9 +342,9 @@ during 1975.
 
 **Try** clicking a legend entry in either the scatterplot or the time
 series above. You should see the data and legends in both plots update
-simultaneously. Since `aes(color=region)` was specified in both plots,
+simultaneously. Since `aes(color=Region)` was specified in both plots,
 animint creates a single shared selector variable called
-`region`. Clicking either legend has the effect of updating the set of
+`Region`. Clicking either legend has the effect of updating the set of
 selected regions, and so animint updates the legends and data in both
 plots accordingly. This is the main mechanism that animint uses to
 create interactive data visualizations with linked plots, and will be
@@ -390,12 +401,13 @@ add.x.var <- function(df, x.var){
 }
 (viz.aligned <- animint(
   scatter=ggplot()+
-    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+    theme_animint(width=600)+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=Region),
                data=add.x.var(WorldBank1975, "life expectancy"))+
-    geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=Region,
                   group=country),
               data=add.x.var(WorldBankBefore1975, "life expectancy"))+
-    geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
+    geom_line(aes(x=year, y=fertility.rate, color=Region, group=country),
               data=add.x.var(WorldBank, "year"))+
     xlab("")+
     facet_grid(. ~ x.var, scales="free")+
@@ -480,9 +492,9 @@ visualization with three panels.
 ```{r Ch02-viz-panels}
 viz.panels <- list(
   scatter=ggplot()+
-    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=Region),
                data=show.point)+
-    geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=Region,
                   group=country),
               data=show.path)+
     facet_grid(. ~ show.year)+

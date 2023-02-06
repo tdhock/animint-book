@@ -31,6 +31,7 @@ fertility.rate.
 ```{r}
 library(animint2)
 data(WorldBank)
+WorldBank$Region <- sub(" (all income levels)", "", WorldBank$region, fixed=TRUE)
 library(data.table)
 not.na <- data.table(
   WorldBank)[!(is.na(life.expectancy) | is.na(fertility.rate))]
@@ -103,7 +104,7 @@ ts.right <- ggplot()+
     clickSelects="year",
     data=TS.RIGHT(years), alpha=1/2)+
   geom_line(aes(
-    year, life.expectancy, group=country, colour=region),
+    year, life.expectancy, group=country, colour=Region),
     clickSelects="country",
     data=TS.RIGHT(not.na), size=4, alpha=3/5)
 ts.right
@@ -139,9 +140,10 @@ country.
 
 ```{r}
 ts.scatter <- ts.facet+
+  theme_animint(width=600)+
   geom_point(aes(
     fertility.rate, life.expectancy,
-    colour=region, size=population,
+    colour=Region, size=population,
     key=country), # key aesthetic for animated transitions!
     clickSelects="country",
     showSelected="year",
@@ -174,7 +176,7 @@ scatter.both <- ts.scatter+
     clickSelects="year",
     data=TS.ABOVE(years), alpha=1/2)+
   geom_path(aes(
-    fertility.rate, year, group=country, colour=region),
+    fertility.rate, year, group=country, colour=Region),
     clickSelects="country",
     data=TS.ABOVE(not.na), size=4, alpha=3/5)
 scatter.both

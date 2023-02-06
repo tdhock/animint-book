@@ -300,8 +300,7 @@ signals.df <- transform(
   person=sub("[.].*", "p", signal),
   chromosome=sub(".*[.]", "c", signal))
 two.strips <- ggplot()+
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
+  theme_animint(height=600)+
   facet_grid(person + chromosome ~ ., scales="free")+
   geom_point(aes(base/1e6, logratio), data=signals.df)
 two.strips+ggtitle("two strip labels on the right")
