@@ -644,6 +644,12 @@ Exercises:
 
 * Add animation over the number of iterations.
 * Add smooth transitions when changing the selected number of iterations.
+* Add a for loop over random seeds (or cross-validation folds) in the
+  data splitting step, and create a visualization that shows how that
+  affects the results.
+* Add a for loop over random seeds at the weight matrix initialization
+  step, and create a visualization that shows how that affects the
+  results.
 * Compute results for another neural network architecture (and/or
   linear model, by adding a for loop over different values of
   `units.per.layer`). Add another plot or facet which allows selecting
