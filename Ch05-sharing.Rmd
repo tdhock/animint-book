@@ -93,6 +93,13 @@ animint2dir(
 
 ## Publish on GitHub Gist {#animint2gist}
 
+Before attempting to use Gist as described in this section, please
+note that since Jan 2023, bl.ocks.org is redirecting to gist, and is
+not rendering, so it would be better to use another option like
+[GitHub pages](https://pages.github.com/), or try to get gist
+rendering working using [another
+method](https://stackoverflow.com/questions/10717169).
+
 This section explains how to publish an animint on the web via
 [GitHub Gist](https://gist.github.com/). Gist was originally meant for
 sharing code, but it also works for sharing animints.
@@ -115,10 +122,7 @@ It will then open a new web browser window at the corresponding
 bl.ocks.org URL, for example
 http://bl.ocks.org/tdhock/raw/2b029fe9abc8eb300f9f/ In the past you
 could use the bl.ocks.org URL to share your data visualization with
-others. But since Jan 2023, bl.ocks.org is redirecting to gist, and is
-not rendering, so it would be better to use one of the other options,
-or try to get gist rendering working using [another
-method](https://stackoverflow.com/questions/10717169).
+others. 
 
 Beware that Gist imposes some limits. In March 2016 Gist imposed a
 maximum of 300 files per gist, and a maximum of 1 megabyte per
@@ -148,10 +152,10 @@ For example I executed the code in
 https://github.com/tdhock/animint/blob/master/inst/examples/WorldBank-facets.R
 to create the `WorldBank-facets` directory on my personal computer. I
 copied that directory to my lab web server using `rsync -r
-WorldBank-facets/ cbio.ensmp.fr:public_html/WorldBank-facets/` and so
-I can view it on http://members.cbio.mines-paristech.fr/~thocking/WorldBank-facets/
+WorldBank-facets/ monsoon.hpc.nau.edu:genomic-ml/WorldBank-facets/` and so
+I can view it on https://rcdata.nau.edu/genomic-ml/WorldBank-facets/
 
-If you don't have access to a personal web server, try using
+If you don't have access to a personal/lab web server, try using
 [GitHub pages](https://pages.github.com/).
 
 ## Chapter summary and exercises {#exercises}
@@ -160,10 +164,10 @@ This chapter explained how to share animints on the web.
 
 Exercises:
 
-* Use `animint2gist` to publish a visualization of a data set from
-  your domain of expertise. Post a link to the data viz (and your
-  source code) on the
-  [Animint Gallery wiki page](https://github.com/tdhock/animint/wiki/Gallery).
+* Use GitHub pages to publish a visualization of a data set from your
+  domain of expertise. Post a link to the data viz (and your source
+  code) on the [Animint Gallery wiki
+  page](https://github.com/tdhock/animint/wiki/Gallery).
 
 Next, [Chapter 6](Ch06-other.html) explains the different options that
 can be used to customize an animint.
