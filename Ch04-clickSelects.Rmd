@@ -358,14 +358,14 @@ opacity of the selected objects, and other objects will have an
 above, the un-selected lines will have `alpha=0.1`, and the
 un-selected tallrects will have `alpha=0` (completely transparent).
 
-As of release August 2022, it is also possible to specify the opacity
-and color for objects which are not currently selected, using the
-`alpha_off` and `color_off` parameters. Users can specify these
-parameters to freely create a different appearance for selected and
-un-selected items, instead of being forced to rely on the behavior
-described above. For more information, see the discussion and example
-in [Chapter 6, section Specifying how selection state is
-displayed](Ch06-other.html#display-selection-state).
+As of September 2023, it is also possible to specify the opacity,
+fill, and color for objects which are not currently selected
+(`alpha_off`, `fill_off`, `color_off`). Users can specify these
+parameters in the geom (not aes) to freely create a different
+appearance for selected and un-selected items, instead of being forced
+to rely on the behavior described above. For more information, see the
+discussion and example in [Chapter 6, section Specifying how selection
+state is displayed](Ch06-other.html#display-selection-state).
 
 Finally, we use the R code below to render the new aligned scatterplot
 and time series using animint.

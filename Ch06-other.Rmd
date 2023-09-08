@@ -19,8 +19,8 @@ will understand how to customize your animint graphics via
 * named elements of `clickSelects` and `showSelected` for specifying
   several selection variables at once;
 * the `chunk_vars` geom-specific option;
-* the `color_off` and `alpha_off` geom parameters for specifying how
-  selection state is displayed;
+* the `color_off`, `fill_off`, and `alpha_off` geom parameters for
+  specifying how selection state is displayed;
 * plot-specific legends and height/width options; and
 * global data viz options.
 
@@ -380,11 +380,12 @@ set.seed(1)
 demo_df <- data.frame(i=1:N, num=rnorm(N,2))
 animint(
   defaults=ggplot()+
-    ggtitle("Defaults, no color_off nor alpha_off")+
+    ggtitle("Defaults, no *_off")+
     geom_tile(aes(
-      i, 0, fill=num),
-      clickSelects="i",
+      i, 0),
       size=5,
+      clickSelects="i",
+      fill="white",
       data=demo_df)+
     geom_point(aes(
       i, num),
@@ -392,12 +393,14 @@ animint(
       clickSelects="i",
       data=demo_df),
   off=ggplot()+
-    ggtitle("User specified alpha_off and color_off")+
+    ggtitle("User specified alpha_off, fill_off, color_off")+
     geom_tile(aes(
-      i, 0, fill=num),
+      i, 0),
       clickSelects="i",
-      color_off="pink",
       color="red",
+      color_off="pink",
+      fill="white",
+      fill_off="black",
       size=5,
       data=demo_df)+
     geom_point(aes(
@@ -413,8 +416,9 @@ animint(
       alpha=1,
       alpha_off=1,
       color="red",
-      fill="grey",
       color_off="black",
+      fill="grey",
+      fill_off="white",
       clickSelects="i",
       data=demo_df))
 ```
