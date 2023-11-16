@@ -532,7 +532,7 @@ Note that the default font size in animint is 11px for the axes and
 
 ## Global data viz options {#global-options}
 
-Global data viz options any named elements of the `viz` list that are
+Global data viz options are any named elements of the `viz` list that are
 not ggplots.
 
 ### Review of previously introduced global options {#review-global}
@@ -556,9 +556,8 @@ variables.
 
 The `title` option should be a character string, and will be used to
 set the `<title>` element of the web page. It does not make sense to
-use the `title` option in an Rmd document such as this page. You can
-and should use it with `animint2dir` or `animint2gist`, as in the code
-below.
+use the `title` option in an Rmd document such as this page. A title
+can and should be used with `animint2dir`, as in the code below.
 
 ```{r Ch06-viz-title}
 viz.title <- viz.scale.size
@@ -569,6 +568,34 @@ animint2dir(viz.title, "Ch06-title")
 Note that `viz.scale.size` already has three ggplots, each with a
 `ggtitle`. Adding the global `title` option has the effect of defining
 a title for [the web page](Ch06-title/index.html).
+
+Chapter 5 introduced the [`animint2pages`](Ch05-sharing.html#pages)
+function, which is used to publish an animint to GitHub Pages. It
+requires that the animint defines the `title` option, because that
+meta-data is required for organizing the animint in a
+[gallery](Ch05-sharing.html#gallery).
+
+### Link R code with source option {#source-option}
+
+The `source` option should be a character string: a link to the R
+source code which was used to create the animint.
+
+```{r}
+animint(
+  demo=ggplot()+
+    geom_point(aes(
+      Petal.Length, Sepal.Length),
+      data=iris),
+  source="https://github.com/tdhock/animint-book/edit/master/Ch06-other.Rmd")
+```
+
+Note above how there is a source link at the bottom of the data viz.
+
+Chapter 5 introduced the [`animint2pages`](Ch05-sharing.html#pages)
+function, which is used to publish an animint to GitHub Pages. It
+requires that the animint defines the `source` option, because that
+meta-data is required for organizing the animint in a
+[gallery](Ch05-sharing.html#gallery).
 
 ### Show or hide selection menus with the selectize option {#selectize-option}
 

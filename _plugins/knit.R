@@ -67,11 +67,12 @@ works_with_R(
   data.table="1.13.0",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "tdhock/animint2@70833005068c754cac357fd8542405b6137bc3e0")
+  "animint/animint2@ce1cc3208b7ca7e44bc8271850dff6fc80b68f67")
              
 library(methods)
 
 args <- commandArgs(trailingOnly = TRUE)
+print(args)
 path <- args[1]
 
 if (!file.exists(path)) {
