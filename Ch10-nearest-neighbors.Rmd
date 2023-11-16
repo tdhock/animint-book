@@ -484,6 +484,7 @@ errorPlot <- ggplot()+
     fill=set),
     showSelected=c("classifier", "set"),
     alpha=0.5,
+    color="transparent",
     data=validation.error)+
   geom_line(aes(
     neighbors, mean, color=set,
@@ -728,6 +729,7 @@ errorPlotNew <- ggplot()+
     fill=set),
     showSelected=c("classifier", "set", "n.folds"),
     alpha=0.5,
+    color="transparent",
     data=facets(validation.error.several, "Misclassification Errors"))+
   geom_line(aes(
     neighbors, mean, color=set,

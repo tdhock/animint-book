@@ -523,8 +523,8 @@ MonthFacet <- ggplot()+
              paste(people.severely.injured,
                    "people severely injured,"))),
       people.slightly.injured,
-                      "people slightly injured in",
-                      month)),
+      "people slightly injured in",
+      month)),
     clickSelects="month",
     alpha=0.5,
     data=data.table(accidents.per.month,
@@ -550,7 +550,7 @@ DaysFacet <- ggplot()+
     xmin=day.of.the.month-0.5, xmax=day.of.the.month+0.5,
     key=paste(day.POSIXct)),
     showSelected="month",
-    color="grey",
+    fill="grey",
     data=weekend.dt)+
   guides(color="none")+
   theme_bw()+

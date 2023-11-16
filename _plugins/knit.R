@@ -67,12 +67,12 @@ works_with_R(
   data.table="1.13.0",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "animint/animint2@ce1cc3208b7ca7e44bc8271850dff6fc80b68f67")
+  "animint/animint2@8ae4a19f469f0cb2db68a396d8ffd88176a92355")
              
 library(methods)
 
 args <- commandArgs(trailingOnly = TRUE)
-print(args)
+##print(args)##NO: that will appear on top of web page!
 path <- args[1]
 
 if (!file.exists(path)) {

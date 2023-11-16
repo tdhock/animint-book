@@ -137,8 +137,11 @@ Then we use `CJ` (cross-join) to create a data table representing the
 ```{r}
 (grid.dt <- do.call(
   CJ, grid.list
-)[, bayes.num := ifelse(bayes(.SD), 1, -1)
-  ][, bayes.fac := factor(bayes.num)][])
+)[
+, bayes.num := ifelse(bayes(.SD), 1, -1)
+][
+, bayes.fac := factor(bayes.num)
+][])
 ```
 
 The best classifier is visualized below in the feature space,
@@ -147,6 +150,7 @@ The best classifier is visualized below in the feature space,
 ggplot()+
   geom_tile(aes(
     V1, V2, fill=bayes.fac),
+    color=NA,
     data=grid.dt)+
   geom_point(aes(
     V1, V2, fill=label.fac),
@@ -545,6 +549,7 @@ ggplot()+
   facet_grid(set ~ iteration, labeller="label_both")+
   geom_tile(aes(
     V1, V2, fill=norm.pred),
+    color=NA,
     data=some.pred)+
   geom_path(aes(
     x, y, group=contour.i),
@@ -569,7 +574,7 @@ with an interactive plot where you can click the loss plot to select
 an iteration of gradient descent, for which the corresponding decision
 boundary is shown on the predictions plot.
 
-```{r}
+```{r Ch18-nnet-vs-linear}
 n.subtrain <- sum(is.set.list$subtrain)
 loss.dt[, n.set := ifelse(set=="subtrain", n.subtrain, sim.row-n.subtrain)]
 loss.dt[, error.count := n.set*error.percent/100]
@@ -608,6 +613,7 @@ animint(
     facet_grid(. ~ set, labeller="label_both")+
     geom_tile(aes(
       V1, V2, fill=norm.pred),
+      color=NA,
       showSelected="iteration",
       data=some(pred.dt))+
     geom_text(aes(

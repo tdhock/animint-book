@@ -371,8 +371,8 @@ particular,
   which are not selected.
   
 The defaults explained above are illustrated in the first plot
-below. Those defaults may be customized by using the `alpha_off` and
-`color_off` geom parameters as in the code below,
+below. Those defaults may be customized by using the `alpha_off`,
+`fill_off`, and `color_off` geom parameters as in the code below,
 
 ```{r}
 N <- 3
@@ -385,7 +385,6 @@ animint(
       i, 0),
       size=5,
       clickSelects="i",
-      fill="white",
       data=demo_df)+
     geom_point(aes(
       i, num),
@@ -395,12 +394,10 @@ animint(
   off=ggplot()+
     ggtitle("User specified alpha_off, fill_off, color_off")+
     geom_tile(aes(
-      i, 0),
+      i, 0, fill=i),
       clickSelects="i",
       color="red",
       color_off="pink",
-      fill="white",
-      fill_off="black",
       size=5,
       data=demo_df)+
     geom_point(aes(
@@ -422,6 +419,13 @@ animint(
       clickSelects="i",
       data=demo_df))
 ```
+
+Note that when using any one of these visual properties in the `aes`
+mapping, it should not be specified as a geom parameter. For example
+in the tile above, we used `aes(fill)`, so `fill` and `fill_off`
+should not be specified as parameters for that geom (in order to make
+it clear that fill is used for displaying data values, not selection
+state).
 
 ## Plot-specific options {#plot-options}
 
@@ -580,7 +584,7 @@ meta-data is required for organizing the animint in a
 The `source` option should be a character string: a link to the R
 source code which was used to create the animint.
 
-```{r}
+```{r Ch06-source-demo}
 animint(
   demo=ggplot()+
     geom_point(aes(
