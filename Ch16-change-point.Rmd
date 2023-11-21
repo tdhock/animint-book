@@ -364,7 +364,7 @@ Exercises:
   for the currently selected signal. Furthermore add a visual
   indication of the selected model to the max margin regression plot.
   The result should look something
-  [like this](http://bl.ocks.org/tdhock/raw/10f27e4ace80bffa10a0/).
+  [like this](https://rcdata.nau.edu/genomic-ml/animint-gallery/2016-01-28-Max-margin-interval-regression-for-supervised-segmentation-model-selection/index.html).
 * Make another data viz by starting with the facetted `gg.signals`
   plot in the beginning of this chapter. Add a plot that can be used
   to select the number of segments for each signal. For each signal in
@@ -373,7 +373,7 @@ Exercises:
   signal -- you can use named clickSelects/showSelected as explained in
   [Chapter 14](Ch14-PeakSegJoint.html)). The result should look
   something
-  [like this](http://bl.ocks.org/tdhock/raw/9311ca39d643d127e04a088814c81ee1/).
+  [like this](https://rcdata.nau.edu/genomic-ml/animint-gallery/2016-11-10-Max-margin-supervised-penalty-learning-for-peak-detection-in-ChIP-seq-data/index.html).
 
 Next, [Chapter 17](Ch17-k-means-clustering.html) explains how to
 visualize the K-means clustering algorithm.
