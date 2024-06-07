@@ -617,7 +617,7 @@ animint(
       color="black",
       data=inputBoundaries)+
     geom_point(aes(
-      x1, x2, color=y, fill=status),
+      x1, x2, fill=status),
       showSelected=c("status", "y", "data.i", "cost.param"),
       size=5,
       color="grey",
@@ -644,7 +644,7 @@ animint(
       margin="dashed",
       true="solid"))+
     geom_point(aes(
-      x1.sq, x2.sq, color=y, fill=status),
+      x1.sq, x2.sq, fill=status),
       showSelected=c("data.i", "cost.param"),
       size=5,
       color="grey",
