@@ -13,6 +13,7 @@ works_with_R <- function(Rvers,...){
   local.lib <- file.path(getwd(), "library")
   dir.create(local.lib, showWarnings=FALSE, recursive=TRUE)
   .libPaths(c(local.lib, .libPaths()))
+  message(paste(c("R .libPaths() is",.libPaths()),collapse=":"))
   pkg_ok_have <- function(pkg,ok,have){
     stopifnot(is.character(ok))
     if(!as.character(have) %in% ok){
@@ -66,13 +67,13 @@ works_with_R(
   caTools="1.18.0",
   data.table="1.13.0",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
-  "hadley/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "animint/animint2@8ae4a19f469f0cb2db68a396d8ffd88176a92355")
-             
-library(methods)
+  "tdhock/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
+  "animint/animint2@c7b40c294f64f24ce60b749c299597ed5461e8b7")
 
+library(methods)
 args <- commandArgs(trailingOnly = TRUE)
 ##print(args)##NO: that will appear on top of web page!
+message(paste(c("R trailing commandArgs:", args), collapse=" "))
 path <- args[1]
 
 if (!file.exists(path)) {

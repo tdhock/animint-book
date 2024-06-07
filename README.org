@@ -49,6 +49,10 @@ warranty, not even for merchantability or fitness for a particular purpose.
 PATH=bin:$PATH jekyll b
 #+end_src
 
+Also make sure that animint2-manual/_plugins/library (used for
+interactive testing) is symlinked to animint2-manual/library (used for
+rendering, could be confusing if they are different).
+
 To edit Rmd in emacs try https://github.com/vspinu/polymode via
 https://github.com/tdhock/dotfiles/blob/master/.emacs
 
