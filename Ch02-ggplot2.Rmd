@@ -441,6 +441,13 @@ call this the
 [Space saving facets idiom](Ch99-appendix.html#space-saving-facets), 
 which is generally useful in any ggplot with facets.
 
+In the data viz above, the text labels overlap a bit, which can be
+fixed by either (exercise for the reader)
+
+* using `breaks` argument of `scale_x_continuous()`
+* reducing text size with `theme()` and `element_text()`
+* increasing plot width using `theme_animint()`, see [Chapter 6](Ch06-other.html#plot-height-width) for more info.
+
 ### Same geoms in each panel (compare data subsets) {#compare-data-subsets}
 
 The second reason for using plots with multiple panels in a data
