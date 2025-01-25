@@ -21,6 +21,8 @@ will understand how to customize your animint graphics via
 * the `chunk_vars` geom-specific option;
 * the `color_off`, `fill_off`, and `alpha_off` geom parameters for
   specifying how selection state is displayed;
+* the `help` and `title` geom-specific parameters, which can be set to
+  text strings that will be shown in the guided tour.
 * plot-specific legends and height/width options; and
 * global data viz options.
 
@@ -188,10 +190,12 @@ timings and disk space measurements, see
 
 ## Geom options {#geom-options}
 
-In animint there are several options for customization at the geom
+In animint, there are several options for customization at the geom
 level: `chunk_vars` is used to specify how to split data sets for
 storage on disk, and `*_off` parameters are used to specify how a
 clickSelects geom should be displayed when it is not selected.
+Additionally, `help` and `title` may be specified, to add information
+to the guided tour.
 
 ### The `chunk_vars` geom-specific compilation option {#chunk-vars}
 
@@ -426,6 +430,44 @@ in the tile above, we used `aes(fill)`, so `fill` and `fill_off`
 should not be specified as parameters for that geom (in order to make
 it clear that fill is used for displaying data values, not selection
 state).
+
+### Specifying guided tour text {#custom-guided-tour}
+
+Since Jan 2025, animint supports a guided tour, which displays
+information about possible interactions with each geom. To customize
+what is displayed for each geom, you can specify the `help` and
+`title` parameters, as in the code below.
+
+
+```{r customTour}
+animint(
+  scatter=ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, color=region),
+      size=5,
+      showSelected="year",
+      clickSelects="country",
+      help="One point drawn for each country in the selected year",
+      alpha=0.7,
+      data=WorldBank)+
+    geom_text(aes(
+      x=life.expectancy, y=fertility.rate, label=country),
+      data=WorldBank,
+      title="Selected country",
+      showSelected=c("year","country")),
+  first=list(
+    country="France",
+    year=1980))
+```
+
+In the code above, we specify `help` for `geom_point`, which controls
+the sub-text which is displayed for that geom, after clicking the
+"Start Tour" button at the bottom of the data visualization. After
+clicking the "Next" button, we can see the `title` that was specified
+in the code, shown at the top of the tour window, for the `geom_text`.
+This mechanism can be used to provide extra helpful information for
+the users of your data visualization, so they can more easily
+understand what is displayed, and what interactions are possible.
 
 ## Plot-specific options {#plot-options}
 

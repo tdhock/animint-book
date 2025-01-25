@@ -83,7 +83,9 @@ rendering the same ggplot using animint2 results in the following
 interactive plot:
 
 ```{r Ch04-viz-scatter}
-(viz.scatter <- animint(scatter, duration=list(year=2000)))
+(viz.scatter <- animint(
+  scatter=scatter,
+  duration=list(year=2000)))
 ```
 
 Try clicking data points in the scatterplot above. You should see the
@@ -93,9 +95,24 @@ country is darker than the others. This serves to highlight the
 current selection, and is performed automatically for each geom with
 `clickSelects`. By default the selected point has alpha=1 (fully
 opaque, no transparency), and the other points have alpha=0.5
-(semi-transparent).
+(semi-transparent). These defaults can be customized; for example in
+the code below a black outline is used to highlight the current selection.
 
-The data visualization above shows the currently selected country in
+```{r}
+animint(
+  ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, fill=region,
+      key=country),
+      shape=21,
+      color="black",
+      color_off=NA,
+      showSelected="year",
+      clickSelects="country",
+      data=WorldBank))
+```
+
+The data visualization above shows the currently selected country name in
 the selection menu, but it would be better to show it as a text label
 on the scatterplot. We can do that by adding a `geom_text` layer with
 two showSelected variables:
@@ -116,6 +133,17 @@ text label with the country name appear. Furthermore, **try** changing
 the year using the selection menu. You should see the text label move
 in a smooth transition along with the corresponding data
 point. 
+
+The data visualization above contains more than one geom, each with
+different interactive features. **Try** clicking the "Start Tour"
+button at the bottom of the data visualization, which will show what
+interactive features are available for the first geom in the data
+visualization. Clicking Next will show information for the next geom,
+and clicking Done or the grey background will end the Tour. The "Start
+Tour" feature can be useful for new users of your data visualization
+to discover what interactive features are present in each geom. The
+information displayed during the tour can be customized, by specifying
+the `help` and `title` params of each geom.
 
 As explained in the last chapter, any variable specified using the
 `showSelected` argument of a geom is treated as an interactive variable. In the
@@ -417,6 +445,9 @@ Exercises:
 * Add a `geom_path` to the World Bank scatterplot to show data for the
   last 5 years.
 * Use the `time` option to make an animated version of `viz.facets`.
+* Use `help` and `title` params for each geom in `viz.facets`, to make
+  a Tour which is more informative about what is displayed in each
+  geom.
 
 Next, [Chapter 5](Ch05-sharing.html) explains several different
 methods for publishing and sharing animints on the web.

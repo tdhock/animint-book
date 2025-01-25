@@ -94,9 +94,10 @@ translate this sketch into R code.
 library(animint2)
 data(WorldBank)
 scatter <- ggplot()+
-  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
-             showSelected="year",
-             data=WorldBank)
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region),
+    showSelected="year",
+    data=WorldBank)
 scatter
 ```
 
@@ -211,10 +212,11 @@ used to match data points before and after changing the selection.
 
 ```{r}
 scatter.key <- ggplot()+
-  geom_point(aes(x=life.expectancy, y=fertility.rate, color=region,
-                 key=country),
-             showSelected="year",
-             data=WorldBank)
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region,
+    key=country),
+    showSelected="year",
+    data=WorldBank)
 ```
 
 The `key` aesthetic in the ggplot above is only meaningful for
