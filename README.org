@@ -19,9 +19,13 @@ ruby 2.5.1p57 (2018-03-29 revision 63029) [x86_64-linux-gnu]
 
 Versions of R and packages are documented in [[file:_plugins/knit.R]]
 
-pandoc known to work is version=1.19.2.4, does not work with 2.14.2
+pandoc known to work is [[https://github.com/jgm/pandoc/releases/tag/1.19.2][version=1.19.2.4]], does not work with 2.14.2
 
 #+begin_src shell-script
+wget https://github.com/jgm/pandoc/releases/download/1.19.2/pandoc-1.19.2-1-amd64.deb
+mkdir pandoc
+ar p pandoc-1.19.2-1-amd64.deb data.tar.gz | tar xvz --strip-components 2 -C pandoc
+
 (base) tdhock@maude-MacBookPro:~/projects/animint2-manual(master*)$ /usr/bin/pandoc --version
 pandoc 1.19.2.4
 Compiled with pandoc-types 1.17.0.5, texmath 0.9.4.4, skylighting 0.3.3.1
