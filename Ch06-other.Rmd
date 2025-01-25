@@ -249,21 +249,24 @@ fp.fn.dt <- error.type.dt[, list(
 errorPlot <- ggplot()+
   ggtitle("select data and segments")+
   theme_bw()+
-  geom_tallrect(aes(xmin=segments-0.5, xmax=segments+0.5),
-                    clickSelects="segments",
-                data=only.segments,
-                alpha=1/2)+
-  geom_line(aes(segments, error.value, color=error.type,
-                group=paste(bases.per.probe, error.type)),
-                showSelected="bases.per.probe",
-            data=fp.fn.dt,
-            size=5)+
+  geom_tallrect(aes(
+    xmin=segments-0.5, xmax=segments+0.5),
+    clickSelects="segments",
+    data=only.segments,
+    alpha=1/2)+
+  geom_line(aes(
+    segments, error.value, color=error.type,
+    group=paste(bases.per.probe, error.type)),
+    showSelected="bases.per.probe",
+    data=fp.fn.dt,
+    size=5)+
   scale_color_manual(values=c(
     "false positives"="red", "false negatives"="blue"))+
-  geom_line(aes(segments, error, group=bases.per.probe),
-                clickSelects="bases.per.probe",
-            data=only.error,
-            size=4)+
+  geom_line(aes(
+    segments, error, group=bases.per.probe),
+    clickSelects="bases.per.probe",
+    data=only.error,
+    size=4)+
   scale_x_continuous(breaks=c(1, 6, 10, 20))
 errorPlot
 ```
@@ -277,14 +280,16 @@ signalPlot <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   theme_animint(height=800)+
-  geom_point(aes(position/1e5, signal),
-                 showSelected="bases.per.probe",
-             shape=1,
-             data=breakpoints$signals)+
-  geom_segment(aes(first.base/1e5, mean, xend=last.base/1e5, yend=mean),
-                   showSelected=c("segments", "bases.per.probe"),
-               color="green",
-               data=breakpoints$segments)
+  geom_point(aes(
+    position/1e5, signal),
+    showSelected="bases.per.probe",
+    shape=1,
+    data=breakpoints$signals)+
+  geom_segment(aes(
+    first.base/1e5, mean, xend=last.base/1e5, yend=mean),
+    showSelected=c("segments", "bases.per.probe"),
+    color="green",
+    data=breakpoints$segments)
 signalPlot+facet_grid(segments ~ bases.per.probe)
 ```
 
@@ -297,12 +302,13 @@ these facets will be shown.
 (viz.chunk.vars <- animint(
   errorPlot,
   signal=signalPlot+
-  geom_vline(aes(xintercept=base/1e5),
-                 showSelected=c("segments", "bases.per.probe"),
-             color="green",
-             chunk_vars=character(),
-             linetype="dashed",
-             data=breakpoints$breaks)))
+    geom_vline(aes(
+      xintercept=base/1e5),
+      showSelected=c("segments", "bases.per.probe"),
+      color="green",
+      chunk_vars=character(),
+      linetype="dashed",
+      data=breakpoints$breaks)))
 ```
 
 Click the "Show download status table" button, and you should see
@@ -320,12 +326,13 @@ tsvSizes <- function(segment.chunk.vars){
   viz <- list(
     error=errorPlot,
     signal=signalPlot+
-      geom_vline(aes(xintercept=base/1e5),
-                     showSelected=c("segments", "bases.per.probe"),
-                 color="green",
-                 chunk_vars=segment.chunk.vars,
-                 linetype="dashed",
-                 data=breakpoints$breaks)
+      geom_vline(aes(
+        xintercept=base/1e5),
+        showSelected=c("segments", "bases.per.probe"),
+        color="green",
+        chunk_vars=segment.chunk.vars,
+        linetype="dashed",
+        data=breakpoints$breaks)
   )
   info <- animint2dir(viz, open.browser=FALSE)
   cmd <- paste("du -ks", info$out.dir)
@@ -439,7 +446,7 @@ what is displayed for each geom, you can specify the `help` and
 `title` parameters, as in the code below.
 
 
-```{r customTour}
+```{r Ch06-customTour}
 animint(
   scatter=ggplot()+
     geom_point(aes(
@@ -552,9 +559,9 @@ size.
 
 ```{r Ch06-text-size}
 scatter1975 <- ggplot()+
-    geom_point(aes(
-      x=life.expectancy, y=fertility.rate, color=region),
-      data=WorldBank1975)
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region),
+    data=WorldBank1975)
 (viz.text.size <- animint(
   animintDefault=scatter1975+
     theme_animint(width=500, height=500)+
@@ -565,8 +572,9 @@ scatter1975 <- ggplot()+
     ggtitle("axis.text=element_text(size=20)"),
   animintLegendOptions=scatter1975+
     theme_animint(width=500, height=500)+
-    theme(legend.title=element_text(size=24),
-        legend.text=element_text(size=rel(2.5)))+
+    theme(
+      legend.title=element_text(size=24),
+      legend.text=element_text(size=rel(2.5)))+
     ggtitle("legend.text=element_text(size=rel(2.5)")))
 ```
 
@@ -642,6 +650,32 @@ function, which is used to publish an animint to GitHub Pages. It
 requires that the animint defines the `source` option, because that
 meta-data is required for organizing the animint in a
 [gallery](Ch05-sharing.html#gallery).
+
+### Link a video {#video-option}
+
+The `video` option should be a character string: a link to a video
+which shows typical interactions with the animint. This mechanism can
+be used to help the users of your data visualization understand what
+is displayed, and what interactions they can use.
+
+```{r Ch06-link-demo}
+animint(
+  video="https://vimeo.com/1050117030",
+  scatter=ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, color=region),
+      clickSelects="country",
+      alpha=0.7,
+      data=WorldBank1975))
+```
+
+In the data visualization above, notice the "video" link which appears
+in the bottom right. Clicking that link leads to a video that was
+recorded to explain a more complex data visualization based on the
+World Bank data. The idea is that you can record a video for each of
+your animints, and then include a link to the video using this
+mechanism, so your users can more easily understand what is displayed,
+and what interactions are possible.
 
 ### Show or hide selection menus with the selectize option {#selectize-option}
 
