@@ -170,7 +170,7 @@ for visualizing the learned decision boundaries of the
 K-Nearest-Neighbors classifier.
 
 ```{r}
-future::plan("multiprocess")
+future::plan("multisession")
 data.all.folds.list <- future.apply::future_lapply(
   0:n.folds, function(validation.fold){
     one.fold <- OneFold(validation.fold)
