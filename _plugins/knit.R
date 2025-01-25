@@ -54,21 +54,21 @@ works_with_R <- function(Rvers,...){
   }
 }
 works_with_R(
-  "4.3.0",
-  penaltyLearning="2020.5.13",
-  future="1.18.0",
-  future.apply="1.6.0",
-  htmltools="0.5.0",
-  RJSONIO="1.3.1.4",
-  maps="3.3.0",
-  lars="1.2",
-  LambertW="0.6.5", #depends/attaches ggplot2
-  kernlab="0.9.29",
-  caTools="1.18.0",
-  data.table="1.13.0",
+  "4.5.0",
+  penaltyLearning="2024.9.3",
+  future="1.34.0",
+  future.apply="1.11.2",
+  htmltools="0.5.7",
+  RJSONIO="1.3.1.9",
+  maps="3.4.2",
+  lars="1.3",
+  LambertW="0.6.9.1", #depends/attaches ggplot2
+  kernlab="0.9.32",
+  caTools="1.18.2",
+  data.table="1.16.99",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "tdhock/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "animint/animint2@9ba62a25378d6a168dab3abece843530a849a3b6")
+  "animint/animint2@f638615162e1dd6864844c7d92dd96f06a5eca9d")
 
 library(methods)
 args <- commandArgs(trailingOnly = TRUE)

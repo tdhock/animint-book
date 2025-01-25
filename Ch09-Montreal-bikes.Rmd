@@ -59,9 +59,11 @@ death and slight/severe injury. Some of the values are in French
 We calculate the time period of the accidents below.
 
 ```{r timeRange}
-accidents.dt[, date.POSIXct := suppressWarnings(strptime(
-  date.str, "%Y-%m-%d"))]
-accidents.dt[, month.str := strftime(date.POSIXct, "%Y-%m")]
+(accidents.dt[
+, date.POSIXct := as.POSIXct(strptime(date.str, "%Y-%m-%d"))
+][
+, month.str := strftime(date.POSIXct, "%Y-%m")
+][])
 range(accidents.dt$month.str)
 ```
 
@@ -99,44 +101,49 @@ make sure to set the locale to C for English month names)
 uniq.month.vec <- unique(c(
   accidents.dt$month.str,
   counts.dt$month.str))
-months <- data.table(month.str=uniq.month.vec)
-months[, month01.str := paste0(month.str, "-01")]
-months[, month01.POSIXct := suppressWarnings(strptime(month01.str, "%Y-%m-%d"))]
 one.day <- 60 * 60 * 24
-months[, next.POSIXct := month01.POSIXct + one.day * 31]
-months[, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")]
-months[, next01.POSIXct := suppressWarnings(strptime(
-  next01.str, "%Y-%m-%d"))]
-months[, month.str := strftime(month01.POSIXct, "%B %Y")]
+months <- data.table(month.str=uniq.month.vec)[
+, month01.str := paste0(month.str, "-01")
+][
+, month01.POSIXct := as.POSIXct(strptime(month01.str, "%Y-%m-%d"))
+][, let(
+  next.POSIXct = month01.POSIXct + one.day * 31,
+  month.str = strftime(month01.POSIXct, "%B %Y")
+)][
+, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")
+][
+, next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
+]
 month.levs <- months[order(month01.POSIXct), month.str]
-months[, month := factor(month.str, month.levs)]
+(months[, month := factor(month.str, month.levs)][])
 ```
 
 Note that we created a `month` column which is a factor ordered by
 `month.levs`.
 
 ```{r}
-accidents.dt[, month.text := strftime(date.POSIXct, "%B %Y")]
-accidents.dt[, month := factor(month.text, month.levs)]
-accidents.dt[, month.POSIXct := suppressWarnings(
-  strptime(paste0(month.str, "-15"), "%Y-%m-%d"))]
+(accidents.dt[
+, month.text := strftime(date.POSIXct, "%B %Y")
+][
+, month := factor(month.text, month.levs)
+][
+, month.POSIXct := as.POSIXct(strptime(paste0(month.str, "-15"), "%Y-%m-%d"))
+][])
 stopifnot(!is.na(accidents.dt$month.POSIXct))
-accidents.per.month <- accidents.dt[, list(
+(accidents.per.month <- accidents.dt[, list(
   total.accidents=.N,
   total.people=sum(deaths+people.severely.injured+people.slightly.injured),
   deaths=sum(deaths),
   people.severely.injured=sum(people.severely.injured),
-  people.slightly.injured=sum(people.slightly.injured)
-), by=.(month, month.str, month.text, month.POSIXct)]
-accidents.per.month[, next.POSIXct := month.POSIXct + one.day * 30]
-accidents.per.month[, month01.str := paste0(
-  strftime(month.POSIXct, "%Y-%m"), "-01")]
-accidents.per.month[, month01.POSIXct := suppressWarnings(
-  strptime(month01.str, "%Y-%m-%d"))]
-accidents.per.month[, next01.str := paste0(
-  strftime(next.POSIXct, "%Y-%m"), "-01")]
-accidents.per.month[, next01.POSIXct := suppressWarnings(
-  strptime(next01.str, "%Y-%m-%d"))]
+  people.slightly.injured=sum(people.slightly.injured),
+  next.POSIXct = month.POSIXct + one.day * 30,
+  month01.str = paste0(strftime(month.POSIXct, "%Y-%m"), "-01")
+), by=.(month, month.str, month.text, month.POSIXct)][, let(
+  month01.POSIXct = as.POSIXct(strptime(month01.str, "%Y-%m-%d")),
+  next01.str = paste0(strftime(next.POSIXct, "%Y-%m"), "-01")
+)][
+, next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
+][])
 ```
 
 We plot the accidents per month below.
@@ -161,29 +168,54 @@ ggplot()+
   scale_fill_manual(values=severity.colors)
 ```
 
+In each accident, there are counts of people who died, along with
+people who suffered severe and slight injuries. Below we classify the
+severity of each accident according to the worst outcome among the
+people affected.
+
 ```{r}
-accidents.dt[, severity.str := ifelse(
-  0 < deaths, "deaths", ifelse(
-    0 < people.severely.injured,
-    "people.severely.injured",
-    "people.slightly.injured"))]
-accidents.dt[, severity := factor(severity.str, names(severity.colors))]
-counts.dt[, month.text := strftime(date, "%B %Y")]
-counts.dt[, day.of.the.month := as.integer(strftime(date, "%d"))]
-counts.dt[, month := factor(month.text, month.levs)]
-counts.dt[, month.POSIXct := suppressWarnings(
-  strptime(paste0(month.str, "-15"), "%Y-%m-%d"))]
-counts.per.month <- counts.dt[, list(
+accidents.dt[
+, severity.str := fcase(
+  0 < deaths, "deaths",
+  0 < people.severely.injured, "people.severely.injured",
+  default="people.slightly.injured")
+][
+, severity := factor(severity.str, names(severity.colors))
+][
+, table(severity)
+]
+```
+
+The output above shows that accidents with only slight injuries are
+most frequent, and accidents with at least one death are least
+frequent.
+Below we compute counts per month.
+
+```{r}
+(counts.per.month <- counts.dt[, let(
+  month.POSIXct = as.POSIXct(strptime(paste0(month.str, "-15"), "%Y-%m-%d")),
+  month.text = strftime(date, "%B %Y"),
+  day.of.the.month = as.integer(strftime(date, "%d"))
+)][
+, month := factor(month.text, month.levs)
+][, list(
   days=.N,
   mean.per.day=mean(count),
-  count=sum(count)
-), by=.(location, month, month.str, month.POSIXct)][0 < count,]
-counts.per.month[, month01.str := paste0(month.str, "-01")]
-counts.per.month[, month01.POSIXct := suppressWarnings(strptime(month01.str, "%Y-%m-%d"))]
-counts.per.month[, next.POSIXct := month01.POSIXct + one.day * 31]
-counts.per.month[, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")]
-counts.per.month[, next01.POSIXct := suppressWarnings(strptime(next01.str, "%Y-%m-%d"))]
-counts.per.month[, days.in.month := round(next01.POSIXct - month01.POSIXct)]
+  count=sum(count),
+  month01.str = paste0(month.str, "-01")
+), by=.(location, month, month.str, month.POSIXct)][
+  0 < count
+][
+, month01.POSIXct := as.POSIXct(strptime(month01.str, "%Y-%m-%d"))
+][
+, next.POSIXct := month01.POSIXct + one.day * 31
+][
+, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")
+][
+, next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
+][
+, days.in.month := as.integer(round(difftime(next01.POSIXct,month01.POSIXct,units="days")))
+][])
 counts.per.month[days < days.in.month, {
   list(location, month, days, days.in.month)
 }]
@@ -201,35 +233,39 @@ month.labels <- counts.per.month[, {
 day.labels <- counts.dt[, {
   .SD[which.max(count), ]
 }, by=.(location, month)]
-city.wide.cyclists <- counts.per.month[0 < count, list(
+(city.wide.cyclists <- counts.per.month[0 < count, list(
   locations=.N,
-  count=sum(count)
-), by=.(month, month.str, month.POSIXct)]
-city.wide.cyclists[, month01.str := paste0(month.str, "-01")]
-city.wide.cyclists[, month01.POSIXct := suppressWarnings(
-  strptime(month01.str, "%Y-%m-%d"))]
-city.wide.cyclists[, next.POSIXct := month01.POSIXct + one.day * 31]
-city.wide.cyclists[, next01.str := paste0(
-  strftime(next.POSIXct, "%Y-%m"), "-01")]
-city.wide.cyclists[, next01.POSIXct := suppressWarnings(
-  strptime(next01.str, "%Y-%m-%d"))]
+  count=sum(count),
+  month01.str = paste0(month.str, "-01")
+), by=.(month, month.str, month.POSIXct)][
+, month01.POSIXct := as.POSIXct(strptime(month01.str, "%Y-%m-%d"))
+][
+, next.POSIXct := month01.POSIXct + one.day * 31
+][
+, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")
+][
+, next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
+][])
 month.str.vec <- strftime(seq(
   strptime("2012-01-15", "%Y-%m-%d"),
   strptime("2013-01-15", "%Y-%m-%d"),
   by="month"), "%Y-%m")
 city.wide.complete <- complete.months[0 < count, list(
   locations=.N,
-  count=sum(count)
+  count=sum(count),
+  month01.str = paste0(month.str, "-01")
 ), by=.(month, month.str, month.POSIXct)]
-city.wide.complete[, month01.str := paste0(month.str, "-01")]
 setkey(city.wide.complete, month.str)
 scatter.cyclists <- city.wide.complete[month.str.vec]
 scatter.accidents <- accidents.per.month[scatter.cyclists, on=list(month.str)]
 scatter.not.na <- scatter.accidents[!is.na(locations),]
-scatter.max <- scatter.not.na[locations==max(locations),]
+scatter.max <- scatter.not.na[locations==max(locations)]
 fit <- lm(total.accidents ~ count - 1, scatter.max)
-scatter.max[, mean(total.accidents/count)]
-scatter.max[, pred.accidents := predict(fit)]
+scatter.max[
+, pred.accidents := predict(fit)
+][
+, mean(total.accidents/count)
+]
 animint(
   regression=ggplot()+
     theme_bw()+
@@ -270,9 +306,14 @@ The plot below is a dotplot of accidents for each month. Each dot
 represents one person who got in an accident.
 
 ```{r}
-accidents.cumsum <- accidents.dt[order(date.POSIXct, month, severity)]
-accidents.cumsum[, accident.i := seq_along(severity), by=.(date.POSIXct, month)]
-accidents.cumsum[, day.of.the.month := as.integer(strftime(date.POSIXct, "%d"))]
+(accidents.cumsum <- accidents.dt[
+  order(date.POSIXct, month, severity)
+][
+, accident.i := seq_along(severity)
+, by=.(date.POSIXct, month)
+][
+, day.of.the.month := as.integer(strftime(date.POSIXct, "%d"))
+][])
 ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "cm"))+
@@ -287,9 +328,10 @@ ggplot()+
 ```
 
 ```{r}
-counter.locations <- data.table(montreal.bikes$counter.locations)
-counter.locations[, lon := coord_X]
-counter.locations[, lat := coord_Y]
+(counter.locations <- data.table(montreal.bikes$counter.locations)[, let(
+  lon = coord_X,
+  lat = coord_Y
+)][])
 loc.name.code <- c(
   "Berri1"="Berri",
   "Brebeuf"="Brébeuf",
@@ -301,7 +343,7 @@ loc.name.code <- c(
   "Rachel/Papineau"="Rachel",
   "Saint-Urbain"="Saint-Urbain",
   "Totem_Laurier"="Totem_Laurier")
-counter.locations[, location := loc.name.code[nom_comptage]]
+counter.locations[, location := loc.name.code[nom_comptage] ]
 velo.counts <- table(counts.dt$location)
 (show.locations <- counter.locations[names(velo.counts), on=list(location)])
 ```
@@ -370,7 +412,7 @@ accidents.range <- accidents.dt[, data.table(
   max=max(date.POSIXct))]
 MonthSummary <- ggplot()+
   theme_bw()+
-  theme_animint(width=400, height=200)+
+  theme_animint(width=450, height=250)+
   xlab("range of dates in data")+
   ylab("data type")+
   scale_color_manual(values=location.colors)+
@@ -393,30 +435,36 @@ print(MonthSummary)
 The plot below shows the bike counts at each location and day.
 
 ```{r}
-dates <- counts.dt[, list(
+(dates <- counts.dt[, list(
+  min.date = date-one.day/2,
+  max.date = date+one.day/2,
   locations=sum(!is.na(count))
-), by=list(date)][0 < locations]
-dates[, min.date := date-one.day/2]
-dates[, max.date := date+one.day/2]
-location.labels <- counts.dt[, .SD[which.max(count)], by=list(location)]
+), by=list(date)][0 < locations])
+(location.labels <- counts.dt[
+, .SD[which.max(count)]
+, by=list(location)])
 TimeSeries <- ggplot()+
   theme_bw()+
-  geom_tallrect(aes(xmin=date-one.day/2, xmax=date+one.day/2,
-                    clickSelects=date),
-                data=dates, alpha=1/2)+
-  geom_line(aes(date, count, group=location,
-                showSelected=location,
-                clickSelects=location),
-            data=counts.dt)+
+  geom_tallrect(aes(
+    xmin=date-one.day/2, xmax=date+one.day/2,
+    clickSelects=date),
+    data=dates, alpha=1/2)+
+  geom_line(aes(
+    date, count, group=location,
+    showSelected=location,
+    clickSelects=location),
+    data=counts.dt)+
   scale_color_manual(values=location.colors)+
-  geom_point(aes(date, count, color=location,
-                 showSelected=location,
-                 clickSelects=location),
-             data=counts.dt)+
-  geom_text(aes(date, count+200, color=location, label=location,
-                showSelected=location,
-                clickSelects=location),
-            data=location.labels)
+  geom_point(aes(
+    date, count, color=location,
+    showSelected=location,
+    clickSelects=location),
+    data=counts.dt)+
+  geom_text(aes(
+    date, count+200, color=location, label=location,
+    showSelected=location,
+    clickSelects=location),
+    data=location.labels)
 print(TimeSeries)
 ```
 
@@ -533,16 +581,23 @@ MonthFacet
 ```
 
 ```{r}
-days.dt <- data.table(day.POSIXct=with(months, seq(
-  min(month01.POSIXct),
-  max(next01.POSIXct),
-  by="day")))
-days.dt[, day.of.the.week := strftime(day.POSIXct, "%a")]
+(days.dt <- data.table(
+  day.POSIXct=with(months, seq(
+    min(month01.POSIXct),
+    max(next01.POSIXct),
+    by="day"))
+)[
+, day.of.the.week := strftime(day.POSIXct, "%a")
+][])
 ## The following only works in locales with English days of the week.
-weekend.dt <- days.dt[day.of.the.week %in% c("Sat", "Sun"),]
-weekend.dt[, month.text := strftime(day.POSIXct, "%B %Y")]
-weekend.dt[, month := factor(month.text, month.levs)]
-weekend.dt[, day.of.the.month := as.integer(strftime(day.POSIXct, "%d"))]
+(weekend.dt <- days.dt[
+  day.of.the.week %in% c("Sat", "Sun")
+][, let(
+  month.text = strftime(day.POSIXct, "%B %Y"),
+  day.of.the.month = as.integer(strftime(day.POSIXct, "%d"))
+)][
+, month := factor(month.text, month.levs)
+][])
 counter.title <- "cyclists per day"
 DaysFacet <- ggplot()+
   ggtitle("Selected month (weekends in grey)")+
@@ -551,11 +606,11 @@ DaysFacet <- ggplot()+
     key=paste(day.POSIXct)),
     showSelected="month",
     fill="grey",
+    color="white",
     data=weekend.dt)+
   guides(color="none")+
   theme_bw()+
   facet_grid(facet ~ ., scales="free")+
-  theme(panel.margin=grid::unit(0, "lines"))+
   geom_line(aes(
     day.of.the.month, count, group=location,
     key=location,
@@ -577,7 +632,7 @@ DaysFacet <- ggplot()+
     clickSelects="location",
     size=5,
     chunk_vars=c("month"),
-    fill="grey",
+    fill="white",
     data=data.table(counts.dt, facet=counter.title))+
   scale_fill_manual(values=severity.colors, breaks=names(severity.colors))+
   geom_text(aes(
