@@ -68,7 +68,7 @@ works_with_R(
   data.table="1.16.99",
   "rstudio/rmarkdown@c97053384dae1c0b254f73a354801bbb73176660",
   "tdhock/bookdown@12ed348231f26d86e478b9462561cc6c8517992d",
-  "animint/animint2@f638615162e1dd6864844c7d92dd96f06a5eca9d")
+  "animint/animint2@df025cd81857e8c4049ced0bcdc7a2324e0b2337")
 
 library(methods)
 args <- commandArgs(trailingOnly = TRUE)
