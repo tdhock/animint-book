@@ -55,8 +55,9 @@ The plot below shows the same data, after computing two additional
 input features (the squares of the original two inputs).
 
 ```{r}
-data.dt[, x1.sq := x1^2 ]
-data.dt[, x2.sq := x2^2 ]
+data.dt[, let(
+  x1.sq = x1^2,
+  x2.sq = x2^2)][]
 ggplot()+
   geom_point(aes(
     x1.sq, x2.sq),
@@ -88,22 +89,28 @@ would not be able to make this visualization with real data (only the
 labels are known in real data, not the scores).
 
 ```{r}
-data.dt[, f.noise := f+rnorm(N, 0, 0.2)]
-data.dt[, y.num := ifelse(f.noise<true.decision.boundary, -1, 1)]
-data.dt[, y := factor(y.num)]
+data.dt[
+, f.noise := f+rnorm(N, 0, 0.2)
+][
+, y.num := ifelse(f.noise<true.decision.boundary, -1, 1)
+][
+, y := factor(y.num)
+]
 table(data.dt$y)
-scores <- data.table(x1=seq(-1, 1, l=101))
-scores[, x1.sq := x1^2 ]
-scores[, f := x1.sq ]
+scores <- data.table(x1=seq(-1, 1, l=101))[
+, x1.sq := x1^2
+][
+, f := x1.sq ]
 x1.boundaries <- data.table(boundary=c(1, -1)*sqrt(true.decision.boundary))
 ggplot()+
   scale_y_continuous(breaks=seq(0, 1, by=0.2))+
   geom_vline(aes(xintercept=boundary), color="grey50", data=x1.boundaries)+
   geom_line(aes(x1, f), data=scores)+
-  geom_point(aes(x1, f.noise, color=y),
-             shape=21,
-             fill=NA,
-             data=data.dt)
+  geom_point(aes(
+    x1, f.noise, color=y),
+    shape=21,
+    fill=NA,
+    data=data.dt)
 ```
 
 The plot below shows the scores and labels, as a function of the
@@ -240,8 +247,11 @@ to just have one color legend.
 
 ```{r}
 train.i <- 1:N
-data.dt[, set := "test"]
-data.dt <- data.dt[train.i, set := "train"]
+data.dt[
+, set := "test"
+][
+  train.i, set := "train"
+]
 table(data.dt$set)
 train.dt <- data.dt[set=="train",]
 ggplot()+
@@ -302,8 +312,9 @@ predF <- function(fit, X){
 xsq.vec <- seq(0, 1, l=41)
 grid.sq.dt <- data.table(expand.grid(
   x1.sq=xsq.vec,
-  x2.sq=xsq.vec))
-grid.sq.dt[, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
+  x2.sq=xsq.vec
+))[
+, pred.f := predF(fit, cbind(x1.sq, x2.sq))]
 train.dt[, train.error := ifelse(y==pred.y, "correct", "error")]
 ggplot()+
   theme_bw()+
@@ -500,7 +511,7 @@ modelLines.list <- list()
 inputBoundaries.list <- list()
 setErrors.list <- list()
 cost.by <- 0.2
-for(cost.param in 10^seq(-1, 1, by=cost.by)){
+for(cost.param in round(10^seq(-1, 1, by=cost.by),1)){
   fit <- ksvm(
     squared.mat, y.vec, kernel="vanilladot", scaled=FALSE, C=cost.param)
   fit.sc <- scaling(fit)$x.scale
@@ -546,9 +557,9 @@ for(cost.param in 10^seq(-1, 1, by=cost.by)){
   norm.weights <- as.numeric(weight.vec %*% weight.vec)
   modelInfo.list[[paste(cost.param)]] <- data.table(
     cost.param,
-    total.slack=slack.join[, sum(1-pred.f*y.num)],
-    norm.weights,
-    margin.size=2/sqrt(norm.weights))
+    slack=slack.join[, sum(1-pred.f*y.num)],
+    norm=norm.weights,
+    margin=2/sqrt(norm.weights))
   predictions.list[[paste(cost.param)]] <- data.table(
     cost.param, train.dt)
   slackSegs.list[[paste(cost.param)]] <- data.table(
@@ -582,7 +593,6 @@ animint(
       alpha=0.5,
       data=modelInfo)+
     theme_bw()+
-    theme(panel.margin=grid::unit(0, "lines"))+
     facet_grid(variable ~ ., scales="free")+
     geom_line(aes(
       log10(cost.param), errors,
@@ -633,7 +643,7 @@ animint(
     geom_vline(aes(
       xintercept=boundary), color="violet",
       data=x1sq.boundary)+
-    coord_cartesian(xlim=c(0, 1), ylim=c(0, 1))+
+    ##coord_cartesian(xlim=c(0, 1), ylim=c(0, 1))+
     geom_abline(aes(
       slope=slope, intercept=intercept, linetype=boundary),
       showSelected="cost.param",
