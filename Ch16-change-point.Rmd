@@ -42,7 +42,6 @@ facets.
 data.color <- "grey50"
 gg.signals <- ggplot()+
   theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(signal ~ ., scales="free")+
   geom_point(aes(
     base/1e6, logratio,
