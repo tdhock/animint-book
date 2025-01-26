@@ -98,7 +98,7 @@ opaque, no transparency), and the other points have alpha=0.5
 (semi-transparent). These defaults can be customized; for example in
 the code below a black outline is used to highlight the current selection.
 
-```{r}
+```{r Ch04-viz-color-off}
 animint(
   ggplot()+
     geom_point(aes(
