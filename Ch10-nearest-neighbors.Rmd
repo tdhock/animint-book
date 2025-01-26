@@ -92,14 +92,15 @@ faster and more memory efficient for big data sets.
 library(MASS)
 library(data.table)
 set.seed(123)
-centers <- c(sample(1:10, 5000, replace=TRUE), 
-               sample(11:20, 5000, replace=TRUE))
+centers <- c(
+  sample(1:10, 5000, replace=TRUE),
+  sample(11:20, 5000, replace=TRUE))
 mix.test <- mvrnorm(10000, c(0,0), 0.2*diag(2))
 test.points <- data.table(
   mix.test + ESL.mixture$means[centers,],
   label=factor(c(rep(0, 5000), rep(1, 5000))))
 test.points
-```  
+```
 
 We then create a data table which includes all test points and grid
 points, which we will use in the test argument to the knn function.
@@ -143,7 +144,8 @@ OneFold <- function(validation.fold){
     if(interactive())cat(sprintf(
       "n.folds=%4d validation.fold=%d neighbors=%d\n",
       n.folds, validation.fold, neighbors))
-    pred.label <- class::knn(
+    set.seed(1)
+    pred.label <- class::knn( # random tie-breaking.
       only.train[, input.cols, with=FALSE],
       fold.data[, input.cols, with=FALSE],
       only.train$label,
@@ -175,7 +177,8 @@ data.all.folds.list <- future.apply::future_lapply(
   0:n.folds, function(validation.fold){
     one.fold <- OneFold(validation.fold)
     data.table(validation.fold, one.fold)
-  })
+  },
+  future.seed = NULL)
 (data.all.folds <- do.call(rbind, data.all.folds.list))
 ```
 
