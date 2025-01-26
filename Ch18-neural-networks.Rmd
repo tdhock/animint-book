@@ -362,6 +362,7 @@ ggplot()+
       "min loss=%f at step size=%.1f",
       loss, step.size)),
     data=line.search.min,
+    size=4,
     hjust=0,
     vjust=1.5)
 ```
