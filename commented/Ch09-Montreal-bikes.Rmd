@@ -1,0 +1,765 @@
+---
+title: Montreal bikes data viz
+layout: default
+output: bookdown::html_chapter
+---
+
+<!-- comment -->
+
+# Chapter 9, Montreal bikes data viz
+
+<!-- comment -->
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ ```{r setup, echo=FALSE}
+ ```{r ghinstall}
+ ```{r accidents}
+ ```{r timeRange}
+ ```{r counterRange}
+ ```{r counterviz}
+ ```{r months}
+ ```{r}
+ ```{r accidentsPerMonth}
+ ```{r}
+ ```{r}
+ ```{r Ch09-viz-regression}
+ ```{r}
+ ```{r}
+ ```{r}
+ ```{r}
+ ```{r}
+ ```{r}
+ ```{r}
+ ```{r}
+ ```{r Ch09-viz-mtl}
+ knitr::opts_chunk$set(fig.path="Ch09-figures/")
+ tryCatch({
+  data(montreal.bikes, package="animint2")
+}, warning=function(w){
+  devtools::install_github("tdhock/animint2")
+})
+ library(animint2)
+data(montreal.bikes) #only present if installed from github
+Sys.setlocale(locale="en_US.UTF-8")
+if(! "Brébeuf" %in% montreal.bikes$counter.counts$location){
+  Encoding(levels(montreal.bikes$counter.counts$location)) <- "UTF-8"
+  print(table(montreal.bikes$counter.counts$location))
+}
+
+library(data.table)
+accidents.dt <- data.table(montreal.bikes$accidents)
+str(accidents.dt)
+ (accidents.dt[
+, date.POSIXct := as.POSIXct(strptime(date.str, "%Y-%m-%d"))
+][
+, month.str := strftime(date.POSIXct, "%Y-%m")
+][])
+range(accidents.dt$month.str)
+ (counts.dt <- data.table(montreal.bikes$counter.counts))
+counts.dt[, month.str := strftime(date, "%Y-%m")]
+range(counts.dt$month.str)
+ counts.dt[, loc.lines := gsub("[- _]", "\n", location)]
+ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(loc.lines ~ .)+
+  geom_point(aes(
+    date, count, color=count==0),
+    shape=21,
+    data=counts.dt)+
+  scale_color_manual(values=c("TRUE"="grey", "FALSE"="black"))
+ uniq.month.vec <- unique(c(
+  accidents.dt$month.str,
+  counts.dt$month.str))
+one.day <- 60 * 60 * 24
+months <- data.table(month.str=uniq.month.vec)[
+, month01.str := paste0(month.str, "-01")
+][
+, month01.POSIXct := as.POSIXct(strptime(month01.str, "%Y-%m-%d"))
+][, let(
+  next.POSIXct = month01.POSIXct + one.day * 31,
+  month.str = strftime(month01.POSIXct, "%B %Y")
+)][
+, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")
+][
+, next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
+]
+month.levs <- months[order(month01.POSIXct), month.str]
+(months[, month := factor(month.str, month.levs)][])
+ (accidents.dt[
+, month.text := strftime(date.POSIXct, "%B %Y")
+][
+, month := factor(month.text, month.levs)
+][
+, month.POSIXct := as.POSIXct(strptime(paste0(month.str, "-15"), "%Y-%m-%d"))
+][])
+stopifnot(!is.na(accidents.dt$month.POSIXct))
+(accidents.per.month <- accidents.dt[, list(
+  total.accidents=.N,
+  total.people=sum(deaths+people.severely.injured+people.slightly.injured),
+  deaths=sum(deaths),
+  people.severely.injured=sum(people.severely.injured),
+  people.slightly.injured=sum(people.slightly.injured),
+  next.POSIXct = month.POSIXct + one.day * 30,
+  month01.str = paste0(strftime(month.POSIXct, "%Y-%m"), "-01")
+), by=.(month, month.str, month.text, month.POSIXct)][, let(
+  month01.POSIXct = as.POSIXct(strptime(month01.str, "%Y-%m-%d")),
+  next01.str = paste0(strftime(next.POSIXct, "%Y-%m"), "-01")
+)][
+, next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
+][])
+ accidents.tall <- melt(
+  accidents.per.month,
+  measure.vars=c(
+    "deaths", "people.severely.injured", "people.slightly.injured"),
+  variable.name="severity",
+  value.name="people")
+severity.colors <- c(
+    "people.slightly.injured"="#FEE0D2",#lite red
+    "people.severely.injured"="#FB6A4A",
+    deaths="#A50F15")#dark red
+ggplot()+
+  theme_bw()+
+  geom_bar(aes(
+    month.POSIXct, people, fill=severity),
+    stat="identity",
+    data=accidents.tall)+
+  scale_fill_manual(values=severity.colors)
+ accidents.dt[
+, severity.str := fcase(
+  0 < deaths, "deaths",
+  0 < people.severely.injured, "people.severely.injured",
+  default="people.slightly.injured")
+][
+, severity := factor(severity.str, names(severity.colors))
+][
+, table(severity)
+]
+ (counts.per.month <- counts.dt[, let(
+  month.POSIXct = as.POSIXct(strptime(paste0(month.str, "-15"), "%Y-%m-%d")),
+  month.text = strftime(date, "%B %Y"),
+  day.of.the.month = as.integer(strftime(date, "%d"))
+)][
+, month := factor(month.text, month.levs)
+][, list(
+  days=.N,
+  mean.per.day=mean(count),
+  count=sum(count),
+  month01.str = paste0(month.str, "-01")
+), by=.(location, month, month.str, month.POSIXct)][
+  0 < count
+][
+, month01.POSIXct := as.POSIXct(strptime(month01.str, "%Y-%m-%d"))
+][
+, next.POSIXct := month01.POSIXct + one.day * 31
+][
+, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")
+][
+, next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
+][
+, days.in.month := as.integer(round(difftime(next01.POSIXct,month01.POSIXct,units="days")))
+][])
+counts.per.month[days < days.in.month, {
+  list(location, month, days, days.in.month)
+}]
+ complete.months <- counts.per.month[days == days.in.month]
+month.labels <- counts.per.month[, {
+  .SD[which.max(count), ]
+}, by=location]
+day.labels <- counts.dt[, {
+  .SD[which.max(count), ]
+}, by=.(location, month)]
+(city.wide.cyclists <- counts.per.month[0 < count, list(
+  locations=.N,
+  count=sum(count),
+  month01.str = paste0(month.str, "-01")
+), by=.(month, month.str, month.POSIXct)][
+, month01.POSIXct := as.POSIXct(strptime(month01.str, "%Y-%m-%d"))
+][
+, next.POSIXct := month01.POSIXct + one.day * 31
+][
+, next01.str := paste0(strftime(next.POSIXct, "%Y-%m"), "-01")
+][
+, next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
+][])
+month.str.vec <- strftime(seq(
+  strptime("2012-01-15", "%Y-%m-%d"),
+  strptime("2013-01-15", "%Y-%m-%d"),
+  by="month"), "%Y-%m")
+city.wide.complete <- complete.months[0 < count, list(
+  locations=.N,
+  count=sum(count),
+  month01.str = paste0(month.str, "-01")
+), by=.(month, month.str, month.POSIXct)]
+setkey(city.wide.complete, month.str)
+scatter.cyclists <- city.wide.complete[month.str.vec]
+scatter.accidents <- accidents.per.month[scatter.cyclists, on=list(month.str)]
+scatter.not.na <- scatter.accidents[!is.na(locations),]
+scatter.max <- scatter.not.na[locations==max(locations)]
+fit <- lm(total.accidents ~ count - 1, scatter.max)
+scatter.max[
+, pred.accidents := predict(fit)
+][
+, mean(total.accidents/count)
+]
+animint(
+  regression=ggplot()+
+    theme_bw()+
+    ggtitle("Numbers of accidents and cyclists")+
+    geom_line(aes(
+      count, pred.accidents),
+      color="grey",
+      data=scatter.max)+
+    geom_point(aes(
+      count, total.accidents),
+      shape=1,
+      clickSelects="month",
+      size=5,
+      alpha=0.75,
+      data=scatter.max)+
+    ylab("Total bike accidents (all Montreal locations)")+
+    xlab("Total cyclists (all Montreal locations)"),
+  timeSeries=ggplot()+
+    theme_bw()+
+    ggtitle("Time series of accident frequency")+
+    xlab("Month")+
+    geom_point(aes(
+      month.POSIXct, total.accidents/count),
+      clickSelects="month",             
+      size=5,
+      alpha=0.75,
+      data=scatter.max))
+ (accidents.cumsum <- accidents.dt[
+  order(date.POSIXct, month, severity)
+][
+, accident.i := seq_along(severity)
+, by=.(date.POSIXct, month)
+][
+, day.of.the.month := as.integer(strftime(date.POSIXct, "%d"))
+][])
+ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "cm"))+
+  facet_wrap("month")+
+  geom_text(aes(15, 25, label=month), data=accidents.per.month)+
+  scale_fill_manual(values=severity.colors)+
+  scale_x_continuous("day of the month", breaks=c(1, 10, 20, 30))+
+  geom_point(aes(
+    day.of.the.month, accident.i, fill=severity),
+    shape=21,
+    data=accidents.cumsum)
+ (counter.locations <- data.table(montreal.bikes$counter.locations)[, let(
+  lon = coord_X,
+  lat = coord_Y
+)][])
+loc.name.code <- c(
+  "Berri1"="Berri",
+  "Brebeuf"="Brébeuf",
+  CSC="Côte-Sainte-Catherine",
+  "Maisonneuve_1"="Maisonneuve 1",
+  "Maisonneuve_2"="Maisonneuve 2",
+  "Parc"="du Parc",
+  PierDup="Pierre-Dupuy",
+  "Rachel/Papineau"="Rachel",
+  "Saint-Urbain"="Saint-Urbain",
+  "Totem_Laurier"="Totem_Laurier")
+counter.locations[, location := loc.name.code[nom_comptage] ]
+velo.counts <- table(counts.dt$location)
+(show.locations <- counter.locations[names(velo.counts), on=list(location)])
+ map.lim <- show.locations[, list(
+  range.lat=range(lat),
+  range.lon=range(lon)
+)]
+diff.vec <- sapply(map.lim, diff)
+diff.mat <- c(-1, 1) * matrix(diff.vec, 2, 2, byrow=TRUE)
+scale.mat <- as.matrix(map.lim) + diff.mat
+location.colors <-
+  c("#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", 
+    "#B3DE69", "#FCCDE5", "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+names(location.colors) <- show.locations$location
+counts.per.month.loc <- counts.per.month[show.locations, on=list(location)]
+bike.paths <- data.table(montreal.bikes$path.locations)
+some.paths <- bike.paths[
+  scale.mat[1, "range.lat"] < lat &
+    scale.mat[1, "range.lon"] < lon &
+    lat < scale.mat[2, "range.lat"] &
+    lon < scale.mat[2, "range.lon"]]
+mtl.map <- ggplot()+
+  theme_bw()+
+  theme(
+    panel.margin=grid::unit(0, "lines"),
+    axis.line=element_blank(), axis.text=element_blank(), 
+    axis.ticks=element_blank(), axis.title=element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_blank())+
+  coord_equal(xlim=map.lim$range.lon, ylim=map.lim$range.lat)+
+  scale_color_manual(values=location.colors)+
+  scale_x_continuous(limits=scale.mat[, "range.lon"])+
+  scale_y_continuous(limits=scale.mat[, "range.lat"])+
+  geom_path(aes(
+    lon, lat,
+    tooltip=TYPE_VOIE,
+    group=paste(feature.i, path.i)),
+    color="grey",
+    data=some.paths)+
+  guides(color="none")+
+  geom_text(aes(
+    lon, lat,
+    label=location),
+    clickSelects="location",
+    data=show.locations)
+mtl.map
+ location.ranges <- counts.per.month[0 < count, list(
+  min=min(month.POSIXct),
+  max=max(month.POSIXct)
+), by=location]
+accidents.range <- accidents.dt[, data.table(
+  location="accidents",
+  min=min(date.POSIXct),
+  max=max(date.POSIXct))]
+MonthSummary <- ggplot()+
+  theme_bw()+
+  theme_animint(width=450, height=250)+
+  xlab("range of dates in data")+
+  ylab("data type")+
+  scale_color_manual(values=location.colors)+
+  guides(color="none")+
+  geom_segment(aes(
+    min, location,
+    xend=max, yend=location,
+    color=location),
+    clickSelects="location",
+    data=location.ranges, alpha=3/4, size=10)+
+  geom_segment(aes(
+    min, location,
+    xend=max, yend=location),
+    color=severity.colors[["deaths"]],
+    data=accidents.range,
+    size=10)
+print(MonthSummary)
+ (dates <- counts.dt[, list(
+  min.date = date-one.day/2,
+  max.date = date+one.day/2,
+  locations=sum(!is.na(count))
+), by=list(date)][0 < locations])
+(location.labels <- counts.dt[
+, .SD[which.max(count)]
+, by=list(location)])
+TimeSeries <- ggplot()+
+  theme_bw()+
+  geom_tallrect(aes(
+    xmin=date-one.day/2, xmax=date+one.day/2,
+    clickSelects=date),
+    data=dates, alpha=1/2)+
+  geom_line(aes(
+    date, count, group=location,
+    showSelected=location,
+    clickSelects=location),
+    data=counts.dt)+
+  scale_color_manual(values=location.colors)+
+  geom_point(aes(
+    date, count, color=location,
+    showSelected=location,
+    clickSelects=location),
+    data=counts.dt)+
+  geom_text(aes(
+    date, count+200, color=location, label=location,
+    showSelected=location,
+    clickSelects=location),
+    data=location.labels)
+print(TimeSeries)
+ MonthSeries <- ggplot()+
+  guides(color="none", fill="none")+
+  theme_bw()+
+  geom_tallrect(aes(
+    xmin=month01.POSIXct, xmax=next01.POSIXct),
+    clickSelects="month",    
+    data=months,
+    alpha=1/2)+
+  geom_line(aes(
+    month.POSIXct, count, group=location,
+    color=location),
+    showSelected="location",
+    clickSelects="location",
+    data=counts.per.month)+
+  scale_color_manual(values=location.colors)+
+  scale_fill_manual(values=location.colors)+
+  xlab("month")+
+  ylab("bike counts per month")+
+  geom_point(aes(
+    month.POSIXct, count, fill=location,
+    tooltip=paste(
+      count, "bikers counted at",
+      location, "in", month)),
+    showSelected="location",
+    clickSelects="location",
+    size=5,
+    color="black",
+    data=counts.per.month)+
+  geom_text(aes(
+    month.POSIXct, count+5000, color=location, label=location),
+    showSelected="location",
+    clickSelects="location",
+    data=month.labels)
+print(MonthSeries)
+ counter.title <- "mean cyclists per day"
+accidents.title <- "city-wide accidents"
+MonthFacet <- ggplot()+
+  ggtitle("All data, select month")+
+  guides(color="none", fill="none")+
+  theme_bw()+
+  facet_grid(facet ~ ., scales="free")+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  geom_tallrect(aes(
+    xmin=month01.POSIXct, xmax=next01.POSIXct),
+    clickSelects="month",
+    data=data.table(
+      city.wide.cyclists,
+      facet=counter.title),
+    alpha=1/2)+
+  geom_line(aes(
+    month.POSIXct, mean.per.day, group=location,
+    color=location),
+    showSelected="location",
+    clickSelects="location",
+    data=data.table(counts.per.month, facet=counter.title))+
+  scale_color_manual(values=location.colors)+
+  xlab("month")+
+  ylab("")+
+  geom_point(aes(
+    month.POSIXct, mean.per.day, color=location,
+    tooltip=paste(
+      count, "cyclists counted at",
+      location, "in",
+      days, "days of", month,
+      sprintf("(mean %d cyclists/day)", as.integer(mean.per.day)))),
+    showSelected="location",
+    clickSelects="location",
+    size=5,
+    fill="grey",
+    data=data.table(counts.per.month, facet=counter.title))+
+  geom_text(aes(
+    month.POSIXct, mean.per.day+300, color=location, label=location),
+    showSelected="location",
+    clickSelects="location",
+    data=data.table(month.labels, facet=counter.title))+
+  scale_fill_manual(values=severity.colors, breaks=names(severity.colors))+
+  geom_bar(aes(
+    month.POSIXct, people,
+    fill=severity),
+    showSelected="severity",
+    stat="identity",
+    position="identity",
+    color=NA,
+    data=data.table(accidents.tall, facet=accidents.title))+
+  geom_tallrect(aes(
+    xmin=month01.POSIXct, xmax=next01.POSIXct,
+    tooltip=paste(
+      ifelse(deaths==0, "",
+      ifelse(deaths==1,
+             "1 death,",
+             paste(deaths, "deaths,"))),
+      ifelse(people.severely.injured==0, "",
+      ifelse(people.severely.injured==1,
+             "1 person severely injured,",
+             paste(people.severely.injured,
+                   "people severely injured,"))),
+      people.slightly.injured,
+      "people slightly injured in",
+      month)),
+    clickSelects="month",
+    alpha=0.5,
+    data=data.table(accidents.per.month,
+                    facet=accidents.title))
+MonthFacet
+ (days.dt <- data.table(
+  day.POSIXct=with(months, seq(
+    min(month01.POSIXct),
+    max(next01.POSIXct),
+    by="day"))
+)[
+, day.of.the.week := strftime(day.POSIXct, "%a")
+][])
+## The following only works in locales with English days of the week.
+(weekend.dt <- days.dt[
+  day.of.the.week %in% c("Sat", "Sun")
+][, let(
+  month.text = strftime(day.POSIXct, "%B %Y"),
+  day.of.the.month = as.integer(strftime(day.POSIXct, "%d"))
+)][
+, month := factor(month.text, month.levs)
+][])
+counter.title <- "cyclists per day"
+DaysFacet <- ggplot()+
+  ggtitle("Selected month (weekends in grey)")+
+  geom_tallrect(aes(
+    xmin=day.of.the.month-0.5, xmax=day.of.the.month+0.5,
+    key=paste(day.POSIXct)),
+    showSelected="month",
+    fill="grey",
+    color="white",
+    data=weekend.dt)+
+  guides(color="none")+
+  theme_bw()+
+  facet_grid(facet ~ ., scales="free")+
+  geom_line(aes(
+    day.of.the.month, count, group=location,
+    key=location,
+    color=location),
+    showSelected=c("location", "month"),
+    clickSelects="location",
+    chunk_vars=c("month"),
+    data=data.table(counts.dt, facet=counter.title))+
+  scale_color_manual(values=location.colors)+
+  ylab("")+
+  geom_point(aes(
+    day.of.the.month, count, color=location,
+    key=paste(day.of.the.month, location),
+    tooltip=paste(
+      count, "cyclists counted at",
+      location, "on",
+      date)),
+    showSelected=c("location", "month"),
+    clickSelects="location",
+    size=5,
+    chunk_vars=c("month"),
+    fill="white",
+    data=data.table(counts.dt, facet=counter.title))+
+  scale_fill_manual(values=severity.colors, breaks=names(severity.colors))+
+  geom_text(aes(
+    15, 23, label=month, key=1),
+    showSelected="month",
+    data=data.table(months, facet=accidents.title))+
+  scale_x_continuous("day of the month", breaks=c(1, 10, 20, 30))+
+  geom_text(aes(
+    day.of.the.month, count+500, color=location, label=location,
+    key=location),
+    showSelected=c("location", "month"),
+    clickSelects="location",
+    data=data.table(day.labels, facet=counter.title))+
+  geom_point(aes(
+    day.of.the.month, accident.i,
+    key=paste(date.str, accident.i),
+    tooltip=paste(
+      ifelse(deaths==0, "",
+      ifelse(deaths==1,
+             "1 death,",
+             paste(deaths, "deaths,"))),
+      ifelse(people.severely.injured==0, "",
+      ifelse(people.severely.injured==1,
+             "1 person severely injured,",
+             paste(people.severely.injured,
+                   "people severely injured,"))),
+      people.slightly.injured,
+      "people slightly injured at",
+      ifelse(is.na(street.number), "", street.number),
+      street, "/", cross.street,
+      date.str, time.str),
+    fill=severity),
+    showSelected="month",
+    size=4,
+    chunk_vars=c("month"),
+    data=data.table(accidents.cumsum, facet=accidents.title))
+DaysFacet
+ animint(
+  MonthFacet,
+  DaysFacet,
+  MonthSummary,
+  selector.types=list(severity="multiple"),
+  duration=list(month=2000),
+  first=list(
+    location="Berri",
+    month="September 2012"),
+  time=list(variable="month", ms=5000))#buggy.
+ 
+
+<!-- comment -->
+
+In this chapter we will explore several data visualizations of the
+Montreal bike data set.
+
+<!-- comment -->
+
+Chapter outline:
+
+<!-- comment -->
+
+* We begin with some static data visualizations.
+* We create an interactive visualization of accident frequency over
+  time.
+* We create a interactive data viz with four plots, showing monthly
+  accident trends, daily details, and a map of counter locations.
+
+<!-- comment -->
+
+## Static figures {#static}
+
+<!-- comment -->
+
+We begin by loading the `montreal.bikes` data set, which is not
+available in the CRAN release of animint2, in order to save space on
+CRAN. Therefore to access this data set, you will need to install
+animint2 from GitHub:
+ 
+
+<!-- comment -->
+
+We begin by examining the accidents data table.
+ 
+
+<!-- comment -->
+
+Each accident has data about its date, time, location, and counts of
+death and slight/severe injury. Some of the values are in French
+(e.g. position Voie de circulation, location En intersection, etc).
+
+<!-- comment -->
+
+We calculate the time period of the accidents below.
+ 
+
+<!-- comment -->
+
+Below we also compute the range of months for the bike counter data table.
+ 
+
+<!-- comment -->
+
+The bike counts are time series data which we visualize below.
+ 
+
+<!-- comment -->
+
+Plotting with `geom_point` makes it easy to see the difference between
+zeros and missing values.
+
+<!-- comment -->
+
+We will compute a summary of all accidents per month in this time
+period, so we first create a data table for each month below. (and
+make sure to set the locale to C for English month names)
+ 
+
+<!-- comment -->
+
+Note that we created a `month` column which is a factor ordered by
+`month.levs`.
+ 
+
+<!-- comment -->
+
+We plot the accidents per month below.
+ 
+
+<!-- comment -->
+
+In each accident, there are counts of people who died, along with
+people who suffered severe and slight injuries. Below we classify the
+severity of each accident according to the worst outcome among the
+people affected.
+ 
+
+<!-- comment -->
+
+The output above shows that accidents with only slight injuries are
+most frequent, and accidents with at least one death are least
+frequent.
+Below we compute counts per month.
+ 
+
+<!-- comment -->
+
+As shown above, some months do not have observations for all days.
+
+<!-- comment -->
+
+## Interactive viz of accident frequency {#regression}
+ 
+
+<!-- comment -->
+
+The data viz above shows two data visualizations of city-wide accident
+frequency over time. The plot on the left shows that the number of
+accidents grows with the number of cyclists. The plot on the right
+shows the frequency of accidents over time.
+
+<!-- comment -->
+
+## Interactive viz with map and details {#details}
+
+<!-- comment -->
+
+The plot below is a dotplot of accidents for each month. Each dot
+represents one person who got in an accident.
+ 
+ 
+
+<!-- comment -->
+
+The counter locations above will be plotted below. Note that we use
+`showSelected=month` and `clickSelects=location`.
+ 
+
+<!-- comment -->
+
+The plot below shows the time period that each counter was in
+operation. Note that we use `geom_tallrect` with `clickSelects` to
+select the month.
+ 
+
+<!-- comment -->
+
+The plot below shows the bike counts at each location and day.
+ 
+
+<!-- comment -->
+
+The plot below shows the same data but for each month.
+ 
+ 
+ 
+ 
+
+<!-- comment -->
+
+## Chapter summary and exercises {#exercises}
+
+<!-- comment -->
+
+Exercises:
+
+<!-- comment -->
+
+* Change location to a multiple selection variable.
+* Add a plot for the map to the data viz.
+* On the map, draw a circle for each location, with size that changes
+  based on the `count` of the accidents in the currently selected
+  `month`.
+* On the `MonthSummary` plot, add a background
+  rectangle that can be used to select the `month`.
+* Remove the `MonthSummary` plot and add a similar visualization as a
+  third panel in the `MonthFacet` plot.
+
+<!-- comment -->
+
+Next, [Chapter 10](Ch10-nearest-neighbors.html) explains how to visualize the
+K-Nearest-Neighbors machine learning model.

@@ -1,0 +1,311 @@
+---
+title: Sharing
+layout: default
+output: bookdown::html_chapter
+---
+
+<!-- comment -->
+
+# Chapter 5, Sharing animints
+
+<!-- comment -->
+
+ 
+ 
+ 
+ ```{r setup, echo=FALSE}
+ ```{r}
+ ```{r}
+ ```{r eval=F}
+ knitr::opts_chunk$set(fig.path="Ch05-figures/")
+ set.seed(1)
+ten.points <- data.frame(x=0:9, y=rnorm(10))
+animint(
+  point=ggplot()+
+    geom_point(aes(
+      x, y), 
+      data=ten.points)
+)
+ animint(
+  point=ggplot()+
+    geom_point(aes(
+      x, y), 
+      data=ten.points),
+  out.dir="Ch05-sharing-ten-points"
+)
+ viz <- animint(
+  point=ggplot()+
+    geom_point(aes(
+      x, y), 
+      data=ten.points))
+animint2dir(
+  viz, 
+  out.dir="Ch05-sharing-ten-points-again", 
+  open.browser=FALSE)
+ 
+
+<!-- comment -->
+
+This chapter explains several methods for sharing your interactive
+data visualizations on the web. After reading this chapter, you will
+be able to view animints
+
+<!-- comment -->
+
+* from a local directory on your personal computer.
+* in [R Markdown](http://rmarkdown.rstudio.com/) documents.
+* using any web server, including [Netlify
+  Drop](https://app.netlify.com/drop).
+* published using [GitHub pages](https://pages.github.com/), and
+  organized into a group called a gallery.
+
+<!-- comment -->
+
+## Compile to a local directory {#animint2dir}
+
+<!-- comment -->
+
+When experimenting with different interactive data visualization
+designs, it is useful to preview them on your personal computer before
+publishing on the web. This section discusses two methods for
+compiling animints to a local directory.
+
+<!-- comment -->
+
+So far in previous chapters we have only discussed one method for
+creating interactive data visualizations. If `viz` is an animint (list
+of ggplots and options with class animint), then printing it on the R
+command line compiles that animint to a temporary
+directory, using code like this,
+ 
+
+<!-- comment -->
+
+The code above saves the animint to a new temporary directory. Rather
+than saving each animint to a separate temporary directory, you can
+specify an output directory via the `out.dir` argument to
+`animint`. If you want to save the animint in the
+`"Ch05-sharing-ten-points"` directory, use:
+ 
+
+<!-- comment -->
+
+If the parent of `out.dir` does not exist, that is an error (you can
+use `dir.create` to create the parent if necessary). If `out.dir` does
+not exist, then it will be created. If `out.dir` does exist (and
+contains a file named `animint.js`), then any files in that directory
+will be overwritten. To view the data viz, navigate to
+`Ch05-sharing-ten-points/index.html` in a web browser (which should be
+done automatically / by default). If the web page is blank, you may
+need to configure your browser to allow execution of local JavaScript
+code, [as explained on our
+FAQ](https://github.com/tdhock/animint2/wiki/FAQ#web-browser-on-local-indexhtml-file-is-blank).
+
+<!-- comment -->
+
+Internally, R calls the `print.animint` S3 method, which calls
+`animint2dir` to compile it to a new temporary directory on your
+personal computer. Generally we advise to avoid calling `animint2dir`
+directly, but it is useful if you want to avoid opening lots of
+similar browser windows when repeatedly revising and rendering an
+animint. You can prevent the default behavior of opening a browser
+window via:
+ 
+
+<!-- comment -->
+
+## Publish in R Markdown {#Rmd}
+
+<!-- comment -->
+
+To include an animint in an R Markdown document, use `animint(...)`
+inside of an R code chunk. R will run the `knit_print.animint` S3
+method, which compiles the animint to a local directory, named based
+on the name of the R code chunk. For example a code chunk named
+`viz-facets` will be saved in the directory `vizfacets`. Make sure to
+put each animint in its own code chunk (do not put two animints in the
+same code chunk).
+
+<!-- comment -->
+
+## Publish on a web server {#web-server}
+
+<!-- comment -->
+
+Since animints are just directories with HTML, TSV, and JavaScript
+files, you can publish them on any web server by simply copying the
+directory to that server.
+
+<!-- comment -->
+
+For example I executed the code in
+https://github.com/animint/animint2/blob/master/inst/examples/WorldBank-facets.R
+to create the `WorldBank-facets` directory on my personal computer. I
+copied that directory to my lab web server using `rsync -r
+WorldBank-facets/ monsoon.hpc.nau.edu:genomic-ml/WorldBank-facets/` and so
+I can view it on https://rcdata.nau.edu/genomic-ml/WorldBank-facets/
+
+<!-- comment -->
+
+If you don't have access to a personal/lab web server, try using
+one of the methods described below, which are free for anyone.
+
+<!-- comment -->
+
+## Publish on Netlify Drop {#netlifydrop}
+
+<!-- comment -->
+
+[Netlify Drop](https://app.netlify.com/drop) is for hosting static web
+sites. To publish your data viz there, simply drag a directory to that
+web page (it can be a directory resulting from `animint2dir`, or from
+`rmarkdown::render` if your animint is inside Rmd, as described
+above).  After the upload completes, you will be provided a link which
+can be used to view the files in that directory. No registration/login
+is required, but if you do not register an account, your data viz will
+be deleted after one hour. You can register for a free account if you
+want your data viz to be available longer.
+
+<!-- comment -->
+
+## Publish on GitHub Pages {#pages}
+
+<!-- comment -->
+
+[GitHub Pages](https://pages.github.com/) is a service that provides
+static web site hosting, and can be used to publish animints. To
+publish an animint on GitHub Pages, you need a GitHub account, and the
+packages `gert` (for running git from R), `gh` (for using the GitHub
+API from R), and `gitcreds` (for interacting with the git credential
+store, easy authentication when pushing to GitHub). First, install
+those packages. If you don't have a GitHub account, you can [sign up
+for free](https://github.com/join). Then make sure to tell R what
+name/email to use for git commits:
+
+<!-- comment -->
+
+```r
+gert::git_config_global_set("user.name", "<your_full_name>")
+gert::git_config_global_set("user.email", "<your_email>")
+```
+
+<!-- comment -->
+
+You can then use `animint2pages(viz, "new_repo")` function to publish
+your data `viz` to the `gh-pages` branch of
+`your_github_username/new_repo` (note that `your_github_username` is
+not specified in code, because `gitcreds` will get that information
+from the git credential store).  It should print a message which tells
+you the URL/link where your data viz will be accessible. It takes a
+few minutes (usually not more than five) from the time you run
+animint2pages, to the time the data viz is published for viewing on
+GitHub Pages.
+
+<!-- comment -->
+
+If you want to update an animint that has already been published on
+GitHub Pages, you can simply run `animint2pages(updated_viz,
+"existing_repo")`, which will update the `gh-pages` branch of the
+specified repository. 
+
+<!-- comment -->
+
+Beware that GitHub Pages imposes a limit of 100MB per file. For most
+animints, this limit should not be a problem. If your data viz
+contains a TSV file over 100MB, consider using the
+[`chunk_vars`](https://rcdata.nau.edu/genomic-ml/animint2-manual/Ch06-other.html#geom-options)
+option to break that TSV file into several smaller files.
+
+<!-- comment -->
+
+## Organizing animints in a gallery {#gallery}
+
+<!-- comment -->
+
+A gallery is a collection of meta-data about animints that have been
+published to GitHub Pages. For example, the main animint gallery is
+<https://animint.github.io/gallery/> which is a web page that has
+links to various animints, organized into a table. 
+
+<!-- comment -->
+
+* There is one row for each animint.
+* The first column `viz.link` shows a screenshot of the animint, which
+  links to the animint web page.
+* The second column `repo.link` shows the name of the data viz (taken
+  from the `title` option of the animint), and links to the GitHub
+  repo's `gh-pages` branch.
+* The third column `source.link` shows the last commit time of the
+  animint, and links to the R source code used to create that animint
+  (taken from the `source` option of the animint).
+
+<!-- comment -->
+
+A gallery is defined as a github repo that should have two source
+files in the `gh-pages` branch: 
+
+<!-- comment -->
+
+* `repos.txt` (list of github repositories which contain animints, one
+  owner/repo per line), and
+* `index.Rmd` (source for web page with links to animints).
+
+<!-- comment -->
+
+To add a new animint to the gallery which is published in the
+`gh-pages` branch of `your_github_username/gallery_repo`, you can use
+the following method:
+
+<!-- comment -->
+
+* Create a new animint in R code, and make sure to define the `source`
+  and `title` options.
+* use `animint2pages(viz, "viz_repo")` to publish that animint to the
+  `gh-pages` branch of `your_github_username/viz_repo`.
+* take a screenshot of that animint, and commit/push that screenshot
+  as a file named `Capture.PNG` (case-sensitive), in the `gh-pages`
+  branch of `your_github_username/viz_repo`.
+* add `your_github_username/viz_repo` to the `repos.txt` file in the
+  `gh-pages` branch of `your_github_username/gallery_repo`.
+* run the R code `animint2::update_gallery("path/to/gallery_repo")`
+  (note that a clone of the gallery repo must be present on the system
+  where you run this function, and the GitHub remote must be named
+  `origin`). It will read `gallery_repo/repos.txt`, read meta-data
+  (`title`, `source`, `Capture.PNG`) from each repo which is not
+  already present in `gallery_repo/meta.csv`, write updated meta-data
+  files to the gallery, render `gallery_repo/index.Rmd` to
+  `gallery_repo/index.html`, commit, and push to `origin`.
+* the updated gallery should be viewable on the web, at
+  <https://your_github_username.github.io/gallery_repo> after a few
+  minutes (usually no more than five).
+
+<!-- comment -->
+
+## Chapter summary and exercises {#exercises}
+
+<!-- comment -->
+
+This chapter explained how to share animints on the web.
+
+<!-- comment -->
+
+Exercises:
+
+<!-- comment -->
+
+* Create an animint using the options mentioned in this chapter:
+  `out.dir` (name of directory to save animint on your computer),
+  `source` (link to R source code used to create animint), `title`
+  (description of animint).
+* Use Netlify Drop to publish that animint on the web.
+* Use `animint2pages` to publish that animint to a new GitHub
+  repository. Create a screenshot and save it as `Capture.PNG` in the
+  `gh-pages` branch of that repository. Add that repository to the
+  main animint gallery
+  [repos.txt](https://github.com/animint/gallery/blob/gh-pages/repos.txt)
+  by submitting a Pull Request on GitHub.
+* Create your own animint gallery repository, and add two or more of
+  your own animints to that gallery.
+  
+Next, [Chapter 6](Ch06-other.html) explains the different options that
+can be used to customize an animint.

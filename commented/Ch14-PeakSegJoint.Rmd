@@ -1,0 +1,538 @@
+---
+title: Named clickSelects/showSelected
+layout: default
+output: bookdown::html_chapter
+---
+
+<!-- comment -->
+
+# Chapter 14, Named clickSelects/showSelected
+
+<!-- comment -->
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ ```{r setup, echo=FALSE}
+ ```{r download-PSJ}
+ ```{r Ch14-setup-data}
+ ```{r Ch14-for-construct}
+ ```{r Ch14-for-compile}
+ ```{r Ch14-viz-named}
+ ```{r Ch14-named-compile}
+ ```{r}
+ ```{r}
+ knitr::opts_chunk$set(fig.path="Ch14-figures/")
+ if(!file.exists("PSJ.RData")){
+  u <- paste0(
+    "http://github.com/tdhock/animint-examples",
+    "/blob/master/data/PSJ.RData?raw=true"
+    )
+  library(httr)
+  request <- GET(u)
+  stop_for_status(request)
+  writeBin(content(request), "PSJ.RData")
+}
+load("PSJ.RData")
+ res.error <- PSJ$error.total.chunk
+ann.colors <- c(
+  noPeaks="#f6f4bf",
+  peakStart="#ffafaf",
+  peakEnd="#ff4c4c",
+  peaks="#a445ee")
+## prob.regions are the black segments that show which regions are
+## mapped to which segmentation problems.
+library(data.table)
+all.regions <- data.table(do.call(rbind, PSJ$regions.by.problem))
+prob.regions.names <- c(
+  "bases.per.problem", "problem.i", "problem.name",
+  "chromStart", "chromEnd")
+prob.regions <- unique(data.frame(all.regions)[, prob.regions.names])
+prob.regions$sample.id <- "problems"
+all.modelSelection <- data.table(do.call(
+  rbind, PSJ$modelSelection.by.problem))
+modelSelection.errors <- all.modelSelection[!is.na(errors)]
+penalty.range <- all.modelSelection[, c(
+  min(max.log.lambda), max(min.log.lambda))]
+penalty.mid <- mean(penalty.range)
+coverage.counts <- table(PSJ$coverage$sample.id)
+facet.rows <- length(coverage.counts)+1
+dvec <- diff(log(res.error$bases.per.problem))
+dval <- exp(mean(dvec))
+dval2 <- (dval-1)/2 + 1
+res.error$min.bases.per.problem <- res.error$bases.per.problem/dval2
+res.error$max.bases.per.problem <- res.error$bases.per.problem*dval2
+modelSelection.labels <- unique(all.modelSelection[, data.table(
+  problem.name=problem.name,
+  bases.per.problem=bases.per.problem,
+  problemStart=problemStart,
+  problemEnd=problemEnd,
+  min.log.lambda=penalty.mid,
+  peaks=max(peaks)+0.5)])
+ library(animint2)
+print(timing.for.construct <- system.time({
+  viz.for <- list(
+    coverage=ggplot()+
+      geom_segment(aes(
+        chromStart/1e3, problem.i,
+        xend=chromEnd/1e3, yend=problem.i),
+        showSelected="bases.per.problem",
+        clickSelects="problem.name",
+        data=prob.regions)+
+      ggtitle("select problem")+
+      geom_text(aes(
+        chromStart/1e3, problem.i,
+        label=sprintf("%d problems mean size %.1f kb",
+                      problems, mean.bases/1e3)),
+        showSelected="bases.per.problem",
+        data=PSJ$problem.labels,
+        hjust=0)+
+      geom_segment(aes(
+        problemStart/1e3, problem.i,
+        xend=problemEnd/1e3, yend=problem.i),
+        showSelected="bases.per.problem",
+        clickSelects="problem.name",
+        size=5,
+        data=PSJ$problems)+
+      scale_y_continuous(
+        "aligned read coverage",
+        breaks=function(limits){
+          floor(limits[2])
+        })+
+      scale_linetype_manual(
+        "error type",
+        limits=c(
+          "correct", 
+          "false negative",
+          "false positive"),
+        values=c(
+          correct=0,
+          "false negative"=3,
+          "false positive"=1))+
+      scale_x_continuous(paste(
+        "position on chr11",
+        "(kilo bases = kb)"))+
+      coord_cartesian(xlim=c(118167.406, 118238.833))+
+      geom_tallrect(aes(
+        xmin=chromStart/1e3, xmax=chromEnd/1e3,
+        fill=annotation),
+        alpha=0.5,
+        color="grey",
+        data=PSJ$filled.regions)+
+      scale_fill_manual(values=ann.colors)+
+      theme_bw()+
+      theme_animint(width=1500, height=facet.rows*100)+
+      theme(panel.margin=grid::unit(0, "cm"))+
+      facet_grid(sample.id ~ ., labeller=function(df){
+        df$sample.id <- sub("McGill0", "", sub(" ", "\n", df$sample.id))
+        df
+      }, scales="free")+
+      geom_line(aes(
+        base/1e3, count),
+        data=PSJ$coverage,
+        color="grey50"),
+    resError=ggplot()+
+      ggtitle("select problem size")+
+      ylab("minimum percent incorrect regions")+
+      geom_tallrect(aes(
+        xmin=min.bases.per.problem,
+        xmax=max.bases.per.problem),
+        clickSelects="bases.per.problem",
+        alpha=0.5,
+        data=res.error)+
+      scale_x_log10()+
+      geom_line(aes(
+        bases.per.problem, errors/regions*100,
+        color=chunks, size=chunks),
+        data=data.frame(res.error, chunks="this"))+
+      geom_line(aes(
+        bases.per.problem, errors/regions*100,
+        color=chunks, size=chunks),
+        data=data.frame(PSJ$error.total.all, chunks="all")),
+    modelSelection=ggplot()+
+      geom_segment(aes(
+        min.log.lambda, peaks,
+        xend=max.log.lambda, yend=peaks),
+        showSelected=c("bases.per.problem", "problem.name"),
+        data=data.frame(all.modelSelection, what="peaks"),
+        size=5)+
+      geom_text(aes(
+        min.log.lambda, peaks,
+        label=sprintf(
+          "%.1f kb in problem %s",
+          (problemEnd-problemStart)/1e3, problem.name)),
+        showSelected=c("problem.name", "bases.per.problem"),
+        data=data.frame(modelSelection.labels, what="peaks"))+
+      geom_segment(aes(
+        min.log.lambda, as.integer(errors),
+        xend=max.log.lambda, yend=as.integer(errors)),
+        showSelected=c("bases.per.problem", "problem.name"),
+        data=data.frame(modelSelection.errors, what="errors"),
+        size=5)+
+      ggtitle("select number of samples with 1 peak")+
+      ylab("")+
+      facet_grid(what ~ ., scales="free"),
+    title="Animint compiler with for loops",
+    first=PSJ$first)
+  ## For every problem there is a selector (called problem.dot) for the
+  ## number of peaks in that problem. So in this for loop we add a few
+  ## layers with aes_string(clickSelects=problem.dot) or
+  ## aes_string(showSelected=problem.dot) to the coverage and
+  ## modelSelection plots.
+  for(problem.dot in names(PSJ$modelSelection.by.problem)){
+    regions.dt <- PSJ$regions.by.problem[[problem.dot]]
+    regions.dt[[problem.dot]] <- regions.dt$peaks
+    if(!is.null(regions.dt)){
+      viz.for$coverage <- viz.for$coverage+
+        geom_tallrect(aes(
+          xmin=chromStart/1e3,
+          xmax=chromEnd/1e3,
+          linetype=status),
+          showSelected=c(problem.dot, "bases.per.problem"),
+          data=data.frame(regions.dt),
+          fill=NA,
+          color="black")
+    }
+    if(problem.dot %in% names(PSJ$peaks.by.problem)){
+      peaks <- PSJ$peaks.by.problem[[problem.dot]]
+      peaks[[problem.dot]] <- peaks$peaks
+      prob.peaks.names <- c(
+        "bases.per.problem", "problem.i", "problem.name",
+        "chromStart", "chromEnd", problem.dot)
+      prob.peaks <- unique(data.frame(peaks)[, prob.peaks.names])
+      prob.peaks$sample.id <- "problems"
+      viz.for$coverage <- viz.for$coverage +
+        geom_segment(aes(
+          chromStart/1e3, 0,
+          xend=chromEnd/1e3, yend=0),
+          clickSelects="problem.name",
+          showSelected=c(problem.dot, "bases.per.problem"),
+          data=peaks, size=7, color="deepskyblue")+
+        geom_segment(aes(
+          chromStart/1e3, problem.i,
+          xend=chromEnd/1e3, yend=problem.i),
+          clickSelects="problem.name",
+          showSelected=c(problem.dot, "bases.per.problem"),
+          data=prob.peaks, size=7, color="deepskyblue")
+    }
+    modelSelection.dt <- PSJ$modelSelection.by.problem[[problem.dot]]
+    modelSelection.dt[[problem.dot]] <- modelSelection.dt$peaks
+    viz.for$modelSelection <- viz.for$modelSelection+
+      geom_tallrect(aes(
+        xmin=min.log.lambda, 
+        xmax=max.log.lambda), 
+        clickSelects=problem.dot,
+        showSelected=c("problem.name", "bases.per.problem"),
+        data=modelSelection.dt, alpha=0.5)
+  }
+}))
+ print(timing.for.compile <- system.time({
+  animint2dir(viz.for, "Ch14-for")
+}))
+ sample.peaks <- data.table(do.call(rbind, PSJ$peaks.by.problem))
+prob.peaks.names <- c(
+  "bases.per.problem", "problem.i", "problem.name", "peaks",
+  "chromStart", "chromEnd")
+problem.peaks <- unique(sample.peaks[, ..prob.peaks.names])
+problem.peaks$sample.id <- "problems"
+peakvar <- function(position){
+  paste0(gsub("[-:]", ".", position), "peaks")
+}
+all.regions[, selector := peakvar(problem.name)]
+sample.peaks[, selector := peakvar(problem.name)]
+problem.peaks[, selector := peakvar(problem.name)]
+all.modelSelection[, selector := peakvar(problem.name)]
+print(timing.named.construct <- system.time({
+  viz.named <- list(
+    coverage=ggplot()+
+      ggtitle("select problem")+
+      geom_segment(aes(
+        chromStart/1e3, problem.i,
+        xend=chromEnd/1e3, yend=problem.i),
+        showSelected="bases.per.problem",
+        clickSelects="problem.name",
+        data=prob.regions)+
+      geom_text(aes(
+        chromStart/1e3, problem.i,
+        label=sprintf(
+          "%d problems mean size %.1f kb",
+          problems, mean.bases/1e3)),
+        showSelected="bases.per.problem",
+        data=PSJ$problem.labels,
+        hjust=0)+
+      geom_segment(aes(
+        problemStart/1e3, problem.i,
+        xend=problemEnd/1e3, yend=problem.i),
+        showSelected="bases.per.problem",
+        clickSelects="problem.name",
+        size=5,
+        data=PSJ$problems)+
+      scale_y_continuous(
+        "aligned read coverage",
+        breaks=function(limits){
+          floor(limits[2])
+        })+
+      scale_linetype_manual(
+        "error type",
+        limits=c(
+          "correct", 
+          "false negative",
+          "false positive"),
+        values=c(
+          correct=0,
+          "false negative"=3,
+          "false positive"=1))+
+      scale_x_continuous(paste(
+        "position on chr11",
+        "(kilo bases = kb)"))+
+      coord_cartesian(xlim=c(118167.406, 118238.833))+
+      geom_tallrect(aes(
+        xmin=chromStart/1e3, xmax=chromEnd/1e3,
+        fill=annotation),
+        alpha=0.5,
+        color="grey",
+        data=PSJ$filled.regions)+
+      scale_fill_manual(values=ann.colors)+
+      theme_bw()+
+      theme_animint(width=1500, height=facet.rows*100)+
+      theme(panel.margin=grid::unit(0, "cm"))+
+      facet_grid(sample.id ~ ., labeller=function(df){
+        df$sample.id <- sub("McGill0", "", sub(" ", "\n", df$sample.id))
+        df
+      }, scales="free")+
+      geom_line(aes(
+        base/1e3, count),
+        data=PSJ$coverage,
+        color="grey50")+
+      geom_tallrect(aes(
+        xmin=chromStart/1e3,
+        xmax=chromEnd/1e3,
+        linetype=status),
+        showSelected=c("selector"="peaks", "bases.per.problem"),
+        data=all.regions,
+        fill=NA,
+        color="black")+
+      geom_segment(aes(
+        chromStart/1e3, 0,
+        xend=chromEnd/1e3, yend=0),
+        clickSelects="problem.name",
+        showSelected=c("selector"="peaks", "bases.per.problem"),
+        data=sample.peaks, size=7, color="deepskyblue")+
+      geom_segment(aes(
+        chromStart/1e3, problem.i,
+        xend=chromEnd/1e3, yend=problem.i),
+        clickSelects="problem.name",
+        showSelected=c("selector"="peaks", "bases.per.problem"),
+        data=problem.peaks, size=7, color="deepskyblue"),
+    resError=ggplot()+
+      ggtitle("select problem size")+
+      ylab("minimum percent incorrect regions")+
+      geom_tallrect(aes(
+        xmin=min.bases.per.problem,
+        xmax=max.bases.per.problem),
+        clickSelects="bases.per.problem",
+        alpha=0.5,
+        data=res.error)+
+      scale_x_log10()+
+      geom_line(aes(
+        bases.per.problem, errors/regions*100,
+        color=chunks, size=chunks),
+        data=data.frame(res.error, chunks="this"))+
+      geom_line(aes(
+        bases.per.problem, errors/regions*100,
+        color=chunks, size=chunks),
+        data=data.frame(PSJ$error.total.all, chunks="all")),
+    modelSelection=ggplot()+
+      geom_segment(aes(
+        min.log.lambda, peaks,
+        xend=max.log.lambda, yend=peaks),
+        showSelected=c("problem.name", "bases.per.problem"),
+        data=data.frame(all.modelSelection, what="peaks"),
+        size=5)+
+      geom_text(aes(
+        min.log.lambda, peaks,
+        label=sprintf(
+          "%.1f kb in problem %s",
+          (problemEnd-problemStart)/1e3, problem.name)),
+        showSelected=c("problem.name", "bases.per.problem"),
+        data=data.frame(modelSelection.labels, what="peaks"))+
+      geom_segment(aes(
+        min.log.lambda, as.integer(errors),
+        xend=max.log.lambda, yend=as.integer(errors)),
+        showSelected=c("problem.name", "bases.per.problem"),
+        data=data.frame(modelSelection.errors, what="errors"),
+        size=5)+
+      ggtitle("select number of samples with 1 peak")+
+      ylab("")+
+      geom_tallrect(aes(
+        xmin=min.log.lambda, 
+        xmax=max.log.lambda), 
+        clickSelects=c("selector"="peaks"),
+        showSelected=c("problem.name", "bases.per.problem"),
+        data=all.modelSelection, alpha=0.5)+
+      facet_grid(what ~ ., scales="free"),
+    title="Animint compiler with named clickSelects/showSelected",
+    first=PSJ$first)
+### For every problem there is a selector (called problem.name) for
+### the number of peaks in that problem. The animint2dir compiler
+### creates a selection variable for every unique value of
+### clickSelects/showSelected names (and it uses corresponding values
+### to set/update the selected value/geoms).
+}))
+ print(timing.named.compile <- system.time({
+  animint2dir(viz.named, "Ch14-named")
+}))
+ viz.dirs.vec <- c("Ch14-for", "Ch14-named")
+viz.dirs.text <- paste(viz.dirs.vec, collapse=" ")
+(cmd <- paste("du -ks", viz.dirs.text))
+kb.dt <- fread(cmd)
+setnames(kb.dt, c("kilobytes", "path"))
+kb.dt
+ data.frame(
+  kilobytes=kb.dt$kilobytes,
+  construct.seconds=c(
+    timing.for.construct[["elapsed"]],
+    timing.named.construct[["elapsed"]]),
+  compile.seconds=c(
+    timing.for.compile[["elapsed"]],
+    timing.named.compile[["elapsed"]]),
+  row.names=c("for", "named"))
+ 
+
+<!-- comment -->
+
+This chapter explains how to use
+[named clickSelects/showSelected variables](Ch06-other.html#data-driven-selectors) for
+creating data-driven selector names. This feature makes it easier to
+write animint code, and makes it faster to compile.
+
+<!-- comment -->
+
+Chapter outline:
+
+<!-- comment -->
+
+* We begin by downloading the PSJ data set and computing the data to
+  plot.
+* We show one method of defining an animint with many selectors, using
+  for loops. This method is technically correct, but computationally
+  inefficient.
+* We then explain the preferred method for defining an animint with
+  many selectors, using named clickSelects/showSelected. This
+  method is more computationally efficient, and easier to code.
+
+<!-- comment -->
+
+## Download data set {#download}
+
+<!-- comment -->
+
+The example data come from the
+[PeakSegJoint package](https://github.com/tdhock/PeakSegJoint). The
+code below downloads the data set.
+ 
+
+<!-- comment -->
+
+## Compute data to plot {#compute-data-to-plot}
+
+<!-- comment -->
+
+The section below computes some common data that we will use in two
+data visualizations below.
+ 
+
+<!-- comment -->
+
+## Define data viz using for loops {#define-using-for-loops}
+
+<!-- comment -->
+
+The R code below constructs a data viz using for loops. 
+ 
+
+<!-- comment -->
+
+Note the timing of the code above. It takes a long time just to
+evaluate the R code that defines this data viz, since it has so many
+geoms. Next, we compile the data visualization.
+ 
+
+<!-- comment -->
+
+Note that the compilation also takes a long time, since there are so
+many geoms. The data viz can be viewed on
+[Ch14-for/index.html](Ch14-for/index.html). In the next section we
+will create the same data viz, but more efficiently.
+
+<!-- comment -->
+
+## Define data viz using named clickSelects/showSelected {#define-using-named}
+
+<!-- comment -->
+
+In this section we use named clickSelects/showSelected to create a
+more efficient version of the previous data visualization. In general,
+any data visualization defined using for loops in R code can be made
+more efficient by instead using this method.
+ 
+
+<!-- comment -->
+
+It is clear that it takes much less time to evaluate the R code above
+which uses the named clickSelects/showSelected. We compile it below.
+ 
+
+<!-- comment -->
+
+The animint produced above can be viewed on
+[Ch14-named/index.html](Ch14-named/index.html). Note that it
+should appear to be the same as the other data viz above. The timings
+above show that named clickSelects/showSelected are much faster
+than for loops, in both the definition and compilation steps.
+
+<!-- comment -->
+
+## Disk usage comparison {#disk-usage}
+
+<!-- comment -->
+
+In this section we compute the disk usage of both methods.
+ 
+
+<!-- comment -->
+
+The table above shows that the data viz defined using for loops takes
+about twice as much disk space as the data viz that used named
+clickSelects/showSelected.
+
+<!-- comment -->
+
+## Chapter summary and exercises {#exercises}
+
+<!-- comment -->
+
+The table below summarizes the disk usage and timings presented in
+this chapter. It is clear that named clickSelects/showSelected are
+more efficient in both respects, and should be used instead of for
+loops.
+ 
+
+<!-- comment -->
+
+Exercises:
+
+<!-- comment -->
+
+* Use named clickSelects/showSelected to create a visualization
+  of some data from your domain of expertise.
+
+<!-- comment -->
+
+Next, [Chapter 15](Ch15-Newton.html) explains how to visualize
+root-finding algorithms.
