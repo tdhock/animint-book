@@ -16,17 +16,18 @@ knitr::opts_chunk$set(fig.path="Ch03-figures/")
 
 <!-- comment -->
 
-This chapter explains showSelected, one of the two main keywords that
-animint introduces for interactive data visualization. After reading
-this chapter, you will be able to
+This chapter explains showSelected, one of the two main keywords that animint introduces for interactive data visualization. 
+<!-- comment -->
+After reading this chapter, you will be able to
 
 <!-- comment -->
 
-* Use the showSelected keyword in your plot sketches to specify geoms
-  for which only a subset of data should be plotted at any time.
+* Use the showSelected keyword in your plot sketches to specify geoms for which only a subset of data should be plotted at any time.
+<!-- comment -->
 * Use selection menus in animint to change the subset of plotted data.
-* Specify smooth transitions between data subsets using the duration
-  option and key aesthetic.
+<!-- comment -->
+* Specify smooth transitions between data subsets using the duration option and key aesthetic.
+<!-- comment -->
 * Create animated data visualizations using the time option.
 
 <!-- comment -->
