@@ -10,130 +10,9 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r installCRAN}
- ```{r installGitHub}
- ```{r attach}
- ```{r data}
- ```{r head}
- ```{r scatter}
- ```{r Ch02-scatter}
- ```{r Ch02-two-layer-viz}
- ```{r Ch02-three-layer-viz}
- ```{r}
- ```{r vizTwoPlots}
- ```{r summaryTwo}
- ```{r Ch02-viz-two-plots}
- ```{r Ch02-viz-aligned}
- ```{r}
- ```{r Ch02-viz-panels}
- knitr::opts_chunk$set(fig.path="Ch02-figures/")
- if(!requireNamespace("animint2"))install.packages("animint2")
- if(!requireNamespace("animint2")){
-  if(!requireNamespace("remotes"))install.packages("remotes")
-  remotes::install_github("tdhock/animint2")
-}
- library(animint2)
- data(WorldBank, package="animint2")
-WorldBank$Region <- sub(" (all income levels)", "", WorldBank$region, fixed=TRUE)
-head(WorldBank)
-tail(WorldBank)
-dim(WorldBank)
- WorldBank1975 <- subset(WorldBank, year==1975)
-head(WorldBank1975)
- scatter <- ggplot()+
-  geom_point(
-    mapping=aes(x=life.expectancy, y=fertility.rate, color=Region),
-    data=WorldBank1975)
-scatter
- animint(scatter)
- WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
-two.layers <- scatter+
-  geom_path(aes(
-    x=life.expectancy, 
-    y=fertility.rate, 
-    color=Region,
-    group=country),
-    data=WorldBankBefore1975)
-(viz.two.layers <- animint(two.layers))
- three.layers <- two.layers+
-  geom_text(aes(
-    x=life.expectancy, 
-    y=fertility.rate, 
-    color=Region,
-    label=country),
-    data=WorldBank1975)
-animint(three.layers)
- WorldBankSome <- subset(WorldBank, year %% 5 == 0)
-dim(WorldBankSome)
-table(WorldBankSome$year)
- viz.two.plots <- viz.two.layers
-viz.two.plots$timeSeries <- ggplot()+
-  geom_line(aes(
-    x=year, 
-    y=fertility.rate, 
-    color=Region, 
-    group=country),
-    data=WorldBankSome)
- summary(viz.two.plots)
- viz.two.plots
- add.x.var <- function(df, x.var){
-  data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
-}
-(viz.aligned <- animint(
-  scatter=ggplot()+
-    theme_bw()+
-    theme_animint(width=600)+
-    geom_point(aes(
-      x=life.expectancy, y=fertility.rate, color=Region),
-      data=add.x.var(WorldBank1975, "life expectancy"))+
-    geom_path(aes(
-      x=life.expectancy, y=fertility.rate, color=Region,
-      group=country),
-      data=add.x.var(WorldBankBefore1975, "life expectancy"))+
-    geom_line(aes(
-      x=year, y=fertility.rate, color=Region, group=country),
-      data=add.x.var(WorldBankSome, "year"))+
-    xlab("")+
-    facet_grid(. ~ x.var, scales="free")))
- show.point.list <- list()
-show.path.list <- list()
-for(show.year in c(1975, 1985, 1995)){
-  show.point.list[[paste(show.year)]] <- data.frame(
-    show.year, subset(WorldBank, year==show.year))
-  show.path.list[[paste(show.year)]] <- data.frame(
-    show.year, subset(WorldBank, show.year - 5 <= year & year <= show.year))
-}
-show.point <- do.call(rbind, show.point.list)
-show.path <- do.call(rbind, show.path.list)
- animint(
-  scatter=ggplot()+
-    geom_point(aes(
-      x=life.expectancy, y=fertility.rate, color=Region),
-      data=show.point)+
-    geom_path(aes(
-      x=life.expectancy, y=fertility.rate, color=Region,
-      group=country),
-      data=show.path)+
-    facet_grid(. ~ show.year)+
-    theme_bw())
- 
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch02-figures/")
+```
 
 <!-- comment -->
 
@@ -244,18 +123,33 @@ package (which imports ggplot2).
 <!-- comment -->
 
 To install the most recent release of `animint2` from CRAN,
- 
+
+
+```{r installCRAN}
+if(!requireNamespace("animint2"))install.packages("animint2")
+```
 
 <!-- comment -->
 
 To install an even more recent development version of `animint2` from GitHub,
- 
+
+
+```{r installGitHub}
+if(!requireNamespace("animint2")){
+  if(!requireNamespace("remotes"))install.packages("remotes")
+  remotes::install_github("tdhock/animint2")
+}
+```
 
 <!-- comment -->
 
 Once you have installed animint2, you can load and attach all of its
 exported functions via:
- 
+
+
+```{r attach}
+library(animint2)
+```
 
 <!-- comment -->
 
@@ -266,7 +160,15 @@ exported functions via:
 This section explains how to translate a plot sketch into R 
 code. We use a data set from the World Bank as an example, and we
 begin by loading and looking at a subset these data.
- 
+
+
+```{r data}
+data(WorldBank, package="animint2")
+WorldBank$Region <- sub(" (all income levels)", "", WorldBank$region, fixed=TRUE)
+head(WorldBank)
+tail(WorldBank)
+dim(WorldBank)
+```
 
 <!-- comment -->
 
@@ -298,7 +200,12 @@ table that has one row for every country in 1975, and columns named
 `life.expectancy`, `fertility.rate`, and `region`. The `WorldBank`
 data already has these columns, so all we need to do is consider the
 subset for the year 1975:
- 
+
+
+```{r head}
+WorldBank1975 <- subset(WorldBank, year==1975)
+head(WorldBank1975)
+```
 
 <!-- comment -->
 
@@ -306,7 +213,15 @@ The code above prints the data for 1975, which clearly has the
 appropriate columns, and one row for each country. The next step is to
 use the notes in the sketch to code a ggplot with a corresponding
 `aes` or aesthetic mapping of data variables to visual properties:
- 
+
+
+```{r scatter}
+scatter <- ggplot()+
+  geom_point(
+    mapping=aes(x=life.expectancy, y=fertility.rate, color=Region),
+    data=WorldBank1975)
+scatter
+```
 
 <!-- comment -->
 
@@ -328,7 +243,11 @@ have a `region` color legend.
 This section explains how the `animint2` package can be used to render
 ggplots on web pages. The ggplot from the previous section can be
 rendered with animint2, by using the `animint` function.
- 
+
+
+```{r Ch02-scatter}
+animint(scatter)
+```
 
 <!-- comment -->
 
@@ -381,7 +300,19 @@ Note how the sketch above includes two different geoms (point and
 path). The two geoms share a common definition of the `x`, `y`, and
 `color` aesthetics, but have different data sets. Below we translate
 this sketch into R code.
- 
+
+
+```{r Ch02-two-layer-viz}
+WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
+two.layers <- scatter+
+  geom_path(aes(
+    x=life.expectancy, 
+    y=fertility.rate, 
+    color=Region,
+    group=country),
+    data=WorldBankBefore1975)
+(viz.two.layers <- animint(two.layers))
+```
 
 <!-- comment -->
 
@@ -423,7 +354,18 @@ an increased fertility rate.
   
 Can we add the names of the countries to the data viz? Below, we add
 another layer with a text label for each country's name.
- 
+
+
+```{r Ch02-three-layer-viz}
+three.layers <- two.layers+
+  geom_text(aes(
+    x=life.expectancy, 
+    y=fertility.rate, 
+    color=Region,
+    label=country),
+    data=WorldBank1975)
+animint(three.layers)
+```
 
 <!-- comment -->
 
@@ -463,27 +405,52 @@ Bank data from 1960-2010 (summary), and a scatterplot with data from
 Note how the sketch above can be directly translated into the R code
 below. 
 For simplicity, we first down-sample the data set to every five years (some web browsers like chromium are not able to display 10,000+ data points at once),
- 
+
+
+```{r}
+WorldBankSome <- subset(WorldBank, year %% 5 == 0)
+dim(WorldBankSome)
+table(WorldBankSome$year)
+```
 
 <!-- comment -->
 
 The table above shows that there are 214 rows for each of the years in the data set.
 Next we copy the existing viz list (`viz.two.layers`),
 then we assign a ggplot to a new element named `timeSeries`. 
-   
+  
+
+```{r vizTwoPlots}
+viz.two.plots <- viz.two.layers
+viz.two.plots$timeSeries <- ggplot()+
+  geom_line(aes(
+    x=year, 
+    y=fertility.rate, 
+    color=Region, 
+    group=country),
+    data=WorldBankSome)
+```
 
 <!-- comment -->
 
 That results in a named list of two elements (both elements are
 ggplots with class `gganimint`).
- 
+
+
+```{r summaryTwo}
+summary(viz.two.plots)
+```
 
 <!-- comment -->
 
 This data visualization list can be printed/rendered by typing its
 name. Since the list contains two ggplots, `animint2`
 renders the data viz as two linked plots.
- 
+
+
+```{r Ch02-viz-two-plots}
+viz.two.plots
+```
 
 <!-- comment -->
 
@@ -564,7 +531,29 @@ aesthetic mapping. The point and path in the left panel have
 `x=year`. Also note that we specified `facet=x.var`, so we need to add
 a variable called `x.var` to each of the three data sets. We translate
 this sketch to the R code below.
- 
+
+
+```{r Ch02-viz-aligned}
+add.x.var <- function(df, x.var){
+  data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
+}
+(viz.aligned <- animint(
+  scatter=ggplot()+
+    theme_bw()+
+    theme_animint(width=600)+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, color=Region),
+      data=add.x.var(WorldBank1975, "life expectancy"))+
+    geom_path(aes(
+      x=life.expectancy, y=fertility.rate, color=Region,
+      group=country),
+      data=add.x.var(WorldBankBefore1975, "life expectancy"))+
+    geom_line(aes(
+      x=year, y=fertility.rate, color=Region, group=country),
+      data=add.x.var(WorldBankSome, "year"))+
+    xlab("")+
+    facet_grid(. ~ x.var, scales="free")))
+```
 
 <!-- comment -->
 
@@ -641,7 +630,20 @@ will need to create data tables which have three values for the
 the `geom_path` has data for 15 years (but 3 values of
 `show.year`). The code below creates these two data sets for three
 years of the WorldBank data set.
- 
+
+
+```{r}
+show.point.list <- list()
+show.path.list <- list()
+for(show.year in c(1975, 1985, 1995)){
+  show.point.list[[paste(show.year)]] <- data.frame(
+    show.year, subset(WorldBank, year==show.year))
+  show.path.list[[paste(show.year)]] <- data.frame(
+    show.year, subset(WorldBank, show.year - 5 <= year & year <= show.year))
+}
+show.point <- do.call(rbind, show.point.list)
+show.path <- do.call(rbind, show.path.list)
+```
 
 <!-- comment -->
 
@@ -657,7 +659,21 @@ which is generally useful for interactive data visualization.
 
 Below, we facet on the `show.year` variable to create a data
 visualization with three panels.
- 
+
+
+```{r Ch02-viz-panels}
+animint(
+  scatter=ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, color=Region),
+      data=show.point)+
+    geom_path(aes(
+      x=life.expectancy, y=fertility.rate, color=Region,
+      group=country),
+      data=show.path)+
+    facet_grid(. ~ show.year)+
+    theme_bw())
+```
 
 <!-- comment -->
 

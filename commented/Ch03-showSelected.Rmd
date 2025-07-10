@@ -10,48 +10,9 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r}
- ```{r Ch03-viz-scatter}
- ```{r}
- ```{r}
- ```{r}
- ```{r Ch03-viz-duration}
- ```{r Ch03-viz-duration-time}
- knitr::opts_chunk$set(fig.path="Ch03-figures/")
- library(animint2)
-data(WorldBank)
-scatter <- ggplot()+
-  geom_point(aes(
-    x=life.expectancy, y=fertility.rate, color=region),
-    showSelected="year",
-    data=WorldBank)
-scatter
- animint(scatter)
- three.years <- subset(WorldBank, 1979 <= year & year <= 1981)
-can.plot <- with(three.years, {
-  (!is.na(life.expectancy)) & (!is.na(fertility.rate))
-})
-table(three.years$year, can.plot)
- subset(three.years, country=="Kosovo")
- scatter.key <- ggplot()+
-  geom_point(aes(
-    x=life.expectancy, y=fertility.rate, color=region,
-    key=country),
-    showSelected="year",
-    data=WorldBank)
- (viz.duration <- animint(scatter.key, duration=list(year=2000)))
- viz.duration.time <- viz.duration
-viz.duration.time$time <- list(variable="year", ms=2000)
-viz.duration.time
- 
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch03-figures/")
+```
 
 <!-- comment -->
 
@@ -168,7 +129,18 @@ Note that there are two `showSelected` variables, `region` and
 `year`. Also note that the data is specified as all years (but only
 one will be shown at a time due to `showSelected=year`). Below, we
 translate this sketch into R code.
- 
+
+
+```{r}
+library(animint2)
+data(WorldBank)
+scatter <- ggplot()+
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region),
+    showSelected="year",
+    data=WorldBank)
+scatter
+```
 
 <!-- comment -->
 
@@ -183,7 +155,11 @@ automatically uses `region` as a `showSelected` variable.
 
 In constrast, rendering the same ggplot using animint yields the
 interactive data visualization below.
- 
+
+
+```{r Ch03-viz-scatter}
+animint(scatter)
+```
 
 <!-- comment -->
 
@@ -276,7 +252,15 @@ Smooth transitions only make sense for data points that exist both
 before and after changing the selection. In the R code below we
 compute a table of counts of data points that can be plotted in each
 of these three years.
- 
+
+
+```{r}
+three.years <- subset(WorldBank, 1979 <= year & year <= 1981)
+can.plot <- with(three.years, {
+  (!is.na(life.expectancy)) & (!is.na(fertility.rate))
+})
+table(three.years$year, can.plot)
+```
 
 <!-- comment -->
 
@@ -284,7 +268,11 @@ It is clear from the table above that there are 187 points that can be
 plotted in 1979 and 1980. However, in 1981 there is one more data
 point, corresponding to a country for which we did not have data in
 1980. Below we show the data for that country, Kosovo.
- 
+
+
+```{r}
+subset(three.years, country=="Kosovo")
+```
 
 <!-- comment -->
 
@@ -295,7 +283,16 @@ be plotted either before or after the transition. How to specify that
 in the data visualization? In the code below, we use
 `aes(key=country)` to specify that the `country` variable should be
 used to match data points before and after changing the selection.
- 
+
+
+```{r}
+scatter.key <- ggplot()+
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region,
+    key=country),
+    showSelected="year",
+    data=WorldBank)
+```
 
 <!-- comment -->
 
@@ -306,7 +303,11 @@ render this ggplot using animint2, the `country` variable will be used
 to make sure transtion durations are meaningful. To specify a default
 transition duration for the `year` variable, we use the `duration`
 option in the data viz below.
- 
+
+
+```{r Ch03-viz-duration}
+(viz.duration <- animint(scatter.key, duration=list(year=2000)))
+```
 
 <!-- comment -->
 
@@ -338,7 +339,13 @@ aesthetic for this geom.
 <!-- comment -->
 
 The `time` option is used to specify a variable to use for animation.
- 
+
+
+```{r Ch03-viz-duration-time}
+viz.duration.time <- viz.duration
+viz.duration.time$time <- list(variable="year", ms=2000)
+viz.duration.time
+```
 
 <!-- comment -->
 

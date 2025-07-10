@@ -10,81 +10,88 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r Ch18-nnet-vs-linear}
- knitr::opts_chunk$set(fig.path="Ch18-figures/")
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch18-figures/")
 if(FALSE){
   knitr::knit("Ch18-neural-networks.Rmd")
 }
- sim.col <- 2
+```
+
+<!-- comment -->
+
+In this chapter we will explore several data visualizations of
+the gradient descent learning algorithm for Neural networks.
+
+<!-- comment -->
+
+Chapter outline:
+
+<!-- comment -->
+
+* We begin by simulating and visualizing some 2d data for binary
+  classification.
+* We then show how a classification function in 2d can be visualized
+  by computing predictions on a grid, and then using `geom_tile` or
+  `geom_path` with contour lines.
+* We compute linear model predictions, and gradient descent updates,
+  using a simple automatic differentiation (auto-grad) system.
+* We end by implementing gradient descent for a neural network, and
+  using an interactive data visualization to show how the predictions
+  get more accurate with iterations of the learning algorithm.
+
+<!-- comment -->
+
+## Visualize simulated data {#viz-sim}
+
+<!-- comment -->
+
+In this section, we simulate a simple data set with a non-linear
+pattern for binary classification.
+
+
+```{r}
+sim.col <- 2
 sim.row <- 100
 set.seed(1)
 features.hidden <- matrix(runif(sim.row*sim.col), sim.row, sim.col)
 head(features.hidden)
- bayes <- function(DT)DT[, (V1>0.2 & V2<0.8)]
+```
+
+<!-- comment -->
+
+In the simulation, the data table above has the "hidden" features
+which are used to create the labels, but are not available for
+learning. The latent/true function used for classification is the
+following,
+
+
+```{r}
+bayes <- function(DT)DT[, (V1>0.2 & V2<0.8)]
 library(data.table)
 hidden.dt <- data.table(features.hidden)
 label.vec <- ifelse(bayes(hidden.dt), 1, -1)
 table(label.vec)
- set.seed(1)
+```
+
+<!-- comment -->
+
+The binary labels above are created from the hidden features, but for
+learning we only have access to the noisy features below,
+
+
+```{r}
+set.seed(1)
 features.noisy <- features.hidden+rnorm(sim.row*sim.col, sd=0.05)
 head(features.noisy)
- library(animint2)
+```
+
+<!-- comment -->
+
+To plot the data and visualize the pattern, we use the code below,
+
+
+```{r}
+library(animint2)
 label.fac <- factor(label.vec)
 sim.dt <- data.table(features.noisy, label.fac)
 ggplot()+
@@ -92,29 +99,98 @@ ggplot()+
     V1, V2, color=label.fac),
     data=sim.dt)+
   coord_equal()
- is.set.list <- list(
+```
+
+<!-- comment -->
+
+The plot above shows each row in the data set as a point, with the two
+features on the two axes, and the two labels in two different
+colors. The lower right part of the feature space tends to have
+positive labels, and the left and top areas have negative labels. This
+is the pattern that the neural network will learn.
+To properly train a neural network, we need to split the data into two sets:
+
+<!-- comment -->
+
+* subtrain: used to compute gradients, which are used to update weight
+  parameters, and predicted values. With enough iterations/epochs of
+  the gradient descent learning algorithm, and a powerful enough
+  neural network model (large enough number of hidden units/layers),
+  it should be possible to get perfect prediction on the subtrain set.
+* validation: used to avoid overfitting. By computing the prediction
+  error on the validation set, and choosing the number of gradient
+  descent iterations/epochs which minimizes the validation error, we
+  can ensure the learned model has good generalization properties
+  (provides good predictions on not only the subtrain set, but also
+  new data points like in the validation set).
+  
+
+```{r}
+is.set.list <- list(
   validation=rep(c(TRUE,FALSE), l=nrow(features.noisy)))
 is.set.list$subtrain <- !is.set.list$validation
 set.vec <- ifelse(is.set.list$validation, "validation", "subtrain")
 table(set.vec)
- sim.dt[, set := set.vec]
+```
+
+<!-- comment -->
+
+The code above is used to randomly assign half of the data into each
+of the subtrain and validation sets. Below, we plot the two sets in
+separate facets,
+
+
+```{r}
+sim.dt[, set := set.vec]
 ggplot()+
   facet_grid(. ~ set, labeller=label_both)+
   geom_point(aes(
     V1, V2, color=label.fac),
     data=sim.dt)+
   coord_equal()
- (grid.list <- lapply(sim.dt[, .(V1, V2)], function(V){
+```
+
+<!-- comment -->
+
+## Visualize Bayes optimal classification function {#viz-bayes-fun}
+
+<!-- comment -->
+
+To visualize the optimal/Bayes decision boundary, we need to evaluate
+the function on a 2d grid of points that spans the feature space. To
+create such a grid, we first create a list which contains the two 1d
+grids for each feature,
+
+
+```{r}
+(grid.list <- lapply(sim.dt[, .(V1, V2)], function(V){
   seq(min(V), max(V), l=30)
 }))
- (grid.dt <- do.call(
+```
+
+<!-- comment -->
+
+Then we use `CJ` (cross-join) to create a data table representing the
+2d grid, for which we evaluate the best/Bayes classification function,
+
+
+```{r}
+(grid.dt <- do.call(
   CJ, grid.list
 )[
 , bayes.num := ifelse(bayes(.SD), 1, -1)
 ][
 , bayes.fac := factor(bayes.num)
 ][])
- ggplot()+
+```
+
+<!-- comment -->
+
+The best classifier is visualized below in the feature space,
+
+
+```{r}
+ggplot()+
   geom_tile(aes(
     V1, V2, fill=bayes.fac),
     color=NA,
@@ -125,7 +201,18 @@ ggplot()+
     shape=21,
     data=sim.dt)+
   coord_equal()
- get_boundary <- function(score){
+```
+
+<!-- comment -->
+
+The plot above shows that even using the best possible function, there
+are still some prediction errors (points on a background of different
+color). Another way to visualize that best classification function is
+via the decision boundary, which can be computed using the code below,
+
+
+```{r}
+get_boundary <- function(score){
   contour.list <- contourLines(
     grid.list$V1, grid.list$V2, 
     matrix(score, length(grid.list$V1), length(grid.list$V2), byrow=TRUE),
@@ -137,7 +224,15 @@ ggplot()+
   }
 }
 (bayes.contour.dt <- get_boundary(grid.dt$bayes.num))
- ggplot()+
+```
+
+<!-- comment -->
+
+The best decision boundary is visualized in the feature space below,
+
+
+```{r}
+ggplot()+
   geom_path(aes(
     x, y, group=contour.i),
     data=bayes.contour.dt)+
@@ -147,7 +242,29 @@ ggplot()+
     shape=21,
     data=sim.dt)+
   coord_equal()
- new_node <- function(value, gradient=NULL, ...){
+```
+
+<!-- comment -->
+
+## Forward and back propagation in linear model {#forward-back-prop-linear}
+
+<!-- comment -->
+
+To implement the gradient descent algorithm for learning neural
+network model parameters, we will use a simple auto-grad
+system. Auto-grad is the idea that the neural network model structure
+should be defined once, and that structure should be used to derive
+both the forward (prediction) and backward (gradient) propagation
+computations. Below we use a simple auto-grad system where each node
+in the computation graph is represented by an R environment (a mutable
+data structure, necessary so that the gradients are back-propagated to
+all the model parameters). The function below is a constructor for the
+most basic building block of the auto-grad system, a node in the
+computation graph:
+
+
+```{r}
+new_node <- function(value, gradient=NULL, ...){
   node <- new.env()
   node$value <- value
   node$parent.list <- list(...)
@@ -161,21 +278,82 @@ ggplot()+
   }
   node
 }
- initial_node <- function(mat){
+```
+
+<!-- comment -->
+
+The code in the function above starts by creating a new environment,
+then populates it with three objects:
+
+<!-- comment -->
+
+* `value` is a matrix computed by forward propagation at this node in
+  the computation graph.
+* `parent.list` is a list of parent nodes, each of which is used to
+  compute `value`. 
+* `backward` is a function which should be called by the user on the
+  final/loss node in the computation graph. It calls `gradient`, which
+  should compute the gradient of the loss with respect to the parent
+  nodes, which are stored in the `grad` attribute in each
+  corresponding parent node, before recursively calling `backward` on
+  each parent node.
+  
+The simplest kind of node is an initial node, defined by the code below,
+
+
+```{r}
+initial_node <- function(mat){
   new_node(mat, gradient=function(...)list())
 }
- mm <- function(feature.node, weight.node)new_node(
+```
+
+<!-- comment -->
+
+The code above says that an initial node simply stores the input
+matrix `mat` as the value, and has a `gradient` method that does
+nothing (because initial nodes in the computation graph have no
+parents for which gradients could be computed). The code below defines
+`mm`, a node in the computation graph which represents a matrix
+multiplication,
+
+
+```{r}
+mm <- function(feature.node, weight.node)new_node(
   cbind(1, feature.node$value) %*% weight.node$value,
   features=feature.node, 
   weights=weight.node,
   gradient=function(node)list(
     features=node$grad %*% t(weight.node$value),
     weights=t(cbind(1, feature.node$value)) %*% node$grad))
- feature.node <- initial_node(features.noisy[is.set.list$subtrain,])
+```
+
+<!-- comment -->
+
+The `mm` definition above assumes that there is a weight node with the
+same number of rows as the number of columns (plus one for intercept)
+in the feature node. The forward/value and gradient computations use
+matrix multiplication. For instance, we can use `mm` as follows to
+define a simple linear model,
+
+
+```{r}
+feature.node <- initial_node(features.noisy[is.set.list$subtrain,])
 weight.node <- initial_node(rep(0, ncol(features.noisy)+1))
 linear.pred.node <- mm(feature.node, weight.node)
 str(linear.pred.node$value)
- log_loss <- function(pred.node, label.node)new_node(
+```
+
+<!-- comment -->
+
+It can be seen in the code above that the `mm` function returns a node
+representing predicted values, one for each row in the feature
+matrix. To use the gradient features we need a loss function, which in
+the case of binary classification is the logistic (cross-entropy)
+loss,
+
+
+```{r}
+log_loss <- function(pred.node, label.node)new_node(
   mean(log(1+exp(-label.node$value*pred.node$value))),
   pred=pred.node,
   label=label.node,
@@ -183,14 +361,69 @@ str(linear.pred.node$value)
     pred=-label.node$value/(
       1+exp(label.node$value*pred.node$value)
     )/length(label.node$value)))
- label.node <- initial_node(label.vec[is.set.list$subtrain])
+```
+
+<!-- comment -->
+
+The code above defines the logistic loss and gradient, assuming the
+label is either -1 or 1, and the prediction is a real number (not
+necessarily between 0 and 1, maybe negative). The code below creates
+nodes for the labels and loss,
+
+
+```{r}
+label.node <- initial_node(label.vec[is.set.list$subtrain])
 loss.node <- log_loss(linear.pred.node, label.node)
 loss.node$value
- weight.node$grad
+```
+
+<!-- comment -->
+
+Now that we have computed the loss, we can compute the gradient of the
+loss with respect to the weights, which is used to perform the updates
+during learning. Remember that we should now call `backward` (on the
+subtrain loss), which should eventually store the gradient as
+`weight.node$grad`. Below we first verify that it has not yet been
+computed, then we compute it:
+
+
+```{r}
+weight.node$grad
 loss.node$backward()
 weight.node$grad
- (descent.direction <- -weight.node$grad)
- (line.search.dt <- data.table(step.size=seq(0, 10, l=101))[, .(
+```
+
+<!-- comment -->
+
+Note that since `loss.node` contains recursive back-references to its
+parent nodes (including predictions and weights), the `backward` call
+above is able to conveniently compute and store `weight.node$grad`,
+the gradient of the loss with respect to the weight parameters. The
+gradient is the direction of steepest ascent, meaning the direction
+weights could be modified to maximize the loss. Because we want to
+minimize the loss, the learning algorithm performs updates in the
+negative gradient direction, of steepest descent.
+
+
+```{r}
+(descent.direction <- -weight.node$grad)
+```
+
+<!-- comment -->
+
+In gradient descent for this linear model, we update the weight vector
+in this direction. Each update to the weight vector is referred to as
+an iteration or step. A small step in this direction is guaranteed to
+decrease the loss, but too small of a step will not make much progress
+toward minimizing the loss. It is unknown how far in this direction is
+best, so we typically need to search over a grid of step sizes (aka
+learning rates). Or we can perform a line search, which means making
+the following plot of loss as a function of step size, then choosing
+the step size with minimal loss.
+
+
+```{r}
+(line.search.dt <- data.table(step.size=seq(0, 10, l=101))[, .(
   loss=log_loss(mm(
     feature.node, 
     initial_node(weight.node$value+step.size*descent.direction)
@@ -212,7 +445,28 @@ ggplot()+
     size=4,
     hjust=0,
     vjust=1.5)
- new_weight_node_list <- function(units.per.layer, intercept=TRUE){
+```
+
+<!-- comment -->
+
+The plot above shows that the min loss occurs at a step size of about 3, which means that the line search would choose that step size for this gradient descent parameter update/iteration, before re-computing the gradient in the next iteration.
+
+<!-- comment -->
+
+## Neural network learning {#neural-network-learning}
+
+<!-- comment -->
+
+Defining a linear model in the previous section was relatively simple,
+because there is only one weight matrix parameter (actually, a weight
+vector, with the same number of elements as the number of
+columns/features, plus one for an intercept). In contrast, a neural
+network has more than one weight matrix parameter to learn. We
+initialize these weights as nodes in the code below,
+
+
+```{r}
+new_weight_node_list <- function(units.per.layer, intercept=TRUE){
   weight.node.list <- list()
   for(layer.i in seq(1, length(units.per.layer)-1)){
     input.units <- units.per.layer[[layer.i]]+intercept
@@ -226,7 +480,24 @@ ggplot()+
 (units.per.layer <- c(ncol(features.noisy), 40, 1))
 (weight.node.list <- new_weight_node_list(units.per.layer))
 lapply(weight.node.list, function(node)dim(node$value))
- relu <- function(before.node)new_node(
+```
+
+<!-- comment -->
+
+The output above shows that there is a single layer with 40 hidden
+units in the neural network, meaning there are two weight matrices to
+learn. Each of these weight matrices is used to predict the units in
+a given layer, from the units in the previous layer. In order to learn
+a prediction function which is a non-linear function of the features,
+each layer except for the last must have a non-linear activation
+function, applied element-wise to the units after matrix
+multiplication. For example, a common and efficient non-linear
+activation function is the ReLU (Rectified Linear Units), which is
+implemented below,
+
+
+```{r}
+relu <- function(before.node)new_node(
   ifelse(before.node$value < 0, 0, before.node$value),
   before=before.node,
   gradient=function(node)list(
@@ -236,7 +507,16 @@ str(hidden.before.act$value)
 hidden.before.act$value[1:5,1:5]
 hidden.after.act <- relu(hidden.before.act)
 hidden.after.act$value[1:5,1:5]
- (relu.dt <- data.table(
+```
+
+<!-- comment -->
+
+Note in the output above how the ReLU activation sets negative values
+to zero, and keeps positive values the same:
+
+
+```{r}
+(relu.dt <- data.table(
   input=seq(-5, 5, l=101)
 )[, output := relu(initial_node(input))$value][])
 ggplot()+
@@ -244,7 +524,17 @@ ggplot()+
   geom_line(aes(
     input, output),
     data=relu.dt)
- pred_node <- function(set.features){
+```
+
+<!-- comment -->
+
+Finally, the last node that we need to implement our neural network is
+a node for predictions, computed via the for loop over weight nodes in
+the function below,
+
+
+```{r}
+pred_node <- function(set.features){
   feature.node <- initial_node(set.features)
   for(layer.i in seq_along(weight.node.list)){
     weight.node <- weight.node.list[[layer.i]]
@@ -259,10 +549,30 @@ ggplot()+
 }
 nn.pred.node <- pred_node(features.noisy[is.set.list$subtrain,])
 str(nn.pred.node$value)
- grid.mat <- grid.dt[, cbind(V1,V2)]
+```
+
+<!-- comment -->
+
+The `pred_node` function is also useful for computing predictions on
+the grid of features, which will be useful later for visualizing the
+learned function,
+
+
+```{r}
+grid.mat <- grid.dt[, cbind(V1,V2)]
 nn.grid.node <- pred_node(grid.mat)
 str(nn.grid.node$value)
- step.size <- 0.5
+```
+
+<!-- comment -->
+
+The code below combines all of the pieces above into a gradient
+descent learning algorithm. The hyper-parameters are the constant step
+size, and the maximum number of iterations.
+
+
+```{r}
+step.size <- 0.5
 max.iterations <- 1000
 units.per.layer <- c(ncol(features.noisy), 40, 1)
 loss.dt.list <- list()
@@ -321,7 +631,17 @@ ggplot()+
     shape=21,
     color="black",
     data=min.dt)
- some <- function(DT)DT[iteration%in%c(1,5,10,50,100)]
+```
+
+<!-- comment -->
+
+In the code above we saved loss and predictions for all of the
+iterations of gradient descent, but in the code below we visualize
+only some of them, due to limited space:
+
+
+```{r}
+some <- function(DT)DT[iteration%in%c(1,5,10,50,100)]
 err.dt[, prediction := ifelse(label==pred.num, "correct", "error")]
 iteration.contours <- pred.dt[
 , get_boundary(pred), by=.(iteration)]
@@ -352,7 +672,19 @@ ggplot()+
   coord_equal()+
   scale_y_continuous(breaks=seq(0,1,by=0.5))+
   scale_x_continuous(breaks=seq(0,1,by=0.5))
- n.subtrain <- sum(is.set.list$subtrain)
+```
+
+<!-- comment -->
+
+From the plot above we can see that as the number of iterations
+increases, the predictions get more accurate.  Finally, we conclude
+with an interactive plot where you can click the loss plot to select
+an iteration of gradient descent, for which the corresponding decision
+boundary is shown on the predictions plot.
+
+
+```{r Ch18-nnet-vs-linear}
+n.subtrain <- sum(is.set.list$subtrain)
 loss.dt[, n.set := ifelse(set=="subtrain", n.subtrain, sim.row-n.subtrain)]
 loss.dt[, error.count := n.set*error.percent/100]
 it.by <- 10
@@ -419,311 +751,7 @@ animint(
     scale_y_continuous(
       "Input/Feature 2")+
     coord_equal())
- 
-
-<!-- comment -->
-
-In this chapter we will explore several data visualizations of
-the gradient descent learning algorithm for Neural networks.
-
-<!-- comment -->
-
-Chapter outline:
-
-<!-- comment -->
-
-* We begin by simulating and visualizing some 2d data for binary
-  classification.
-* We then show how a classification function in 2d can be visualized
-  by computing predictions on a grid, and then using `geom_tile` or
-  `geom_path` with contour lines.
-* We compute linear model predictions, and gradient descent updates,
-  using a simple automatic differentiation (auto-grad) system.
-* We end by implementing gradient descent for a neural network, and
-  using an interactive data visualization to show how the predictions
-  get more accurate with iterations of the learning algorithm.
-
-<!-- comment -->
-
-## Visualize simulated data {#viz-sim}
-
-<!-- comment -->
-
-In this section, we simulate a simple data set with a non-linear
-pattern for binary classification.
- 
-
-<!-- comment -->
-
-In the simulation, the data table above has the "hidden" features
-which are used to create the labels, but are not available for
-learning. The latent/true function used for classification is the
-following,
- 
-
-<!-- comment -->
-
-The binary labels above are created from the hidden features, but for
-learning we only have access to the noisy features below,
- 
-
-<!-- comment -->
-
-To plot the data and visualize the pattern, we use the code below,
- 
-
-<!-- comment -->
-
-The plot above shows each row in the data set as a point, with the two
-features on the two axes, and the two labels in two different
-colors. The lower right part of the feature space tends to have
-positive labels, and the left and top areas have negative labels. This
-is the pattern that the neural network will learn.
-To properly train a neural network, we need to split the data into two sets:
-
-<!-- comment -->
-
-* subtrain: used to compute gradients, which are used to update weight
-  parameters, and predicted values. With enough iterations/epochs of
-  the gradient descent learning algorithm, and a powerful enough
-  neural network model (large enough number of hidden units/layers),
-  it should be possible to get perfect prediction on the subtrain set.
-* validation: used to avoid overfitting. By computing the prediction
-  error on the validation set, and choosing the number of gradient
-  descent iterations/epochs which minimizes the validation error, we
-  can ensure the learned model has good generalization properties
-  (provides good predictions on not only the subtrain set, but also
-  new data points like in the validation set).
-   
-
-<!-- comment -->
-
-The code above is used to randomly assign half of the data into each
-of the subtrain and validation sets. Below, we plot the two sets in
-separate facets,
- 
-
-<!-- comment -->
-
-## Visualize Bayes optimal classification function {#viz-bayes-fun}
-
-<!-- comment -->
-
-To visualize the optimal/Bayes decision boundary, we need to evaluate
-the function on a 2d grid of points that spans the feature space. To
-create such a grid, we first create a list which contains the two 1d
-grids for each feature,
- 
-
-<!-- comment -->
-
-Then we use `CJ` (cross-join) to create a data table representing the
-2d grid, for which we evaluate the best/Bayes classification function,
- 
-
-<!-- comment -->
-
-The best classifier is visualized below in the feature space,
- 
-
-<!-- comment -->
-
-The plot above shows that even using the best possible function, there
-are still some prediction errors (points on a background of different
-color). Another way to visualize that best classification function is
-via the decision boundary, which can be computed using the code below,
- 
-
-<!-- comment -->
-
-The best decision boundary is visualized in the feature space below,
- 
-
-<!-- comment -->
-
-## Forward and back propagation in linear model {#forward-back-prop-linear}
-
-<!-- comment -->
-
-To implement the gradient descent algorithm for learning neural
-network model parameters, we will use a simple auto-grad
-system. Auto-grad is the idea that the neural network model structure
-should be defined once, and that structure should be used to derive
-both the forward (prediction) and backward (gradient) propagation
-computations. Below we use a simple auto-grad system where each node
-in the computation graph is represented by an R environment (a mutable
-data structure, necessary so that the gradients are back-propagated to
-all the model parameters). The function below is a constructor for the
-most basic building block of the auto-grad system, a node in the
-computation graph:
- 
-
-<!-- comment -->
-
-The code in the function above starts by creating a new environment,
-then populates it with three objects:
-
-<!-- comment -->
-
-* `value` is a matrix computed by forward propagation at this node in
-  the computation graph.
-* `parent.list` is a list of parent nodes, each of which is used to
-  compute `value`. 
-* `backward` is a function which should be called by the user on the
-  final/loss node in the computation graph. It calls `gradient`, which
-  should compute the gradient of the loss with respect to the parent
-  nodes, which are stored in the `grad` attribute in each
-  corresponding parent node, before recursively calling `backward` on
-  each parent node.
-  
-The simplest kind of node is an initial node, defined by the code below,
- 
-
-<!-- comment -->
-
-The code above says that an initial node simply stores the input
-matrix `mat` as the value, and has a `gradient` method that does
-nothing (because initial nodes in the computation graph have no
-parents for which gradients could be computed). The code below defines
-`mm`, a node in the computation graph which represents a matrix
-multiplication,
- 
-
-<!-- comment -->
-
-The `mm` definition above assumes that there is a weight node with the
-same number of rows as the number of columns (plus one for intercept)
-in the feature node. The forward/value and gradient computations use
-matrix multiplication. For instance, we can use `mm` as follows to
-define a simple linear model,
- 
-
-<!-- comment -->
-
-It can be seen in the code above that the `mm` function returns a node
-representing predicted values, one for each row in the feature
-matrix. To use the gradient features we need a loss function, which in
-the case of binary classification is the logistic (cross-entropy)
-loss,
- 
-
-<!-- comment -->
-
-The code above defines the logistic loss and gradient, assuming the
-label is either -1 or 1, and the prediction is a real number (not
-necessarily between 0 and 1, maybe negative). The code below creates
-nodes for the labels and loss,
- 
-
-<!-- comment -->
-
-Now that we have computed the loss, we can compute the gradient of the
-loss with respect to the weights, which is used to perform the updates
-during learning. Remember that we should now call `backward` (on the
-subtrain loss), which should eventually store the gradient as
-`weight.node$grad`. Below we first verify that it has not yet been
-computed, then we compute it:
- 
-
-<!-- comment -->
-
-Note that since `loss.node` contains recursive back-references to its
-parent nodes (including predictions and weights), the `backward` call
-above is able to conveniently compute and store `weight.node$grad`,
-the gradient of the loss with respect to the weight parameters. The
-gradient is the direction of steepest ascent, meaning the direction
-weights could be modified to maximize the loss. Because we want to
-minimize the loss, the learning algorithm performs updates in the
-negative gradient direction, of steepest descent.
- 
-
-<!-- comment -->
-
-In gradient descent for this linear model, we update the weight vector
-in this direction. Each update to the weight vector is referred to as
-an iteration or step. A small step in this direction is guaranteed to
-decrease the loss, but too small of a step will not make much progress
-toward minimizing the loss. It is unknown how far in this direction is
-best, so we typically need to search over a grid of step sizes (aka
-learning rates). Or we can perform a line search, which means making
-the following plot of loss as a function of step size, then choosing
-the step size with minimal loss.
- 
-
-<!-- comment -->
-
-The plot above shows that the min loss occurs at a step size of about 3, which means that the line search would choose that step size for this gradient descent parameter update/iteration, before re-computing the gradient in the next iteration.
-
-<!-- comment -->
-
-## Neural network learning {#neural-network-learning}
-
-<!-- comment -->
-
-Defining a linear model in the previous section was relatively simple,
-because there is only one weight matrix parameter (actually, a weight
-vector, with the same number of elements as the number of
-columns/features, plus one for an intercept). In contrast, a neural
-network has more than one weight matrix parameter to learn. We
-initialize these weights as nodes in the code below,
- 
-
-<!-- comment -->
-
-The output above shows that there is a single layer with 40 hidden
-units in the neural network, meaning there are two weight matrices to
-learn. Each of these weight matrices is used to predict the units in
-a given layer, from the units in the previous layer. In order to learn
-a prediction function which is a non-linear function of the features,
-each layer except for the last must have a non-linear activation
-function, applied element-wise to the units after matrix
-multiplication. For example, a common and efficient non-linear
-activation function is the ReLU (Rectified Linear Units), which is
-implemented below,
- 
-
-<!-- comment -->
-
-Note in the output above how the ReLU activation sets negative values
-to zero, and keeps positive values the same:
- 
-
-<!-- comment -->
-
-Finally, the last node that we need to implement our neural network is
-a node for predictions, computed via the for loop over weight nodes in
-the function below,
- 
-
-<!-- comment -->
-
-The `pred_node` function is also useful for computing predictions on
-the grid of features, which will be useful later for visualizing the
-learned function,
- 
-
-<!-- comment -->
-
-The code below combines all of the pieces above into a gradient
-descent learning algorithm. The hyper-parameters are the constant step
-size, and the maximum number of iterations.
- 
-
-<!-- comment -->
-
-In the code above we saved loss and predictions for all of the
-iterations of gradient descent, but in the code below we visualize
-only some of them, due to limited space:
- 
-
-<!-- comment -->
-
-From the plot above we can see that as the number of iterations
-increases, the predictions get more accurate.  Finally, we conclude
-with an interactive plot where you can click the loss plot to select
-an iteration of gradient descent, for which the corresponding decision
-boundary is shown on the predictions plot.
- 
+```
 
 <!-- comment -->
 

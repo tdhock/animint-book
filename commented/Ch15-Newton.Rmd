@@ -10,177 +10,9 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r Ch15-viz}
- ```{r compare-lambert}
- ```{r logloss}
- knitr::opts_chunk$set(fig.path="Ch15-figures/")
- Linear <- 95
-Log <- -1097
-Constant <- 1000
-loss.fun <- function(Mean){
-  Linear*Mean + Log*log(Mean) + Constant
-}
-(mean.at.optimum <- -Log/Linear)
-(loss.at.optimum <- loss.fun(mean.at.optimum))
-library(data.table)
-loss.dt <- data.table(mean=seq(0, 100, l=400))
-loss.dt[, loss := loss.fun(mean)]
-opt.dt <- data.table(
-  mean=mean.at.optimum,
-  loss=loss.at.optimum,
-  point="minimum")
-library(animint2)
-gg.loss <- ggplot()+
-  geom_point(aes(mean, loss, color=point), data=opt.dt)+
-  geom_line(aes(mean, loss), data=loss.dt)
-print(gg.loss)
- loss.deriv <- function(Mean){
-  Linear + Log/Mean
-}
- possible.root <- mean.at.optimum+1
-gg.loss+
-  geom_point(aes(
-    mean, loss, color=point),
-    data=data.table(
-      point="start",
-      mean=possible.root,
-      loss=loss.fun(possible.root)))
- iteration <- 1
-solution.list <- list()
-thresh.dt <- data.table(thresh=1e-6)
-while(thresh.dt$thresh < abs({
-  fun.value <- loss.fun(possible.root)
-})){
-  cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
-  deriv.value <- loss.deriv(possible.root)
-  new.root <- possible.root - fun.value/deriv.value
-  solution.list[[iteration]] <- data.table(
-    iteration, possible.root, fun.value, deriv.value, new.root)
-  iteration <- iteration+1
-  possible.root <- new.root
-}
-root.dt <- data.table(point="root", possible.root, fun.value)
-gg.loss+
-  geom_point(aes(possible.root, fun.value, color=point),
-             data=root.dt)
- solution <- do.call(rbind, solution.list)
-solution$new.value <- c(solution$fun.value[-1], fun.value)
-gg.it <- ggplot()+
-  geom_point(aes(
-    iteration, fun.value, color=fun),
-    data=data.table(solution, y="fun.value", fun="function"))+
-  geom_point(aes(
-    iteration, log10(abs(fun.value)), color=fun),
-    data=data.table(solution, y="log10(abs(fun.value))", fun="function"))+
-  scale_color_manual(values=c("function"="black", approximation="red"))+
-  geom_point(aes(
-    iteration, new.value, color=fun),
-    data=data.table(solution, y="fun.value", fun="approximation"))+
-  geom_point(aes(
-    iteration, log10(abs(new.value)), color=fun),
-    data=data.table(solution, y="log10(abs(fun.value))", fun="approximation"))+
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
-  facet_grid(y ~ ., scales="free")+
-  ylab("")
-print(gg.it)
- ## y - fun.value = deriv.value * (x - possible.root)
-## y = deriv.value*x + fun.value-possible.root*deriv.value
-ggplot()+
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
-  facet_grid(iteration ~ step)+
-  scale_color_manual(values=c("function"="black", approximation="red"))+
-  geom_abline(aes(
-    slope=deriv.value, intercept=fun.value-possible.root*deriv.value,
-    color=fun),
-    data=data.table(solution, fun="approximation", step=1))+
-  geom_point(aes(
-    new.root, 0, color=fun),
-    data=data.table(solution, fun="approximation"))+
-  geom_point(aes(
-    new.root, new.value, color=fun),
-    data=data.table(solution, fun="function", step=2))+
-  geom_vline(aes(
-    xintercept=new.root, color=fun),
-    data=data.table(solution, fun="approximation", step=2))+
-  geom_point(aes(
-    possible.root, fun.value, color=fun),
-    data=data.table(solution, fun="function", step=1))+
-  geom_line(aes(
-    mean, loss, color=fun),
-    data=data.table(loss.dt, fun="function"))+
-  ylab("")
- animint(
-  time=list(variable="iteration", ms=2000),
-  iterations=gg.it+
-    geom_tallrect(aes(
-      xmin=iteration-0.5,
-      xmax=iteration+0.5),
-      clickSelects="iteration",
-      alpha=0.5,
-      data=solution),
-  loss=ggplot()+
-    theme_bw()+
-    scale_color_manual(values=c("function"="black", approximation="red"))+
-    geom_abline(aes(
-      slope=deriv.value, intercept=fun.value-possible.root*deriv.value,
-      color=fun),
-      showSelected="iteration",
-      data=data.table(solution, fun="approximation"))+
-    geom_point(aes(
-      new.root, 0, color=fun),
-      showSelected="iteration",
-      size=4,
-      data=data.table(solution, fun="approximation"))+
-    geom_point(aes(
-      new.root, new.value, color=fun),
-      showSelected="iteration",
-      data=data.table(solution, fun="function"))+
-    geom_vline(aes(
-      xintercept=new.root, color=fun),
-      showSelected="iteration",
-      data=data.table(solution, fun="approximation"))+
-    geom_point(aes(
-      possible.root, fun.value, color=fun),
-      showSelected="iteration",
-      data=data.table(solution, fun="function"))+
-    geom_line(aes(
-      mean, loss, color=fun),
-      data=data.table(loss.dt, fun="function"))+
-    ylab(""))
- inside <- Linear*exp(-Constant/Log)/Log
-root.vec <- c(LambertW::W(inside, 0), LambertW::W(inside, -1))*Log/Linear
-loss.fun(c(Newton=root.dt$possible.root, Lambert=root.vec[2]))
- log.loss.fun <- function(log.mean){
-  Linear*exp(log.mean) + Log*log.mean + Constant
-}
-log.loss.dt <- data.table(log.mean=seq(-1, 3, l=400))
-log.loss.dt[, loss := log.loss.fun(log.mean)]
-ggplot()+
-  geom_line(aes(
-    log.mean, loss),
-    data=log.loss.dt)+
-  geom_point(aes(
-    log(mean), loss, color=point),
-    data=opt.dt)
- 
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch15-figures/")
+```
 
 <!-- comment -->
 
@@ -228,7 +60,30 @@ Chapter outline:
 
 We begin by defining coefficients of a Poisson Loss function with two
 roots.
- 
+
+
+```{r}
+Linear <- 95
+Log <- -1097
+Constant <- 1000
+loss.fun <- function(Mean){
+  Linear*Mean + Log*log(Mean) + Constant
+}
+(mean.at.optimum <- -Log/Linear)
+(loss.at.optimum <- loss.fun(mean.at.optimum))
+library(data.table)
+loss.dt <- data.table(mean=seq(0, 100, l=400))
+loss.dt[, loss := loss.fun(mean)]
+opt.dt <- data.table(
+  mean=mean.at.optimum,
+  loss=loss.at.optimum,
+  point="minimum")
+library(animint2)
+gg.loss <- ggplot()+
+  geom_point(aes(mean, loss, color=point), data=opt.dt)+
+  geom_line(aes(mean, loss), data=loss.dt)
+print(gg.loss)
+```
 
 <!-- comment -->
 
@@ -236,19 +91,57 @@ Our goal is to find the two roots of this function. Newton's root finding
 method starts from an arbitrary candidate root, and then repeatedly
 uses linear approximations to find more accurate candidate roots. To
 compute the linear approximation, we need the derivative:
- 
+
+
+```{r}
+loss.deriv <- function(Mean){
+  Linear + Log/Mean
+}
+```
 
 <!-- comment -->
 
 We begin the root finding at a point larger than the
 minimum,
- 
+
+
+```{r}
+possible.root <- mean.at.optimum+1
+gg.loss+
+  geom_point(aes(
+    mean, loss, color=point),
+    data=data.table(
+      point="start",
+      mean=possible.root,
+      loss=loss.fun(possible.root)))
+```
 
 <!-- comment -->
 
 We then use the following implementation of Newton's method to find a
 root,
- 
+
+
+```{r}
+iteration <- 1
+solution.list <- list()
+thresh.dt <- data.table(thresh=1e-6)
+while(thresh.dt$thresh < abs({
+  fun.value <- loss.fun(possible.root)
+})){
+  cat(sprintf("mean=%e loss=%e\n", possible.root, fun.value))
+  deriv.value <- loss.deriv(possible.root)
+  new.root <- possible.root - fun.value/deriv.value
+  solution.list[[iteration]] <- data.table(
+    iteration, possible.root, fun.value, deriv.value, new.root)
+  iteration <- iteration+1
+  possible.root <- new.root
+}
+root.dt <- data.table(point="root", possible.root, fun.value)
+gg.loss+
+  geom_point(aes(possible.root, fun.value, color=point),
+             data=root.dt)
+```
 
 <!-- comment -->
 
@@ -256,7 +149,31 @@ The plot above shows the root that was found. The stopping criterion
 was an absolute cost value less than `1e-6` so we know that this
 root is at least that accurate. The following plot shows the accuracy
 of the root as a function of the number of iterations.
- 
+
+
+```{r}
+solution <- do.call(rbind, solution.list)
+solution$new.value <- c(solution$fun.value[-1], fun.value)
+gg.it <- ggplot()+
+  geom_point(aes(
+    iteration, fun.value, color=fun),
+    data=data.table(solution, y="fun.value", fun="function"))+
+  geom_point(aes(
+    iteration, log10(abs(fun.value)), color=fun),
+    data=data.table(solution, y="log10(abs(fun.value))", fun="function"))+
+  scale_color_manual(values=c("function"="black", approximation="red"))+
+  geom_point(aes(
+    iteration, new.value, color=fun),
+    data=data.table(solution, y="fun.value", fun="approximation"))+
+  geom_point(aes(
+    iteration, log10(abs(new.value)), color=fun),
+    data=data.table(solution, y="log10(abs(fun.value))", fun="approximation"))+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(y ~ ., scales="free")+
+  ylab("")
+print(gg.it)
+```
 
 <!-- comment -->
 
@@ -271,13 +188,84 @@ the linear approximation at the candidate root, along with the root of
 the linear approximation. The right panels show the root of the linear
 approximation, along with the corresponding function value (the new
 candidate root). 
- 
+
+
+```{r}
+## y - fun.value = deriv.value * (x - possible.root)
+## y = deriv.value*x + fun.value-possible.root*deriv.value
+ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(iteration ~ step)+
+  scale_color_manual(values=c("function"="black", approximation="red"))+
+  geom_abline(aes(
+    slope=deriv.value, intercept=fun.value-possible.root*deriv.value,
+    color=fun),
+    data=data.table(solution, fun="approximation", step=1))+
+  geom_point(aes(
+    new.root, 0, color=fun),
+    data=data.table(solution, fun="approximation"))+
+  geom_point(aes(
+    new.root, new.value, color=fun),
+    data=data.table(solution, fun="function", step=2))+
+  geom_vline(aes(
+    xintercept=new.root, color=fun),
+    data=data.table(solution, fun="approximation", step=2))+
+  geom_point(aes(
+    possible.root, fun.value, color=fun),
+    data=data.table(solution, fun="function", step=1))+
+  geom_line(aes(
+    mean, loss, color=fun),
+    data=data.table(loss.dt, fun="function"))+
+  ylab("")
+```
 
 <!-- comment -->
 
 It is clear that the algorithm quickly converges to the root. The
 following is an animated interactive version of the same data viz.
- 
+
+
+```{r Ch15-viz}
+animint(
+  time=list(variable="iteration", ms=2000),
+  iterations=gg.it+
+    geom_tallrect(aes(
+      xmin=iteration-0.5,
+      xmax=iteration+0.5),
+      clickSelects="iteration",
+      alpha=0.5,
+      data=solution),
+  loss=ggplot()+
+    theme_bw()+
+    scale_color_manual(values=c("function"="black", approximation="red"))+
+    geom_abline(aes(
+      slope=deriv.value, intercept=fun.value-possible.root*deriv.value,
+      color=fun),
+      showSelected="iteration",
+      data=data.table(solution, fun="approximation"))+
+    geom_point(aes(
+      new.root, 0, color=fun),
+      showSelected="iteration",
+      size=4,
+      data=data.table(solution, fun="approximation"))+
+    geom_point(aes(
+      new.root, new.value, color=fun),
+      showSelected="iteration",
+      data=data.table(solution, fun="function"))+
+    geom_vline(aes(
+      xintercept=new.root, color=fun),
+      showSelected="iteration",
+      data=data.table(solution, fun="approximation"))+
+    geom_point(aes(
+      possible.root, fun.value, color=fun),
+      showSelected="iteration",
+      data=data.table(solution, fun="function"))+
+    geom_line(aes(
+      mean, loss, color=fun),
+      data=data.table(loss.dt, fun="function"))+
+    ylab(""))
+```
 
 <!-- comment -->
 
@@ -287,7 +275,13 @@ following is an animated interactive version of the same data viz.
 
 The code below uses the Lambert W function to compute a root, and
 compares its solution to the one we computed using Newton's method.
- 
+
+
+```{r compare-lambert}
+inside <- Linear*exp(-Constant/Log)/Log
+root.vec <- c(LambertW::W(inside, 0), LambertW::W(inside, -1))*Log/Linear
+loss.fun(c(Newton=root.dt$possible.root, Lambert=root.vec[2]))
+```
 
 <!-- comment -->
 
@@ -306,7 +300,22 @@ finding the other root (smaller than the minimum). Note that the
 Poisson loss is highly non-linear as mean goes to zero, so the linear
 approximation in the Newton root finding will not work very
 well. Instead, we equivalently perform root finding in the log space:
- 
+
+
+```{r logloss}
+log.loss.fun <- function(log.mean){
+  Linear*exp(log.mean) + Log*log.mean + Constant
+}
+log.loss.dt <- data.table(log.mean=seq(-1, 3, l=400))
+log.loss.dt[, loss := log.loss.fun(log.mean)]
+ggplot()+
+  geom_line(aes(
+    log.mean, loss),
+    data=log.loss.dt)+
+  geom_point(aes(
+    log(mean), loss, color=point),
+    data=opt.dt)
+```
 
 <!-- comment -->
 

@@ -16,7 +16,7 @@ for(Rmd in Sys.glob(glob)){
   Rmd.dt <- nc::capture_all_str(
     Rmd,
     before=non.greedy.lines,
-    code.pattern,
+    code_chunk=code.pattern,
     after=list(
       nc::quantifier(".*\n(?!", code.start, ")", "*"),
       ".*")
@@ -26,9 +26,9 @@ for(Rmd in Sys.glob(glob)){
     "output %s with %d code chunks with blank lines\n",
     out.Rmd, sum(grepl("\n\n", Rmd.dt$code))))
   dir.create("commented", showWarnings = FALSE)
-  Rmd.dt[, cat(
-    comment_blank_lines(before), code_header, code, comment_blank_lines(after),
-    file=out.Rmd
+  out.text <- Rmd.dt[, paste0(
+    comment_blank_lines(before), code_chunk, comment_blank_lines(after)
   )]
+  cat(out.text, sep="\n", file=out.Rmd)
 }  
 

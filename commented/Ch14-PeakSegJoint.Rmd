@@ -10,25 +10,45 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r download-PSJ}
- ```{r Ch14-setup-data}
- ```{r Ch14-for-construct}
- ```{r Ch14-for-compile}
- ```{r Ch14-viz-named}
- ```{r Ch14-named-compile}
- ```{r}
- ```{r}
- knitr::opts_chunk$set(fig.path="Ch14-figures/")
- if(!file.exists("PSJ.RData")){
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch14-figures/")
+```
+
+<!-- comment -->
+
+This chapter explains how to use
+[named clickSelects/showSelected variables](Ch06-other.html#data-driven-selectors) for
+creating data-driven selector names. This feature makes it easier to
+write animint code, and makes it faster to compile.
+
+<!-- comment -->
+
+Chapter outline:
+
+<!-- comment -->
+
+* We begin by downloading the PSJ data set and computing the data to
+  plot.
+* We show one method of defining an animint with many selectors, using
+  for loops. This method is technically correct, but computationally
+  inefficient.
+* We then explain the preferred method for defining an animint with
+  many selectors, using named clickSelects/showSelected. This
+  method is more computationally efficient, and easier to code.
+
+<!-- comment -->
+
+## Download data set {#download}
+
+<!-- comment -->
+
+The example data come from the
+[PeakSegJoint package](https://github.com/tdhock/PeakSegJoint). The
+code below downloads the data set.
+
+
+```{r download-PSJ}
+if(!file.exists("PSJ.RData")){
   u <- paste0(
     "http://github.com/tdhock/animint-examples",
     "/blob/master/data/PSJ.RData?raw=true"
@@ -39,7 +59,20 @@ output: bookdown::html_chapter
   writeBin(content(request), "PSJ.RData")
 }
 load("PSJ.RData")
- res.error <- PSJ$error.total.chunk
+```
+
+<!-- comment -->
+
+## Compute data to plot {#compute-data-to-plot}
+
+<!-- comment -->
+
+The section below computes some common data that we will use in two
+data visualizations below.
+
+
+```{r Ch14-setup-data}
+res.error <- PSJ$error.total.chunk
 ann.colors <- c(
   noPeaks="#f6f4bf",
   peakStart="#ffafaf",
@@ -74,7 +107,19 @@ modelSelection.labels <- unique(all.modelSelection[, data.table(
   problemEnd=problemEnd,
   min.log.lambda=penalty.mid,
   peaks=max(peaks)+0.5)])
- library(animint2)
+```
+
+<!-- comment -->
+
+## Define data viz using for loops {#define-using-for-loops}
+
+<!-- comment -->
+
+The R code below constructs a data viz using for loops. 
+
+
+```{r Ch14-for-construct}
+library(animint2)
 print(timing.for.construct <- system.time({
   viz.for <- list(
     coverage=ggplot()+
@@ -231,10 +276,42 @@ print(timing.for.construct <- system.time({
         data=modelSelection.dt, alpha=0.5)
   }
 }))
- print(timing.for.compile <- system.time({
+```
+
+<!-- comment -->
+
+Note the timing of the code above. It takes a long time just to
+evaluate the R code that defines this data viz, since it has so many
+geoms. Next, we compile the data visualization.
+
+
+```{r Ch14-for-compile}
+print(timing.for.compile <- system.time({
   animint2dir(viz.for, "Ch14-for")
 }))
- sample.peaks <- data.table(do.call(rbind, PSJ$peaks.by.problem))
+```
+
+<!-- comment -->
+
+Note that the compilation also takes a long time, since there are so
+many geoms. The data viz can be viewed on
+[Ch14-for/index.html](Ch14-for/index.html). In the next section we
+will create the same data viz, but more efficiently.
+
+<!-- comment -->
+
+## Define data viz using named clickSelects/showSelected {#define-using-named}
+
+<!-- comment -->
+
+In this section we use named clickSelects/showSelected to create a
+more efficient version of the previous data visualization. In general,
+any data visualization defined using for loops in R code can be made
+more efficient by instead using this method.
+
+
+```{r Ch14-viz-named}
+sample.peaks <- data.table(do.call(rbind, PSJ$peaks.by.problem))
 prob.peaks.names <- c(
   "bases.per.problem", "problem.i", "problem.name", "peaks",
   "chromStart", "chromEnd")
@@ -384,109 +461,19 @@ print(timing.named.construct <- system.time({
 ### clickSelects/showSelected names (and it uses corresponding values
 ### to set/update the selected value/geoms).
 }))
- print(timing.named.compile <- system.time({
-  animint2dir(viz.named, "Ch14-named")
-}))
- viz.dirs.vec <- c("Ch14-for", "Ch14-named")
-viz.dirs.text <- paste(viz.dirs.vec, collapse=" ")
-(cmd <- paste("du -ks", viz.dirs.text))
-kb.dt <- fread(cmd)
-setnames(kb.dt, c("kilobytes", "path"))
-kb.dt
- data.frame(
-  kilobytes=kb.dt$kilobytes,
-  construct.seconds=c(
-    timing.for.construct[["elapsed"]],
-    timing.named.construct[["elapsed"]]),
-  compile.seconds=c(
-    timing.for.compile[["elapsed"]],
-    timing.named.compile[["elapsed"]]),
-  row.names=c("for", "named"))
- 
-
-<!-- comment -->
-
-This chapter explains how to use
-[named clickSelects/showSelected variables](Ch06-other.html#data-driven-selectors) for
-creating data-driven selector names. This feature makes it easier to
-write animint code, and makes it faster to compile.
-
-<!-- comment -->
-
-Chapter outline:
-
-<!-- comment -->
-
-* We begin by downloading the PSJ data set and computing the data to
-  plot.
-* We show one method of defining an animint with many selectors, using
-  for loops. This method is technically correct, but computationally
-  inefficient.
-* We then explain the preferred method for defining an animint with
-  many selectors, using named clickSelects/showSelected. This
-  method is more computationally efficient, and easier to code.
-
-<!-- comment -->
-
-## Download data set {#download}
-
-<!-- comment -->
-
-The example data come from the
-[PeakSegJoint package](https://github.com/tdhock/PeakSegJoint). The
-code below downloads the data set.
- 
-
-<!-- comment -->
-
-## Compute data to plot {#compute-data-to-plot}
-
-<!-- comment -->
-
-The section below computes some common data that we will use in two
-data visualizations below.
- 
-
-<!-- comment -->
-
-## Define data viz using for loops {#define-using-for-loops}
-
-<!-- comment -->
-
-The R code below constructs a data viz using for loops. 
- 
-
-<!-- comment -->
-
-Note the timing of the code above. It takes a long time just to
-evaluate the R code that defines this data viz, since it has so many
-geoms. Next, we compile the data visualization.
- 
-
-<!-- comment -->
-
-Note that the compilation also takes a long time, since there are so
-many geoms. The data viz can be viewed on
-[Ch14-for/index.html](Ch14-for/index.html). In the next section we
-will create the same data viz, but more efficiently.
-
-<!-- comment -->
-
-## Define data viz using named clickSelects/showSelected {#define-using-named}
-
-<!-- comment -->
-
-In this section we use named clickSelects/showSelected to create a
-more efficient version of the previous data visualization. In general,
-any data visualization defined using for loops in R code can be made
-more efficient by instead using this method.
- 
+```
 
 <!-- comment -->
 
 It is clear that it takes much less time to evaluate the R code above
 which uses the named clickSelects/showSelected. We compile it below.
- 
+
+
+```{r Ch14-named-compile}
+print(timing.named.compile <- system.time({
+  animint2dir(viz.named, "Ch14-named")
+}))
+```
 
 <!-- comment -->
 
@@ -503,7 +490,16 @@ than for loops, in both the definition and compilation steps.
 <!-- comment -->
 
 In this section we compute the disk usage of both methods.
- 
+
+
+```{r}
+viz.dirs.vec <- c("Ch14-for", "Ch14-named")
+viz.dirs.text <- paste(viz.dirs.vec, collapse=" ")
+(cmd <- paste("du -ks", viz.dirs.text))
+kb.dt <- fread(cmd)
+setnames(kb.dt, c("kilobytes", "path"))
+kb.dt
+```
 
 <!-- comment -->
 
@@ -521,7 +517,19 @@ The table below summarizes the disk usage and timings presented in
 this chapter. It is clear that named clickSelects/showSelected are
 more efficient in both respects, and should be used instead of for
 loops.
- 
+
+
+```{r}
+data.frame(
+  kilobytes=kb.dt$kilobytes,
+  construct.seconds=c(
+    timing.for.construct[["elapsed"]],
+    timing.named.construct[["elapsed"]]),
+  compile.seconds=c(
+    timing.for.compile[["elapsed"]],
+    timing.named.compile[["elapsed"]]),
+  row.names=c("for", "named"))
+```
 
 <!-- comment -->
 

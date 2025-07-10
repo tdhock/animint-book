@@ -8,36 +8,55 @@ output: bookdown::html_chapter
 
 # Chapter 11, Lasso
  
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r Ch11-viz-one-split}
- ```{r Ch11-viz-moving-rect}
- knitr::opts_chunk$set(fig.path="Ch11-figures/")
- if(!file.exists("prostate.data")){
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch11-figures/")
+```
+
+<!-- comment -->
+
+This goal of this chapter is to create an interactive data
+visualization that explains the
+[Lasso](https://en.wikipedia.org/wiki/Lasso_%28statistics%29), a
+machine learning model for regularized linear regression.
+
+<!-- comment -->
+
+Chapter outline:
+
+<!-- comment -->
+
+* We begin with several static data visualizations of the lasso path.
+* We then create an interactive version with a facet and plot showing
+  train/validation error and residuals.
+* Finally we re-design the interactive data visualization with
+  simplified legends and moving tallrects.
+
+<!-- comment -->
+
+## Static plots of the coefficient regularization path {#static-path-plots}
+
+<!-- comment -->
+
+We begin by loading the prostate cancer data set.
+
+
+```{r}
+if(!file.exists("prostate.data")){
   download.file(
     "https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data",
     "prostate.data")
 }
 prostate <- data.table::fread("prostate.data")
 head(prostate)
- input.cols <- c(
+```
+
+<!-- comment -->
+
+We construct a train inputs `x` and outputs `y` using the code below.
+
+
+```{r}
+input.cols <- c(
   "lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason", 
   "pgg45")
 prostate.inputs <- prostate[, ..input.cols]
@@ -46,10 +65,26 @@ x <- as.matrix(prostate.inputs[is.train])
 head(x)
 y <- prostate[is.train, lpsa]
 head(y)
- library(lars)
+```
+
+<!-- comment -->
+
+Below we fit the full path of lasso solutions using the `lars` package.
+
+
+```{r}
+library(lars)
 fit <- lars(x,y,type="lasso")
 fit$lambda
- pred.nox <- predict(fit, type="coef")
+```
+
+<!-- comment -->
+
+The path of `lambda` values are not evenly spaced.
+
+
+```{r}
+pred.nox <- predict(fit, type="coef")
 beta <- scale(pred.nox$coefficients, FALSE, 1/fit$normx)
 arclength <- rowSums(abs(beta))
 path.list <- list()
@@ -77,7 +112,20 @@ gg.lambda <- ggplot()+
     data=path)+
   ggtitle("LASSO path for prostate cancer data calculated using the LARS")
 gg.lambda
- x.scaled <- with(fit, scale(x, meanx, normx))
+```
+
+<!-- comment -->
+
+The plot above shows the entire lasso path, the optimal weights in the
+L1-regularized least squares regression problem, for every
+regularization parameter lambda. The path begins at the least squares
+solution, lambda=0 on the left. It ends at the completely regularized
+intercept-only model on the right. To see the equivalence with the
+ordinary least squares solution, we add dots in the plot below.
+
+
+```{r}
+x.scaled <- with(fit, scale(x, meanx, normx))
 lfit <- lm.fit(x.scaled, y)
 lpoints <- data.table::data.table(
   variable=colnames(x),
@@ -87,7 +135,17 @@ gg.lambda+
   geom_point(aes(
     0, standardized.coef, color=variable),
     data=lpoints)
- fraction <- sort(unique(c(
+```
+
+<!-- comment -->
+
+In the next plot below, we show the path as a function of L1 norm
+(arclength), with some more points on an evenly spaced grid that we
+will use later for animation.
+
+
+```{r}
+fraction <- sort(unique(c(
   seq(0, 1, l=21))))
 pred.fraction <- predict(
   fit, prostate.inputs,
@@ -120,7 +178,30 @@ ggplot()+
     fill=NA,
     size=3,
     data=coef.grid)
- pred.list <- predict(
+```
+
+<!-- comment -->
+
+The plot above shows that the weights at the grid points are
+consistent with the lines that represent the entire path of
+solutions. The LARS algorithm quickly provides Lasso solutions for as
+many grid points as you like. More precisely, since the LARS only
+computes the change-points in the piecewise linear path, its time
+complexity only depends on the number of change-points (not the number
+of grid points).
+
+<!-- comment -->
+
+## Interactive visualization of the regularization path {#interactive-path-viz}
+
+<!-- comment -->
+
+The plot below combines the lasso weight path with the train/test
+error plot.
+
+
+```{r}
+pred.list <- predict(
   fit, prostate.inputs,
   mode="fraction", s=fraction)
 residual.mat <- pred.list$fit - prostate$lpsa
@@ -159,7 +240,15 @@ gg.path <- ggplot()+
     alpha=0.5,
     data=tallrect.dt)
 print(gg.path)
- lasso.res.list <- list()
+```
+
+<!-- comment -->
+
+Finally, we add a plot of residuals versus actual values.
+
+
+```{r}
+lasso.res.list <- list()
 for(fraction.i in seq_along(fraction)){
   lasso.res.list[[fraction.i]] <- data.table::data.table(
     observation.i=1:nrow(prostate),
@@ -184,12 +273,54 @@ gg.res <- ggplot()+
     shape=21,
     data=lasso.res)
 print(gg.res)
- animint(
+```
+
+<!-- comment -->
+
+Below, we combine the ggplots above in a single animint
+below. Clicking the first plot changes the regularization parameter,
+and the residuals that are shown in the second plot.
+
+
+```{r Ch11-viz-one-split}
+animint(
   gg.path,
   gg.res,
   duration=list(arclength=2000),
   time=list(variable="arclength", ms=2000))
- tallrect.show.list <- list()
+```
+
+<!-- comment -->
+
+## Re-design with moving tallrects {#re-design}
+
+<!-- comment -->
+
+The re-design below has two changes. First, you may have noticed that
+there are two different set legends in the previous animint
+(linetype=set in the first path plot, and color=set in the second
+residual plot). It would be easier for the reader to decode if the set
+variable had just one mapping. So in the re-design below we replace
+the `geom_point` in the second plot with a `geom_segment` with
+`linetype=set`.
+
+<!-- comment -->
+
+Second, we have replaced the single tallrect in the first plot with
+two tallrects. The first tallrect has `showSelected=arclength` and is
+used to show the selected arclength using a grey rectangle. Since we
+specify a `duration` for the `arclength` variable, and the same
+`key=1` value, we will observe a smooth transition of the selected
+grey tallrect. The second tallrect has `clickSelects=arclength` and so
+clicking it has the effect of changing the selected value of
+`arclength`. We specify a another data set with more rows, and use the
+[named clickSelects/showSelected variables](Ch06-other.html#data-driven-selectors) to
+indicate that `arclength` should also be used as a `showSelected`
+variable.
+
+
+```{r Ch11-viz-moving-rect}
+tallrect.show.list <- list()
 for(a in tallrect.dt$arclength){
   is.selected <- tallrect.dt$arclength == a
   not.selected <- tallrect.dt[!is.selected]
@@ -267,128 +398,7 @@ animint(
       data=lasso.res),
   duration=list(arclength=2000),
   time=list(variable="arclength", ms=2000))
- 
-
-<!-- comment -->
-
-This goal of this chapter is to create an interactive data
-visualization that explains the
-[Lasso](https://en.wikipedia.org/wiki/Lasso_%28statistics%29), a
-machine learning model for regularized linear regression.
-
-<!-- comment -->
-
-Chapter outline:
-
-<!-- comment -->
-
-* We begin with several static data visualizations of the lasso path.
-* We then create an interactive version with a facet and plot showing
-  train/validation error and residuals.
-* Finally we re-design the interactive data visualization with
-  simplified legends and moving tallrects.
-
-<!-- comment -->
-
-## Static plots of the coefficient regularization path {#static-path-plots}
-
-<!-- comment -->
-
-We begin by loading the prostate cancer data set.
- 
-
-<!-- comment -->
-
-We construct a train inputs `x` and outputs `y` using the code below.
- 
-
-<!-- comment -->
-
-Below we fit the full path of lasso solutions using the `lars` package.
- 
-
-<!-- comment -->
-
-The path of `lambda` values are not evenly spaced.
- 
-
-<!-- comment -->
-
-The plot above shows the entire lasso path, the optimal weights in the
-L1-regularized least squares regression problem, for every
-regularization parameter lambda. The path begins at the least squares
-solution, lambda=0 on the left. It ends at the completely regularized
-intercept-only model on the right. To see the equivalence with the
-ordinary least squares solution, we add dots in the plot below.
- 
-
-<!-- comment -->
-
-In the next plot below, we show the path as a function of L1 norm
-(arclength), with some more points on an evenly spaced grid that we
-will use later for animation.
- 
-
-<!-- comment -->
-
-The plot above shows that the weights at the grid points are
-consistent with the lines that represent the entire path of
-solutions. The LARS algorithm quickly provides Lasso solutions for as
-many grid points as you like. More precisely, since the LARS only
-computes the change-points in the piecewise linear path, its time
-complexity only depends on the number of change-points (not the number
-of grid points).
-
-<!-- comment -->
-
-## Interactive visualization of the regularization path {#interactive-path-viz}
-
-<!-- comment -->
-
-The plot below combines the lasso weight path with the train/test
-error plot.
- 
-
-<!-- comment -->
-
-Finally, we add a plot of residuals versus actual values.
- 
-
-<!-- comment -->
-
-Below, we combine the ggplots above in a single animint
-below. Clicking the first plot changes the regularization parameter,
-and the residuals that are shown in the second plot.
- 
-
-<!-- comment -->
-
-## Re-design with moving tallrects {#re-design}
-
-<!-- comment -->
-
-The re-design below has two changes. First, you may have noticed that
-there are two different set legends in the previous animint
-(linetype=set in the first path plot, and color=set in the second
-residual plot). It would be easier for the reader to decode if the set
-variable had just one mapping. So in the re-design below we replace
-the `geom_point` in the second plot with a `geom_segment` with
-`linetype=set`.
-
-<!-- comment -->
-
-Second, we have replaced the single tallrect in the first plot with
-two tallrects. The first tallrect has `showSelected=arclength` and is
-used to show the selected arclength using a grey rectangle. Since we
-specify a `duration` for the `arclength` variable, and the same
-`key=1` value, we will observe a smooth transition of the selected
-grey tallrect. The second tallrect has `clickSelects=arclength` and so
-clicking it has the effect of changing the selected value of
-`arclength`. We specify a another data set with more rows, and use the
-[named clickSelects/showSelected variables](Ch06-other.html#data-driven-selectors) to
-indicate that `arclength` should also be used as a `showSelected`
-variable.
- 
+```
 
 <!-- comment -->
 

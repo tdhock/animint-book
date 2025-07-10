@@ -10,73 +10,9 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r, eval=FALSE}
- ```{r, eval=FALSE}
- ```{r, eval=FALSE}
- ```{r, fig.height=8}
- ```{r}
- ```{r}
- ```{r}
- knitr::opts_chunk$set(fig.path="Ch99-figures/")
- ggplot()+
-  geom_point(aes(Petal.Width, Sepal.Width), iris)+
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
-  facet_grid(. ~ Species)
- library(data.table)
-outer.data.list <- list()
-inner.data.list <- list()
-for(outer in outer.vec){
-  outer.dt <- computeOuter(outer)
-  outer.data.list[[paste(outer)]] <- data.table(outer, outer.dt)
-  for(inner in inner.vec){
-    inner.dt <- computeInner(outer.dt, inner)
-    inner.data.list[[paste(outer, inner)]] <-
-      data.table(outer, inner, inner.dt)
-  }
-}
-outer.data <- do.call(rbind, outer.data.list)
-inner.data <- do.call(rbind, inner.data.list)
- addColumn <- function(df, time.period){
-  data.frame(df, time.period=factor(time.period, c("1975", "1960-2010")))
-}
-animint(
-  ggplot()+
-  geom_point(aes(
-    x=life.expectancy, y=fertility.rate, color=region),
-    data=addColumn(WorldBank1975, "1975"))+
-  geom_path(aes(
-    x=life.expectancy, y=fertility.rate, color=region,
-    group=country),
-    data=addColumn(WorldBankBefore1975, "1975"))+
-  geom_line(aes(
-    x=year, y=fertility.rate, color=region, group=country),
-    data=addColumn(WorldBank, "1960-2010"))+
-  facet_grid(. ~ time.period, scales="free")+
-  xlab(""))
- RColorBrewer::display.brewer.all()
- dput(RColorBrewer::brewer.pal(Inf, "Set1"))
- data(WorldBank, package="animint2")
-region.colors <- 
-  c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
-    "#A65628", "#F781BF", "#999999")
-names(region.colors) <- levels(WorldBank$region)
-region.colors
- library(animint2)
-ggplot()+
-  scale_color_manual(values=region.colors)+
-  geom_point(aes(
-    x=life.expectancy, y=fertility.rate, color=region),
-    data=WorldBank)
- 
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch99-figures/")
+```
 
 <!-- comment -->
 
@@ -91,7 +27,15 @@ animints.
 
 To emphasize the plotted data in facetted ggplots, eliminate the space
 between facets using the following idiom.
- 
+
+
+```{r, eval=FALSE}
+ggplot()+
+  geom_point(aes(Petal.Width, Sepal.Width), iris)+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ Species)
+```
 
 <!-- comment -->
 
@@ -121,7 +65,24 @@ units such as `cm`.
 
 The list of data tables idiom is very useful for creating interactive
 data visualizations of arbitrary complexity. The general form looks like
- 
+
+
+```{r, eval=FALSE}
+library(data.table)
+outer.data.list <- list()
+inner.data.list <- list()
+for(outer in outer.vec){
+  outer.dt <- computeOuter(outer)
+  outer.data.list[[paste(outer)]] <- data.table(outer, outer.dt)
+  for(inner in inner.vec){
+    inner.dt <- computeInner(outer.dt, inner)
+    inner.data.list[[paste(outer, inner)]] <-
+      data.table(outer, inner, inner.dt)
+  }
+}
+outer.data <- do.call(rbind, outer.data.list)
+inner.data <- do.call(rbind, inner.data.list)
+```
 
 <!-- comment -->
 
@@ -159,7 +120,27 @@ This idiom is useful for creating multi-panel ggplots with aligned
 axes. First, define a function which takes as input a data table and
 one or more values which will be used to add factors to that data
 table.
- 
+
+
+```{r, eval=FALSE}
+addColumn <- function(df, time.period){
+  data.frame(df, time.period=factor(time.period, c("1975", "1960-2010")))
+}
+animint(
+  ggplot()+
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region),
+    data=addColumn(WorldBank1975, "1975"))+
+  geom_path(aes(
+    x=life.expectancy, y=fertility.rate, color=region,
+    group=country),
+    data=addColumn(WorldBankBefore1975, "1975"))+
+  geom_line(aes(
+    x=year, y=fertility.rate, color=region, group=country),
+    data=addColumn(WorldBank, "1960-2010"))+
+  facet_grid(. ~ time.period, scales="free")+
+  xlab(""))
+```
 
 <!-- comment -->
 
@@ -175,23 +156,50 @@ have very different units (year and life expectancy).
 Color and fill legends in `ggplot2` can be manually specified via
 `scale_color_manual` and `scale_fill_manual`. Typically we will choose
 one of the ColorBrewer palettes:
- 
+
+
+```{r, fig.height=8}
+RColorBrewer::display.brewer.all()
+```
 
 <!-- comment -->
 
 For example to get the R code for the Set1 palette, we can write
- 
+
+
+```{r}
+dput(RColorBrewer::brewer.pal(Inf, "Set1"))
+```
 
 <!-- comment -->
 
 We can then copy that R code from the terminal and paste it into our
 text editor
- 
+
+
+```{r}
+data(WorldBank, package="animint2")
+region.colors <- 
+  c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
+    "#A65628", "#F781BF", "#999999")
+names(region.colors) <- levels(WorldBank$region)
+region.colors
+```
 
 <!-- comment -->
 
 Then we can use it with `scale_color_manual` 
- 
+
+
+```{r}
+library(animint2)
+ggplot()+
+  scale_color_manual(values=region.colors)+
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region),
+    data=WorldBank)
+```
 
 <!-- comment -->
+
 

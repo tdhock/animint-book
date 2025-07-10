@@ -10,123 +10,9 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r Ch04-ggplot-scatter}
- ```{r Ch04-viz-scatter}
- ```{r Ch04-viz-color-off}
- ```{r Ch04-viz-text}
- ```{r Ch04-viz-first}
- ```{r Ch04-viz-multiple}
- ```{r}
- ```{r Ch04-viz-timeSeries}
- ```{r Ch04-ggplot-scatterFacet}
- ```{r Ch04-ggplot-scatterTS}
- ```{r Ch04-viz-facets}
- knitr::opts_chunk$set(fig.path="Ch04-figures/")
- library(animint2)
-data(WorldBank)
-scatter <- ggplot()+
-  geom_point(aes(
-    x=life.expectancy, y=fertility.rate, color=region,
-    key=country),
-    showSelected="year",
-    clickSelects="country",
-    data=WorldBank)
-scatter
- (viz.scatter <- animint(
-  scatter=scatter,
-  duration=list(year=2000)))
- animint(
-  ggplot()+
-    geom_point(aes(
-      x=life.expectancy, y=fertility.rate, fill=region,
-      key=country),
-      shape=21,
-      color="black",
-      color_off=NA,
-      showSelected="year",
-      clickSelects="country",
-      data=WorldBank))
- viz.text <- viz.scatter
-viz.text$scatter <- scatter+
-  geom_text(aes(
-    x=life.expectancy, y=fertility.rate, label=country,
-    key=country),
-    showSelected=c("year", "country"),
-    data=WorldBank)
-viz.text
- viz.first <- viz.text
-viz.first$first <- list(
-  year=1970,
-  country="United States",
-  region=c("North America", "South Asia"))
-viz.first
- viz.multiple <- viz.first
-viz.multiple$selector.types <- list(country="multiple")
-viz.multiple
- years <- data.frame(year=unique(WorldBank$year))
-head(years)
- viz.timeSeries <- viz.multiple
-viz.timeSeries$timeSeries <- ggplot()+
-  geom_tallrect(aes(
-    xmin=year-0.5, xmax=year+0.5),
-    clickSelects="year",
-    alpha=0.5,
-    data=years)+
-  geom_line(aes(
-    x=year, y=fertility.rate, group=country, color=region),
-    clickSelects="country",
-    size=3,
-    alpha=0.6,
-    data=WorldBank)
-viz.timeSeries
- add.x.var <- function(df, x.var){
-  data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
-}
-scatterFacet <- ggplot()+
-  geom_point(aes(
-    x=life.expectancy, y=fertility.rate, color=region,
-    key=country),
-    showSelected="year",
-    clickSelects="country",
-    data=add.x.var(WorldBank, "life expectancy"))+
-  geom_text(aes(
-    x=life.expectancy, y=fertility.rate, label=country,
-    key=country),
-    clickSelects="country",
-    showSelected=c("year", "country", "region"),
-    data=add.x.var(WorldBank, "life expectancy"))+
-  facet_grid(. ~ x.var, scales="free")+
-  xlab("")+
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))
-scatterFacet
- scatterTS <- scatterFacet+
-  geom_tallrect(aes(
-    xmin=year-0.5, xmax=year+0.5),
-    clickSelects="year",
-    alpha=0.5,
-    data=add.x.var(years, "year"))+
-  geom_line(aes(
-    x=year, y=fertility.rate, group=country, color=region),
-    clickSelects="country",
-    size=3,
-    alpha=0.6,
-    data=add.x.var(WorldBank, "year"))
-scatterTS
- (viz.facets <- animint(scatterTS))
- 
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch04-figures/")
+```
 
 <!-- comment -->
 
@@ -205,7 +91,20 @@ the World Bank data.
 
 To start, consider the following R code which generates a
 scatterplot of the World Bank data:
- 
+
+
+```{r Ch04-ggplot-scatter}
+library(animint2)
+data(WorldBank)
+scatter <- ggplot()+
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region,
+    key=country),
+    showSelected="year",
+    clickSelects="country",
+    data=WorldBank)
+scatter
+```
 
 <!-- comment -->
 
@@ -213,7 +112,13 @@ Note that the plot above is not interactive, because it is rendered
 using the traditional R graphics device. In contrast,
 rendering the same ggplot using animint2 results in the following
 interactive plot:
- 
+
+
+```{r Ch04-viz-scatter}
+(viz.scatter <- animint(
+  scatter=scatter,
+  duration=list(year=2000)))
+```
 
 <!-- comment -->
 
@@ -226,7 +131,21 @@ current selection, and is performed automatically for each geom with
 opaque, no transparency), and the other points have alpha=0.5
 (semi-transparent). These defaults can be customized; for example in
 the code below a black outline is used to highlight the current selection.
- 
+
+
+```{r Ch04-viz-color-off}
+animint(
+  ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, fill=region,
+      key=country),
+      shape=21,
+      color="black",
+      color_off=NA,
+      showSelected="year",
+      clickSelects="country",
+      data=WorldBank))
+```
 
 <!-- comment -->
 
@@ -234,7 +153,18 @@ The data visualization above shows the currently selected country name in
 the selection menu, but it would be better to show it as a text label
 on the scatterplot. We can do that by adding a `geom_text` layer with
 two showSelected variables:
- 
+
+
+```{r Ch04-viz-text}
+viz.text <- viz.scatter
+viz.text$scatter <- scatter+
+  geom_text(aes(
+    x=life.expectancy, y=fertility.rate, label=country,
+    key=country),
+    showSelected=c("year", "country"),
+    data=WorldBank)
+viz.text
+```
 
 <!-- comment -->
 
@@ -316,7 +246,16 @@ first rendered, use the `first` option. It should be a named list with
 entries for each selection variable. For example, the code below
 specifies 1970 as the first year, United States as the first country,
 and North America and South Asia as the first regions.
- 
+
+
+```{r Ch04-viz-first}
+viz.first <- viz.text
+viz.first$first <- list(
+  year=1970,
+  country="United States",
+  region=c("North America", "South Asia"))
+viz.first
+```
 
 <!-- comment -->
 
@@ -357,7 +296,13 @@ variables. However, single or multiple selection can be specified by
 using the `selector.types` option. In the R code below, we use the
 `selector.types` option to specify that `country` should be treated as
 a multiple selection variable.
- 
+
+
+```{r Ch04-viz-multiple}
+viz.multiple <- viz.first
+viz.multiple$selector.types <- list(country="multiple")
+viz.multiple
+```
 
 <!-- comment -->
 
@@ -413,12 +358,34 @@ horizontal limits via the `xmin` and `xmax` aesthetics. Specifying
 for each year, and click a tallrect to change the selected year. Thus
 we need to create a new data set called `years` with one row for each
 unique year of the `WorldBank` data.
- 
+
+
+```{r}
+years <- data.frame(year=unique(WorldBank$year))
+head(years)
+```
 
 <!-- comment -->
 
 Next, we add the time series ggplot to the existing data viz.
- 
+
+
+```{r Ch04-viz-timeSeries}
+viz.timeSeries <- viz.multiple
+viz.timeSeries$timeSeries <- ggplot()+
+  geom_tallrect(aes(
+    xmin=year-0.5, xmax=year+0.5),
+    clickSelects="year",
+    alpha=0.5,
+    data=years)+
+  geom_line(aes(
+    x=year, y=fertility.rate, group=country, color=region),
+    clickSelects="country",
+    size=3,
+    alpha=0.6,
+    data=WorldBank)
+viz.timeSeries
+```
 
 <!-- comment -->
 
@@ -453,7 +420,31 @@ First, we re-create the scatterplot from the previous section using the
 [addColumn then facet idiom](Ch99-appendix.html#addColumn-then-facet), 
 which is useful for creating ggplots
 with aligned axes.
- 
+
+
+```{r Ch04-ggplot-scatterFacet}
+add.x.var <- function(df, x.var){
+  data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
+}
+scatterFacet <- ggplot()+
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region,
+    key=country),
+    showSelected="year",
+    clickSelects="country",
+    data=add.x.var(WorldBank, "life expectancy"))+
+  geom_text(aes(
+    x=life.expectancy, y=fertility.rate, label=country,
+    key=country),
+    clickSelects="country",
+    showSelected=c("year", "country", "region"),
+    data=add.x.var(WorldBank, "life expectancy"))+
+  facet_grid(. ~ x.var, scales="free")+
+  xlab("")+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))
+scatterFacet
+```
 
 <!-- comment -->
 
@@ -463,7 +454,23 @@ have used an augmented `WorldBank` data set with an additional
 `x.var` variable that we use with `facet_grid`. Below, we add
 geoms for a time series plot that is aligned on the fertility rate
 axis.
- 
+
+
+```{r Ch04-ggplot-scatterTS}
+scatterTS <- scatterFacet+
+  geom_tallrect(aes(
+    xmin=year-0.5, xmax=year+0.5),
+    clickSelects="year",
+    alpha=0.5,
+    data=add.x.var(years, "year"))+
+  geom_line(aes(
+    x=year, y=fertility.rate, group=country, color=region),
+    clickSelects="country",
+    size=3,
+    alpha=0.6,
+    data=add.x.var(WorldBank, "year"))
+scatterTS
+```
 
 <!-- comment -->
 
@@ -502,7 +509,11 @@ state is displayed](Ch06-other.html#display-selection-state).
 
 Finally, we use the R code below to render the new aligned scatterplot
 and time series using animint.
- 
+
+
+```{r Ch04-viz-facets}
+(viz.facets <- animint(scatterTS))
+```
 
 <!-- comment -->
 

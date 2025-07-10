@@ -10,304 +10,9 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r Ch06-viz-href}
- ```{r Ch06-viz-tooltip}
- ```{r Ch06-viz-id}
- ```{r, eval=FALSE}
- ```{r, eval=FALSE}
- ```{r, eval=FALSE}
- ```{r Ch06-errorPlot}
- ```{r Ch06-signalPlot}
- ```{r Ch06-viz-chunk-vars}
- ```{r tsvSizes}
- ```{r}
- ```{r Ch06-customTour}
- ```{r Ch06-viz-width-height}
- ```{r Ch06-viz-scale-size}
- ```{r Ch06-text-size}
- ```{r Ch06-viz-title}
- ```{r Ch06-source-demo}
- ```{r Ch06-link-demo}
- knitr::opts_chunk$set(fig.path="Ch06-figures/")
- library(animint2)
-USpolygons <- map_data("state")
-animint(
-  map=ggplot()+
-    ggtitle("click a state to read its Wikipedia page")+
-    coord_equal()+
-    geom_polygon(aes(
-      x=long, y=lat, group=group,
-      href=paste0("http://en.wikipedia.org/wiki/", region)),
-      data=USpolygons, fill="black", colour="grey"))
- data(WorldBank)
-WorldBank1975 <- subset(WorldBank, year == 1975)
-animint(
-  scatter=ggplot()+
-    geom_point(aes(
-      x=life.expectancy, y=fertility.rate,
-      tooltip=paste(country, "population =", population)),
-      size=5,
-      data=WorldBank1975))
- animint(
-  map=ggplot()+
-    ggtitle("each state/region/group has a unique id")+
-    coord_equal()+
-    geom_polygon(aes(
-      x=long, y=lat, group=group,
-      id=gsub(" ", "_", paste(region, group))),
-      data=USpolygons, fill="black", colour="grey"))
- viz <- list(
-  points=ggplot()+
-    geom_point(clickSelects="selector1value", data=data1)+
-    ...
-    geom_point(clickSelects="selector20value", data=data20)
-)
- viz <- list(points=ggplot())
-for(selector.name in paste0("selector", 1:20, "value")){
-  data.for.selector <- all.data.list[[selector.name]]
-  viz$points <- viz$points +
-    geom_point(clickSelects=selector.name, data=data.for.selector)
-}
- viz <- list(
-  points=ggplot()+
-    geom_point(
-      clickSelects=c(selector.name="selector.value"),
-      data=all.data)
-)
- data(breakpoints)
-only.error <- subset(breakpoints$error, type=="E")
-only.segments <- subset(only.error,bases.per.probe==bases.per.probe[1])
-library(data.table)
-fp.fn.names <- rbind(
-  data.table(error.type="false positives", type="FP"),
-  data.table(error.type="false negatives", type=c("I", "FN")))
-error.dt <- data.table(breakpoints$error)
-error.type.dt <- error.dt[fp.fn.names, on=list(type)]
-fp.fn.dt <- error.type.dt[, list(
-  error.value=sum(error)
-), by=.(error.type, segments, bases.per.probe)]
-errorPlot <- ggplot()+
-  ggtitle("select data and segments")+
-  theme_bw()+
-  geom_tallrect(aes(
-    xmin=segments-0.5, xmax=segments+0.5),
-    clickSelects="segments",
-    data=only.segments,
-    alpha=1/2)+
-  geom_line(aes(
-    segments, error.value, color=error.type,
-    group=paste(bases.per.probe, error.type)),
-    showSelected="bases.per.probe",
-    data=fp.fn.dt,
-    size=5)+
-  scale_color_manual(values=c(
-    "false positives"="red", "false negatives"="blue"))+
-  geom_line(aes(
-    segments, error, group=bases.per.probe),
-    clickSelects="bases.per.probe",
-    data=only.error,
-    size=4)+
-  scale_x_continuous(breaks=c(1, 6, 10, 20))
-errorPlot
- signalPlot <- ggplot()+
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
-  theme_animint(height=800)+
-  geom_point(aes(
-    position/1e5, signal),
-    showSelected="bases.per.probe",
-    shape=1,
-    data=breakpoints$signals)+
-  geom_segment(aes(
-    first.base/1e5, mean, xend=last.base/1e5, yend=mean),
-    showSelected=c("segments", "bases.per.probe"),
-    color="green",
-    data=breakpoints$segments)
-signalPlot+facet_grid(segments ~ bases.per.probe)
- (viz.chunk.vars <- animint(
-  errorPlot,
-  signal=signalPlot+
-    geom_vline(aes(
-      xintercept=base/1e5),
-      showSelected=c("segments", "bases.per.probe"),
-      color="green",
-      chunk_vars=character(),
-      linetype="dashed",
-      data=breakpoints$breaks)))
- tsvSizes <- function(segment.chunk.vars){
-  viz <- list(
-    error=errorPlot,
-    signal=signalPlot+
-      geom_vline(aes(
-        xintercept=base/1e5),
-        showSelected=c("segments", "bases.per.probe"),
-        color="green",
-        chunk_vars=segment.chunk.vars,
-        linetype="dashed",
-        data=breakpoints$breaks)
-  )
-  info <- animint2dir(viz, open.browser=FALSE)
-  cmd <- paste("du -ks", info$out.dir)
-  kb.dt <- fread(cmd=cmd)
-  setnames(kb.dt, c("kb", "dir"))
-  tsv.vec <- Sys.glob(paste0(info$out.dir, "/*.tsv"))
-  is.geom6 <- grepl("geom6", tsv.vec)
-  data.frame(kb=kb.dt$kb, geom6.tsv=sum(is.geom6), other.tsv=sum(!is.geom6))
-}
-chunk_vars_list <- list(
-  neither=c(),
-  bases.per.probe=c("bases.per.probe"),
-  segments=c("segments"),
-  both=c("segments", "bases.per.probe"))
-sizes.list <- lapply(chunk_vars_list, tsvSizes)
-(sizes <- do.call(rbind, sizes.list))
- N <- 3
-set.seed(1)
-demo_df <- data.frame(i=1:N, num=rnorm(N,2))
-animint(
-  defaults=ggplot()+
-    ggtitle("Defaults, no *_off")+
-    geom_tile(aes(
-      i, 0),
-      size=5,
-      clickSelects="i",
-      data=demo_df)+
-    geom_point(aes(
-      i, num),
-      size=5,
-      clickSelects="i",
-      data=demo_df),
-  off=ggplot()+
-    ggtitle("User specified alpha_off, fill_off, color_off")+
-    geom_tile(aes(
-      i, 0, fill=i),
-      clickSelects="i",
-      color="red",
-      color_off="pink",
-      size=5,
-      data=demo_df)+
-    geom_point(aes(
-      i, num),
-      size=5,
-      alpha=0.5,
-      alpha_off=0.1,
-      clickSelects="i",
-      data=demo_df)+
-    geom_point(aes(
-      i, -num),
-      size=5,
-      alpha=1,
-      alpha_off=1,
-      color="red",
-      color_off="black",
-      fill="grey",
-      fill_off="white",
-      clickSelects="i",
-      data=demo_df))
- animint(
-  scatter=ggplot()+
-    geom_point(aes(
-      x=life.expectancy, y=fertility.rate, color=region),
-      size=5,
-      showSelected="year",
-      clickSelects="country",
-      help="One point drawn for each country in the selected year",
-      alpha=0.7,
-      data=WorldBank)+
-    geom_text(aes(
-      x=life.expectancy, y=fertility.rate, label=country),
-      data=WorldBank,
-      title="Selected country",
-      showSelected=c("year","country")),
-  first=list(
-    country="France",
-    year=1980))
- animint(
-  map=ggplot()+
-    theme_animint(width=750, height=500)+
-    theme(
-      axis.line=element_blank(),
-      axis.text=element_blank(), 
-      axis.ticks=element_blank(),
-      axis.title=element_blank(),
-      panel.border=element_blank(),
-      panel.background=element_blank(),
-      panel.grid.major=element_blank(),
-      panel.grid.minor=element_blank())+
-    geom_polygon(aes(
-      x=long, y=lat, group=group),
-      data=USpolygons, fill="black", colour="grey"))
- scatter1975 <- ggplot()+
-  geom_point(
-    aes(x=life.expectancy, y=fertility.rate, size=population),
-    WorldBank1975,
-    shape=21,
-    color="red",
-    fill="black")
-(viz.scale.size <- animint(
-  ggplotDefault=scatter1975+
-    ggtitle("no scale specified"),
-  animintDefault=scatter1975+
-    ggtitle("scale_size_animint()")+
-    scale_size_animint(),
-  animintOptions=scatter1975+
-    ggtitle("scale_size_animint(pixel.range, breaks)")+
-    scale_size_animint(pixel.range=c(5, 15), breaks=10^(10:1))))
- scatter1975 <- ggplot()+
-  geom_point(aes(
-    x=life.expectancy, y=fertility.rate, color=region),
-    data=WorldBank1975)
-(viz.text.size <- animint(
-  animintDefault=scatter1975+
-    theme_animint(width=500, height=500)+
-    ggtitle("no axes and legend size specified"),
-  animintAxesOptions=scatter1975+
-    theme_animint(width=500, height=500)+
-    theme(axis.text=element_text(size=20))+
-    ggtitle("axis.text=element_text(size=20)"),
-  animintLegendOptions=scatter1975+
-    theme_animint(width=500, height=500)+
-    theme(
-      legend.title=element_text(size=24),
-      legend.text=element_text(size=rel(2.5)))+
-    ggtitle("legend.text=element_text(size=rel(2.5)")))
- viz.title <- viz.scale.size
-viz.title$title <- "Several size scales"
-animint2dir(viz.title, "Ch06-title")
- animint(
-  demo=ggplot()+
-    geom_point(aes(
-      Petal.Length, Sepal.Length),
-      data=iris),
-  source="https://github.com/tdhock/animint-book/edit/master/Ch06-other.Rmd")
- animint(
-  video="https://vimeo.com/1050117030",
-  scatter=ggplot()+
-    geom_point(aes(
-      x=life.expectancy, y=fertility.rate, color=region),
-      clickSelects="country",
-      alpha=0.7,
-      data=WorldBank1975))
- 
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch06-figures/")
+```
 
 <!-- comment -->
 
@@ -360,7 +65,20 @@ are interpretable.
 <!-- comment -->
 
 The code below uses animint to draw a map of the United States. 
- 
+
+
+```{r Ch06-viz-href}
+library(animint2)
+USpolygons <- map_data("state")
+animint(
+  map=ggplot()+
+    ggtitle("click a state to read its Wikipedia page")+
+    coord_equal()+
+    geom_polygon(aes(
+      x=long, y=lat, group=group,
+      href=paste0("http://en.wikipedia.org/wiki/", region)),
+      data=USpolygons, fill="black", colour="grey"))
+```
 
 <!-- comment -->
 
@@ -378,7 +96,19 @@ hover the cursor over something on the screen. In animint you can use
 `aes(tooltip)` to designate the observation-specific message that 
 appears. For example we use it to display the population and country
 name in the scatterplot of the World Bank data below.
- 
+
+
+```{r Ch06-viz-tooltip}
+data(WorldBank)
+WorldBank1975 <- subset(WorldBank, year == 1975)
+animint(
+  scatter=ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate,
+      tooltip=paste(country, "population =", population)),
+      size=5,
+      data=WorldBank1975))
+```
 
 <!-- comment -->
 
@@ -405,7 +135,18 @@ Since everything plotted by animint is rendered as an
 page, you may want to specify a
 [HTML id attribute](http://www.w3schools.com/tags/att_global_id.asp)
 using `aes(id)` as below.
- 
+
+
+```{r Ch06-viz-id}
+animint(
+  map=ggplot()+
+    ggtitle("each state/region/group has a unique id")+
+    coord_equal()+
+    geom_polygon(aes(
+      x=long, y=lat, group=group,
+      id=gsub(" ", "_", paste(region, group))),
+      data=USpolygons, fill="black", colour="grey"))
+```
 
 <!-- comment -->
 
@@ -443,13 +184,31 @@ illustrate we consider the following theoretical example (the code in
 this section is not directly executable). Say you want to use 20
 different selector variable names, `selector1value`
 ... `selector20value`. The usual way to define your data viz would be
- 
+
+
+```{r, eval=FALSE}
+viz <- list(
+  points=ggplot()+
+    geom_point(clickSelects="selector1value", data=data1)+
+    ...
+    geom_point(clickSelects="selector20value", data=data20)
+)
+```
 
 <!-- comment -->
 
 However that method is bad since it violates the DRY principle (Don't
 Repeat Yourself). Another way to do that would be to use a for loop:
- 
+
+
+```{r, eval=FALSE}
+viz <- list(points=ggplot())
+for(selector.name in paste0("selector", 1:20, "value")){
+  data.for.selector <- all.data.list[[selector.name]]
+  viz$points <- viz$points +
+    geom_point(clickSelects=selector.name, data=data.for.selector)
+}
+```
 
 <!-- comment -->
 
@@ -459,7 +218,16 @@ at least one TSV file created for each `geom_point`. The preferable
 method is to use a named character vector for `clickSelects`. The
 names should be used to indicate the column that contains the selector
 variable name. For example:
- 
+
+
+```{r, eval=FALSE}
+viz <- list(
+  points=ggplot()+
+    geom_point(
+      clickSelects=c(selector.name="selector.value"),
+      data=all.data)
+)
+```
 
 <!-- comment -->
 
@@ -544,14 +312,70 @@ visualization of the `breakpoints` data set.
 
 The sketch above consists of two plots. We begin by creating the plot
 of error curves on the left.
- 
+
+
+```{r Ch06-errorPlot}
+data(breakpoints)
+only.error <- subset(breakpoints$error, type=="E")
+only.segments <- subset(only.error,bases.per.probe==bases.per.probe[1])
+library(data.table)
+fp.fn.names <- rbind(
+  data.table(error.type="false positives", type="FP"),
+  data.table(error.type="false negatives", type=c("I", "FN")))
+error.dt <- data.table(breakpoints$error)
+error.type.dt <- error.dt[fp.fn.names, on=list(type)]
+fp.fn.dt <- error.type.dt[, list(
+  error.value=sum(error)
+), by=.(error.type, segments, bases.per.probe)]
+errorPlot <- ggplot()+
+  ggtitle("select data and segments")+
+  theme_bw()+
+  geom_tallrect(aes(
+    xmin=segments-0.5, xmax=segments+0.5),
+    clickSelects="segments",
+    data=only.segments,
+    alpha=1/2)+
+  geom_line(aes(
+    segments, error.value, color=error.type,
+    group=paste(bases.per.probe, error.type)),
+    showSelected="bases.per.probe",
+    data=fp.fn.dt,
+    size=5)+
+  scale_color_manual(values=c(
+    "false positives"="red", "false negatives"="blue"))+
+  geom_line(aes(
+    segments, error, group=bases.per.probe),
+    clickSelects="bases.per.probe",
+    data=only.error,
+    size=4)+
+  scale_x_continuous(breaks=c(1, 6, 10, 20))
+errorPlot
+```
 
 <!-- comment -->
 
 The plot above includes a `geom_tallrect` with `clickSelects=segments`
 and a `geom_line` with `clickSelects=bases.per.probe`. It will be used
 to select the data and model in the plot below.
- 
+
+
+```{r Ch06-signalPlot}
+signalPlot <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  theme_animint(height=800)+
+  geom_point(aes(
+    position/1e5, signal),
+    showSelected="bases.per.probe",
+    shape=1,
+    data=breakpoints$signals)+
+  geom_segment(aes(
+    first.base/1e5, mean, xend=last.base/1e5, yend=mean),
+    showSelected=c("segments", "bases.per.probe"),
+    color="green",
+    data=breakpoints$segments)
+signalPlot+facet_grid(segments ~ bases.per.probe)
+```
 
 <!-- comment -->
 
@@ -559,7 +383,20 @@ The non-interactive plot above has 80 facets, one for each combination
 of the two `showSelected` variables, `bases.per.probe` and
 `segments`. Below we make an interactive version in which only one of
 these facets will be shown.
- 
+
+
+```{r Ch06-viz-chunk-vars}
+(viz.chunk.vars <- animint(
+  errorPlot,
+  signal=signalPlot+
+    geom_vline(aes(
+      xintercept=base/1e5),
+      showSelected=c("segments", "bases.per.probe"),
+      color="green",
+      chunk_vars=character(),
+      linetype="dashed",
+      data=breakpoints$breaks)))
+```
 
 <!-- comment -->
 
@@ -574,7 +411,37 @@ appearance of the data viz should be the same.
 
 Below we use the `du` command line program to determine the disk usage
 of the data viz for different choices of `chunk_vars`.
- 
+
+
+```{r tsvSizes}
+tsvSizes <- function(segment.chunk.vars){
+  viz <- list(
+    error=errorPlot,
+    signal=signalPlot+
+      geom_vline(aes(
+        xintercept=base/1e5),
+        showSelected=c("segments", "bases.per.probe"),
+        color="green",
+        chunk_vars=segment.chunk.vars,
+        linetype="dashed",
+        data=breakpoints$breaks)
+  )
+  info <- animint2dir(viz, open.browser=FALSE)
+  cmd <- paste("du -ks", info$out.dir)
+  kb.dt <- fread(cmd=cmd)
+  setnames(kb.dt, c("kb", "dir"))
+  tsv.vec <- Sys.glob(paste0(info$out.dir, "/*.tsv"))
+  is.geom6 <- grepl("geom6", tsv.vec)
+  data.frame(kb=kb.dt$kb, geom6.tsv=sum(is.geom6), other.tsv=sum(!is.geom6))
+}
+chunk_vars_list <- list(
+  neither=c(),
+  bases.per.probe=c("bases.per.probe"),
+  segments=c("segments"),
+  both=c("segments", "bases.per.probe"))
+sizes.list <- lapply(chunk_vars_list, tsvSizes)
+(sizes <- do.call(rbind, sizes.list))
+```
 
 <!-- comment -->
 
@@ -619,7 +486,53 @@ particular,
 The defaults explained above are illustrated in the first plot
 below. Those defaults may be customized by using the `alpha_off`,
 `fill_off`, and `color_off` geom parameters as in the code below,
- 
+
+
+```{r}
+N <- 3
+set.seed(1)
+demo_df <- data.frame(i=1:N, num=rnorm(N,2))
+animint(
+  defaults=ggplot()+
+    ggtitle("Defaults, no *_off")+
+    geom_tile(aes(
+      i, 0),
+      size=5,
+      clickSelects="i",
+      data=demo_df)+
+    geom_point(aes(
+      i, num),
+      size=5,
+      clickSelects="i",
+      data=demo_df),
+  off=ggplot()+
+    ggtitle("User specified alpha_off, fill_off, color_off")+
+    geom_tile(aes(
+      i, 0, fill=i),
+      clickSelects="i",
+      color="red",
+      color_off="pink",
+      size=5,
+      data=demo_df)+
+    geom_point(aes(
+      i, num),
+      size=5,
+      alpha=0.5,
+      alpha_off=0.1,
+      clickSelects="i",
+      data=demo_df)+
+    geom_point(aes(
+      i, -num),
+      size=5,
+      alpha=1,
+      alpha_off=1,
+      color="red",
+      color_off="black",
+      fill="grey",
+      fill_off="white",
+      clickSelects="i",
+      data=demo_df))
+```
 
 <!-- comment -->
 
@@ -643,7 +556,28 @@ what is displayed for each geom, you can specify the `help` and
 
 <!-- comment -->
 
- 
+
+
+```{r Ch06-customTour}
+animint(
+  scatter=ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, color=region),
+      size=5,
+      showSelected="year",
+      clickSelects="country",
+      help="One point drawn for each country in the selected year",
+      alpha=0.7,
+      data=WorldBank)+
+    geom_text(aes(
+      x=life.expectancy, y=fertility.rate, label=country),
+      data=WorldBank,
+      title="Selected country",
+      showSelected=c("year","country")),
+  first=list(
+    country="France",
+    year=1980))
+```
 
 <!-- comment -->
 
@@ -675,7 +609,25 @@ options to ggplot objects.
 The `width` and `height` options are for specifying the dimensions (in
 pixels) of a ggplot rendered by animint. For example, consider the
 following re-design of the plot of the United States:
- 
+
+
+```{r Ch06-viz-width-height}
+animint(
+  map=ggplot()+
+    theme_animint(width=750, height=500)+
+    theme(
+      axis.line=element_blank(),
+      axis.text=element_blank(), 
+      axis.ticks=element_blank(),
+      axis.title=element_blank(),
+      panel.border=element_blank(),
+      panel.background=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank())+
+    geom_polygon(aes(
+      x=long, y=lat, group=group),
+      data=USpolygons, fill="black", colour="grey"))
+```
 
 <!-- comment -->
 
@@ -698,7 +650,26 @@ is generally useful for rendering maps.
 
 The `scale_size_animint` scale should be used in all ggplots where you
 specify `aes(size)`. To see why, consider the following examples.
- 
+
+
+```{r Ch06-viz-scale-size}
+scatter1975 <- ggplot()+
+  geom_point(
+    aes(x=life.expectancy, y=fertility.rate, size=population),
+    WorldBank1975,
+    shape=21,
+    color="red",
+    fill="black")
+(viz.scale.size <- animint(
+  ggplotDefault=scatter1975+
+    ggtitle("no scale specified"),
+  animintDefault=scatter1975+
+    ggtitle("scale_size_animint()")+
+    scale_size_animint(),
+  animintOptions=scatter1975+
+    ggtitle("scale_size_animint(pixel.range, breaks)")+
+    scale_size_animint(pixel.range=c(5, 15), breaks=10^(10:1))))
+```
 
 <!-- comment -->
 
@@ -723,7 +694,28 @@ The syntax of defining axes and legend text size(in pixels) is almost
 the same as ggplot2. Inside `theme`, you can use numbers directly to
 change the font size, or you can use `rel()` to define the relative
 size.
- 
+
+
+```{r Ch06-text-size}
+scatter1975 <- ggplot()+
+  geom_point(aes(
+    x=life.expectancy, y=fertility.rate, color=region),
+    data=WorldBank1975)
+(viz.text.size <- animint(
+  animintDefault=scatter1975+
+    theme_animint(width=500, height=500)+
+    ggtitle("no axes and legend size specified"),
+  animintAxesOptions=scatter1975+
+    theme_animint(width=500, height=500)+
+    theme(axis.text=element_text(size=20))+
+    ggtitle("axis.text=element_text(size=20)"),
+  animintLegendOptions=scatter1975+
+    theme_animint(width=500, height=500)+
+    theme(
+      legend.title=element_text(size=24),
+      legend.text=element_text(size=rel(2.5)))+
+    ggtitle("legend.text=element_text(size=rel(2.5)")))
+```
 
 <!-- comment -->
 
@@ -781,7 +773,13 @@ The `title` option should be a character string, and will be used to
 set the `<title>` element of the web page. It does not make sense to
 use the `title` option in an Rmd document such as this page. A title
 can and should be used with `animint2dir`, as in the code below.
- 
+
+
+```{r Ch06-viz-title}
+viz.title <- viz.scale.size
+viz.title$title <- "Several size scales"
+animint2dir(viz.title, "Ch06-title")
+```
 
 <!-- comment -->
 
@@ -805,7 +803,16 @@ meta-data is required for organizing the animint in a
 
 The `source` option should be a character string: a link to the R
 source code which was used to create the animint.
- 
+
+
+```{r Ch06-source-demo}
+animint(
+  demo=ggplot()+
+    geom_point(aes(
+      Petal.Length, Sepal.Length),
+      data=iris),
+  source="https://github.com/tdhock/animint-book/edit/master/Ch06-other.Rmd")
+```
 
 <!-- comment -->
 
@@ -829,7 +836,18 @@ The `video` option should be a character string: a link to a video
 which shows typical interactions with the animint. This mechanism can
 be used to help the users of your data visualization understand what
 is displayed, and what interactions they can use.
- 
+
+
+```{r Ch06-link-demo}
+animint(
+  video="https://vimeo.com/1050117030",
+  scatter=ggplot()+
+    geom_point(aes(
+      x=life.expectancy, y=fertility.rate, color=region),
+      clickSelects="country",
+      alpha=0.7,
+      data=WorldBank1975))
+```
 
 <!-- comment -->
 

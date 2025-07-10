@@ -10,132 +10,9 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r}
- ```{r Ch07-viz-stat}
- ```{r}
- ```{r Ch07-viz-identity}
- ```{r}
- ```{r Ch07-viz-just}
- ```{r Ch07-viz-order}
- ```{r}
- ```{r Ch07-viz-return}
- ```{r Ch07-viz-two-lines}
- ```{r}
- ```{r Ch07-viz-strips}
- ```{r, eval=FALSE}
- knitr::opts_chunk$set(fig.path="Ch07-figures/")
- set.seed(1)
-library(data.table)
-random.counts <- data.table(
-  letter = c(replicate(4, LETTERS[1:5])),
-  count = c(replicate(4, rbinom(5, 50, 0.5))),
-  stack = rep(rep(1:2, each = 5), 2),
-  facet = rep(1:2, each = 10))
-library(animint2)
-ggstat <- ggplot() +
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
-  geom_bar(
-      aes(letter, count, fill = stack),
-      showSelected="facet",
-    data = random.counts,
-    stat = "identity",
-    position="stack"
-  )
-ggstat+facet_grid(facet ~ .)
- animint(
-  plot = ggstat,
-  time = list(variable = "facet", ms = 1000),
-  duration = list(facet = 1000))
- random.cumsums <- random.counts[, list(
-  cumsum=cumsum(count),
-  count=count,
-  stack=stack),
-  by=.(letter, facet)]
-ggidentity <- ggplot() +
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
-  geom_segment(aes(
-    x=letter, xend=letter,
-    y=cumsum, yend=cumsum-count,
-    color=stack),
-    showSelected="facet",
-    data = random.cumsums,
-    size=10,
-    stat = "identity",
-    position="identity")
-ggidentity+facet_grid(facet ~ .)
- animint(
-  plot = ggidentity,
-  time = list(variable = "facet", ms = 1000),
-  duration = list(facet = 1000))
- line.df <- data.frame(just=c(0, 0.5, 1))
-text.df <- expand.grid(
-  vjust=line.df$just,
-  hjust=line.df$just)
-gg.lines <- ggplot()+
-  theme_bw()+
-  geom_vline(aes(xintercept=just), data=line.df, color="grey")+
-  geom_hline(aes(yintercept=just), data=line.df, color="grey")
-gg.vjust <- gg.lines+
-  geom_text(aes(
-    hjust, vjust, label="qwerty", hjust=hjust, vjust=vjust),
-    data=text.df)
-gg.vjust+ggtitle("R graphics devices respect aes(vjust)")
- (viz.just <- animint(
-  vjust=gg.vjust+
-    ggtitle("animint does not support aes(vjust)"),
-  workaround=gg.lines+
-    ggtitle("workaround: no aes(vjust), add to y")+
-    geom_text(aes(
-      hjust, vjust + (0.5-vjust)*0.03 - 0.01,
-      label="qwerty", hjust=hjust),
-      data=text.df)))
- animint(
-  first=viz.just$workaround,
-  second=viz.just$vjust)
- gg.return <- ggplot()+
-  geom_text(aes(
-    hjust, vjust, label=sprintf("x=%.1f\ny=%.1f", hjust, vjust)),
-    data=text.df)
-gg.return
- animint(gg.return)
- gg.two.lines <- ggplot()+
-  geom_text(aes(
-    hjust, vjust, label=sprintf("x=%.1f", hjust)),
-    data=text.df)+
-  geom_text(aes(
-    hjust, vjust-0.05, label=sprintf("y=%.1f", vjust)),
-    data=text.df)
-gg.two.lines
-animint(gg.two.lines)
- data(intreg)
-signals.df <- transform(
-  intreg$signals,
-  person=sub("[.].*", "p", signal),
-  chromosome=sub(".*[.]", "c", signal))
-two.strips <- ggplot()+
-  theme_animint(height=600)+
-  facet_grid(person + chromosome ~ ., scales="free")+
-  geom_point(aes(base/1e6, logratio), data=signals.df)
-two.strips+ggtitle("two strip labels on the right")
- animint(two.strips+ggtitle("only one strip label"))
- shiny::runApp(system.file("examples", "shiny-WorldBank", package="animint"))
- 
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch07-figures/")
+```
 
 <!-- comment -->
 
@@ -199,25 +76,82 @@ for details.
 
 Animint does not support ggplot2 statistics with `showSelected`. For
 example, consider the facetted ggplot below.
- 
+
+
+```{r}
+set.seed(1)
+library(data.table)
+random.counts <- data.table(
+  letter = c(replicate(4, LETTERS[1:5])),
+  count = c(replicate(4, rbinom(5, 50, 0.5))),
+  stack = rep(rep(1:2, each = 5), 2),
+  facet = rep(1:2, each = 10))
+library(animint2)
+ggstat <- ggplot() +
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  geom_bar(
+      aes(letter, count, fill = stack),
+      showSelected="facet",
+    data = random.counts,
+    stat = "identity",
+    position="stack"
+  )
+ggstat+facet_grid(facet ~ .)
+```
 
 <!-- comment -->
 
 Using `showSelected` instead of facets does not result in what you
 may expect.
- 
+
+
+```{r Ch07-viz-stat}
+animint(
+  plot = ggstat,
+  time = list(variable = "facet", ms = 1000),
+  duration = list(facet = 1000))
+```
 
 <!-- comment -->
 
 A workaround is to compute what you want to display, and use
 position=identity.
- 
+
+
+```{r}
+random.cumsums <- random.counts[, list(
+  cumsum=cumsum(count),
+  count=count,
+  stack=stack),
+  by=.(letter, facet)]
+ggidentity <- ggplot() +
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  geom_segment(aes(
+    x=letter, xend=letter,
+    y=cumsum, yend=cumsum-count,
+    color=stack),
+    showSelected="facet",
+    data = random.cumsums,
+    size=10,
+    stat = "identity",
+    position="identity")
+ggidentity+facet_grid(facet ~ .)
+```
 
 <!-- comment -->
 
 Note how we used `geom_segment` instead of `geom_bar`, but their
 appearance is similar.
- 
+
+
+```{r Ch07-viz-identity}
+animint(
+  plot = ggidentity,
+  time = list(variable = "facet", ms = 1000),
+  duration = list(facet = 1000))
+```
 
 <!-- comment -->
 
@@ -248,7 +182,23 @@ alignment, and 1 for right alignment. Animint translates these three
 However, animint does not support vertical text alignment using
 `vjust` in R, because there is no property that can be used for
 vertical text alignment in SVG. 
- 
+
+
+```{r}
+line.df <- data.frame(just=c(0, 0.5, 1))
+text.df <- expand.grid(
+  vjust=line.df$just,
+  hjust=line.df$just)
+gg.lines <- ggplot()+
+  theme_bw()+
+  geom_vline(aes(xintercept=just), data=line.df, color="grey")+
+  geom_hline(aes(yintercept=just), data=line.df, color="grey")
+gg.vjust <- gg.lines+
+  geom_text(aes(
+    hjust, vjust, label="qwerty", hjust=hjust, vjust=vjust),
+    data=text.df)
+gg.vjust+ggtitle("R graphics devices respect aes(vjust)")
+```
 
 <!-- comment -->
 
@@ -256,7 +206,19 @@ Note how both hjust and vjust are respected in the static ggplot
 above. In contrast, consider the animint below. The left plot should
 be the same as the ggplot above, but there are clear differences in
 terms of vertical placement of the text elements. 
- 
+
+
+```{r Ch07-viz-just}
+(viz.just <- animint(
+  vjust=gg.vjust+
+    ggtitle("animint does not support aes(vjust)"),
+  workaround=gg.lines+
+    ggtitle("workaround: no aes(vjust), add to y")+
+    geom_text(aes(
+      hjust, vjust + (0.5-vjust)*0.03 - 0.01,
+      label="qwerty", hjust=hjust),
+      data=text.df)))
+```
 
 <!-- comment -->
 
@@ -282,7 +244,13 @@ order of the ggplots in the animint `viz` list. The plots will appear
 on the web page in the same order as they occur in the animint `viz`
 list. For example, compare the data viz below with the data viz from
 the previous section.
- 
+
+
+```{r Ch07-viz-order}
+animint(
+  first=viz.just$workaround,
+  second=viz.just$vjust)
+```
 
 <!-- comment -->
 
@@ -308,12 +276,24 @@ an animint,
 When rendering a ggplot using regular R graphics devices, using a line
 break or newline `\n` in a `geom_text` label results in multiple lines
 of text on the plot.
- 
+
+
+```{r}
+gg.return <- ggplot()+
+  geom_text(aes(
+    hjust, vjust, label=sprintf("x=%.1f\ny=%.1f", hjust, vjust)),
+    data=text.df)
+gg.return
+```
 
 <!-- comment -->
 
 However, animint only supports drawing the first line of text.
- 
+
+
+```{r Ch07-viz-return}
+animint(gg.return)
+```
 
 <!-- comment -->
 
@@ -326,7 +306,19 @@ willing to accept a Pull Request which implements that.
 
 Until then, the workaround is to use one `geom_text` layer for each
 line of text that you want to display:
- 
+
+
+```{r Ch07-viz-two-lines}
+gg.two.lines <- ggplot()+
+  geom_text(aes(
+    hjust, vjust, label=sprintf("x=%.1f", hjust)),
+    data=text.df)+
+  geom_text(aes(
+    hjust, vjust-0.05, label=sprintf("y=%.1f", vjust)),
+    data=text.df)
+gg.two.lines
+animint(gg.two.lines)
+```
 
 <!-- comment -->
 
@@ -382,13 +374,30 @@ visualizations, but only has limited support for multiple variables
 per axis. For example the ggplot below uses two variables to create
 vertical facets, which results in two strip labels when rendered with
 ggplot2.
- 
+
+
+```{r}
+data(intreg)
+signals.df <- transform(
+  intreg$signals,
+  person=sub("[.].*", "p", signal),
+  chromosome=sub(".*[.]", "c", signal))
+two.strips <- ggplot()+
+  theme_animint(height=600)+
+  facet_grid(person + chromosome ~ ., scales="free")+
+  geom_point(aes(base/1e6, logratio), data=signals.df)
+two.strips+ggtitle("two strip labels on the right")
+```
 
 <!-- comment -->
 
 In contrast, animint renders the same ggplot below using only one
 strip label.
- 
+
+
+```{r Ch07-viz-strips}
+animint(two.strips+ggtitle("only one strip label"))
+```
 
 <!-- comment -->
 
@@ -406,7 +415,11 @@ Normally, aesthetic mappings are defined once in R code, and can not
 be changed after rendering an animint. One way to overcome this
 limitation is by defining `shiny` inputs that are used as animint
 aesthetics, as in the following example.
- 
+
+
+```{r, eval=FALSE}
+shiny::runApp(system.file("examples", "shiny-WorldBank", package="animint"))
+```
 
 <!-- comment -->
 

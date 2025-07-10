@@ -10,41 +10,44 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r, Ch12-viz-simple}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r Ch12-viz-linear}
- ```{r Ch12-viz-poly}
- knitr::opts_chunk$set(fig.path="Ch12-figures/")
- library(data.table)
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch12-figures/")
+```
+
+<!-- comment -->
+
+This goal of this chapter is to create an interactive data
+visualization that explains the
+[Support Vector Machine](https://en.wikipedia.org/wiki/Support_vector_machine),
+a machine learning model for binary classification.
+
+<!-- comment -->
+
+Chapter summary:
+
+<!-- comment -->
+
+* We begin by simulating some data for binary classification in two
+  dimensions, and making some static plots.
+* In the second section, we make an interactive data visualization to
+  show how the linear Support Vector Machine decision boundary changes
+  as a function of the cost hyper-parameter.
+* In the last section, we make an interactive data visualization to
+  show how the decision boundary of the polynomial kernel Support
+  Vector Machine changes as a function of the two hyper-parameters
+  (cost and degree).
+
+<!-- comment -->
+
+## Generate and plot some data {#generate}
+
+<!-- comment -->
+
+We begin by generating two input features, `x1` and `x2`.
+
+
+```{r}
+library(data.table)
 N <- 50
 set.seed(1)
 getInput <- function(){
@@ -61,14 +64,33 @@ ggplot()+
   geom_point(aes(
     x1, x2),
     data=data.dt)
- data.dt[, let(
+```
+
+<!-- comment -->
+
+The plot below shows the same data, after computing two additional
+input features (the squares of the original two inputs).
+
+
+```{r}
+data.dt[, let(
   x1.sq = x1^2,
   x2.sq = x2^2)][]
 ggplot()+
   geom_point(aes(
     x1.sq, x2.sq),
     data=data.dt)
- data.dt[, f := x1.sq]
+```
+
+<!-- comment -->
+
+In our simulation, we assume that the output score `f` is a linear
+function of `x1.sq`, and ignores `x2.sq`. The plot below visualizes
+the output scores using the point fill aesthetic.
+
+
+```{r}
+data.dt[, f := x1.sq]
 true.decision.boundary <- 0.2
 ggplot()+
   theme_bw()+
@@ -78,7 +100,20 @@ ggplot()+
     shape=21,
     color="grey",
     data=data.dt)
- data.dt[
+```
+
+<!-- comment -->
+
+In particular, we assume that the label `y` is negative (-1) if
+`x1.sq + noise < threshold`, and positive (1) otherwise. The plot below
+visualizes the scores and labels, as a function of the input feature
+`x1`. It also shows the true score function in black. Of course, we
+would not be able to make this visualization with real data (only the
+labels are known in real data, not the scores).
+
+
+```{r}
+data.dt[
 , f.noise := f+rnorm(N, 0, 0.2)
 ][
 , y.num := ifelse(f.noise<true.decision.boundary, -1, 1)
@@ -100,7 +135,17 @@ ggplot()+
     shape=21,
     fill=NA,
     data=data.dt)
- x1sq.boundary <- data.table(boundary=true.decision.boundary)
+```
+
+<!-- comment -->
+
+The plot below shows the scores and labels, as a function of the
+squared feature `x1.sq`. It is clear that the score function that we
+want to learn is linear in `x1.sq`.
+
+
+```{r}
+x1sq.boundary <- data.table(boundary=true.decision.boundary)
 ggplot()+
   scale_y_continuous(breaks=seq(0, 1, by=0.2))+
   scale_x_continuous(breaks=seq(0, 1, by=0.2))+
@@ -114,7 +159,16 @@ ggplot()+
     shape=21,
     fill=NA,
     data=data.dt)
- ggplot()+
+```
+
+<!-- comment -->
+
+Next, we visualize the labels in the two-dimensional squared feature
+space. It is clear that the decision boundary is linear in this space.
+
+
+```{r}
+ggplot()+
   scale_y_continuous(breaks=seq(0, 1, by=0.2))+
   scale_x_continuous(breaks=seq(0, 1, by=0.2))+
   geom_vline(aes(
@@ -126,7 +180,16 @@ ggplot()+
     shape=21,
     fill=NA,
     data=data.dt)
- ggplot()+
+```
+
+<!-- comment -->
+
+The plot below shows the input feature space (`x1` and `x2`). It is
+clear that the decision boundary is non-linear in `x1`.
+
+
+```{r}
+ggplot()+
   scale_y_continuous(breaks=seq(-1, 1, by=0.2))+
   scale_x_continuous(breaks=seq(-1, 1, by=0.2))+
   geom_vline(aes(
@@ -138,7 +201,17 @@ ggplot()+
     shape=21,
     fill=NA,
     data=data.dt)
- data.dt[, data.i := 1:.N]
+```
+
+<!-- comment -->
+
+The animint below uses `clickSelects` to show which points in the
+input and squared space correspond. We just need to create an
+`data.i` variable that has a unique ID for each data point.
+
+
+```{r, Ch12-viz-simple}
+data.dt[, data.i := 1:.N]
 YVAR <- function(dt, y.var){
   dt$y.var <- factor(y.var, c("x2", "x2.sq", "f"))
   dt
@@ -197,7 +270,24 @@ animint(
       size=4,
       alpha=0.7,
       data=YVAR(data.dt, "f")))
- train.i <- 1:N
+```
+
+<!-- comment -->
+
+Note how we used two multi-panel plots with the
+[addColumn then facet](Ch99-appendix.html#addColumn-then-facet) idiom,
+rather than creating four separate plots. This emphasizes the fact
+that some plots/facets have a common `x1` or `x1.sq` axis. Note that
+we also hid the color legend in the first plot, since it is sufficient
+to just have one color legend.
+
+<!-- comment -->
+
+## Linear SVM {#linear-svm}
+
+
+```{r}
+train.i <- 1:N
 data.dt[
 , set := "test"
 ][
@@ -218,7 +308,17 @@ ggplot()+
   geom_point(aes(
     x1, x2, color=y),
     data=data.dt)
- library(kernlab)
+```
+
+<!-- comment -->
+
+We begin by fitting a linear SVM to the train data in the squared
+feature space, and visualizing the true labels `y` along with the
+predicted labels `pred.y`.
+
+
+```{r}
+library(kernlab)
 squared.mat <- train.dt[, cbind(x1.sq, x2.sq)]
 y.vec <- train.dt$y
 fit <- ksvm(squared.mat, y.vec, kernel="vanilladot")
@@ -230,7 +330,17 @@ ggplot()+
     size=4,
     stroke=2,
     data=train.dt)
- predF <- function(fit, X){
+```
+
+<!-- comment -->
+
+It is clear from the plot above that there are several mis-classified
+train data points. In the plot below we visualize the decision
+boundary and margin.
+
+
+```{r}
+predF <- function(fit, X){
   fit.sc <- scaling(fit)$x.scale
   if(is.null(fit.sc)){
     fit.sc <- list(
@@ -276,7 +386,23 @@ ggplot()+
     color="black",
     linetype="dashed",
     data=grid.sq.dt)
- ## The equation of the margin lines is x2 = m2 + s2/w2[c+b+w1*m1/s1]
+```
+
+<!-- comment -->
+
+The plot above shows the true decision boundary using a grey
+`vline`. It also uses `geom_contour` to display the decision boundary
+(solid black line, predicted score 0) and the margin (dashed black
+line, predicted score -1 and 1). Since the decision boundary and
+margin are linear in this space, we can also use `geom_abline` to
+display them. To do that we need to do some math, and work out the
+equations for the slope and intercepts of those lines (as a function
+of the learned bias `b(fit)` and `weight.vec`, as well as the scale
+parameters `mu` and `sigma`).
+
+
+```{r}
+## The equation of the margin lines is x2 = m2 + s2/w2[c+b+w1*m1/s1]
 ## -s2*w1/(w2*s1)*x1 for c=1 and -1. x is input feature, m is mean, s
 ## is scale, w is learned weight.
 fit.sc <- scaling(fit)$x.scale
@@ -323,7 +449,18 @@ ggplot()+
     color="black",
     linetype="dashed",
     data=grid.sq.dt)
- train.dt[, alpha := 0]
+```
+
+<!-- comment -->
+
+The plot above confirms that our computation of the slope and
+intercepts (green lines) agrees with the contours (black lines). In
+the plot below, we show the learned `alpha` coefficients, and add a
+`geom_segment` to visualize the slack.
+
+
+```{r}
+train.dt[, alpha := 0]
 train.row.vec <- as.integer(rownames(xmatrix(fit)[[1]]))
 train.dt[train.row.vec, alpha := kernlab::alpha(fit)[[1]] ]
 train.dt[, status := ifelse(
@@ -360,7 +497,21 @@ ggplot()+
     shape=21,
     size=4,
     data=train.dt)
- n.grid <- 41
+```
+
+<!-- comment -->
+
+The plot above shows the slack in grey segments, and the decision and
+margin lines in black. The Bayes decision boundary is shown in the
+background as a vertical violet line. The support vectors are the
+points with non-zero alpha coefficients. Black filled support vectors
+are on the margin, and grey support vectors are on the wrong side of
+the margin (and have non-zero slack). The plot below shows the model
+that was learned in the original feature space,
+
+
+```{r}
+n.grid <- 41
 x.vec <- seq(-1, 1, l=n.grid)
 grid.dt <- data.table(expand.grid(
   x1=x.vec,
@@ -402,7 +553,17 @@ ggplot()+
     fill=status),
     shape=21,
     data=train.dt)
- modelInfo.list <- list()
+```
+
+<!-- comment -->
+
+The goal below will be to make an animint that shows
+how the decision boundary, margin, and slack change as a function of
+the cost parameter.
+
+
+```{r Ch12-viz-linear}
+modelInfo.list <- list()
 predictions.list <- list()
 slackSegs.list <- list()
 modelLines.list <- list()
@@ -570,7 +731,22 @@ animint(
       showSelected=c("cost.param", "boundary"),
       color="grey",
       data=slackSegs))
- predictions.list <- list()
+```
+
+<!-- comment -->
+
+## Non-linear polynomial kernel SVM {#nonlinear-polynomial-kernel-svm}
+
+<!-- comment -->
+
+In the previous section we fit a linear kernel in the squared feature
+space, which resulted in learning a function which is non-linear in
+terms of the original feature space. In this section we directly fit a
+non-linear polynomial kernel in the original space.
+
+
+```{r Ch12-viz-poly}
+predictions.list <- list()
 inputBoundaries.list <- list()
 setErrors.list <- list()
 cost.by <- 0.2
@@ -659,167 +835,7 @@ animint(
       showSelected=c("cost.param", "degree.num"),
       size=3,
       data=predictions))
- 
-
-<!-- comment -->
-
-This goal of this chapter is to create an interactive data
-visualization that explains the
-[Support Vector Machine](https://en.wikipedia.org/wiki/Support_vector_machine),
-a machine learning model for binary classification.
-
-<!-- comment -->
-
-Chapter summary:
-
-<!-- comment -->
-
-* We begin by simulating some data for binary classification in two
-  dimensions, and making some static plots.
-* In the second section, we make an interactive data visualization to
-  show how the linear Support Vector Machine decision boundary changes
-  as a function of the cost hyper-parameter.
-* In the last section, we make an interactive data visualization to
-  show how the decision boundary of the polynomial kernel Support
-  Vector Machine changes as a function of the two hyper-parameters
-  (cost and degree).
-
-<!-- comment -->
-
-## Generate and plot some data {#generate}
-
-<!-- comment -->
-
-We begin by generating two input features, `x1` and `x2`.
- 
-
-<!-- comment -->
-
-The plot below shows the same data, after computing two additional
-input features (the squares of the original two inputs).
- 
-
-<!-- comment -->
-
-In our simulation, we assume that the output score `f` is a linear
-function of `x1.sq`, and ignores `x2.sq`. The plot below visualizes
-the output scores using the point fill aesthetic.
- 
-
-<!-- comment -->
-
-In particular, we assume that the label `y` is negative (-1) if
-`x1.sq + noise < threshold`, and positive (1) otherwise. The plot below
-visualizes the scores and labels, as a function of the input feature
-`x1`. It also shows the true score function in black. Of course, we
-would not be able to make this visualization with real data (only the
-labels are known in real data, not the scores).
- 
-
-<!-- comment -->
-
-The plot below shows the scores and labels, as a function of the
-squared feature `x1.sq`. It is clear that the score function that we
-want to learn is linear in `x1.sq`.
- 
-
-<!-- comment -->
-
-Next, we visualize the labels in the two-dimensional squared feature
-space. It is clear that the decision boundary is linear in this space.
- 
-
-<!-- comment -->
-
-The plot below shows the input feature space (`x1` and `x2`). It is
-clear that the decision boundary is non-linear in `x1`.
- 
-
-<!-- comment -->
-
-The animint below uses `clickSelects` to show which points in the
-input and squared space correspond. We just need to create an
-`data.i` variable that has a unique ID for each data point.
- 
-
-<!-- comment -->
-
-Note how we used two multi-panel plots with the
-[addColumn then facet](Ch99-appendix.html#addColumn-then-facet) idiom,
-rather than creating four separate plots. This emphasizes the fact
-that some plots/facets have a common `x1` or `x1.sq` axis. Note that
-we also hid the color legend in the first plot, since it is sufficient
-to just have one color legend.
-
-<!-- comment -->
-
-## Linear SVM {#linear-svm}
- 
-
-<!-- comment -->
-
-We begin by fitting a linear SVM to the train data in the squared
-feature space, and visualizing the true labels `y` along with the
-predicted labels `pred.y`.
- 
-
-<!-- comment -->
-
-It is clear from the plot above that there are several mis-classified
-train data points. In the plot below we visualize the decision
-boundary and margin.
- 
-
-<!-- comment -->
-
-The plot above shows the true decision boundary using a grey
-`vline`. It also uses `geom_contour` to display the decision boundary
-(solid black line, predicted score 0) and the margin (dashed black
-line, predicted score -1 and 1). Since the decision boundary and
-margin are linear in this space, we can also use `geom_abline` to
-display them. To do that we need to do some math, and work out the
-equations for the slope and intercepts of those lines (as a function
-of the learned bias `b(fit)` and `weight.vec`, as well as the scale
-parameters `mu` and `sigma`).
- 
-
-<!-- comment -->
-
-The plot above confirms that our computation of the slope and
-intercepts (green lines) agrees with the contours (black lines). In
-the plot below, we show the learned `alpha` coefficients, and add a
-`geom_segment` to visualize the slack.
- 
-
-<!-- comment -->
-
-The plot above shows the slack in grey segments, and the decision and
-margin lines in black. The Bayes decision boundary is shown in the
-background as a vertical violet line. The support vectors are the
-points with non-zero alpha coefficients. Black filled support vectors
-are on the margin, and grey support vectors are on the wrong side of
-the margin (and have non-zero slack). The plot below shows the model
-that was learned in the original feature space,
- 
-
-<!-- comment -->
-
-The goal below will be to make an animint that shows
-how the decision boundary, margin, and slack change as a function of
-the cost parameter.
- 
-
-<!-- comment -->
-
-## Non-linear polynomial kernel SVM {#nonlinear-polynomial-kernel-svm}
-
-<!-- comment -->
-
-In the previous section we fit a linear kernel in the squared feature
-space, which resulted in learning a function which is non-linear in
-terms of the original feature space. In this section we directly fit a
-non-linear polynomial kernel in the original space.
- 
+```
 
 <!-- comment -->
 

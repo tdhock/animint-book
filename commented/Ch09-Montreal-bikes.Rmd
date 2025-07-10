@@ -10,54 +10,54 @@ output: bookdown::html_chapter
 
 <!-- comment -->
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- ```{r setup, echo=FALSE}
- ```{r ghinstall}
- ```{r accidents}
- ```{r timeRange}
- ```{r counterRange}
- ```{r counterviz}
- ```{r months}
- ```{r}
- ```{r accidentsPerMonth}
- ```{r}
- ```{r}
- ```{r Ch09-viz-regression}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r}
- ```{r Ch09-viz-mtl}
- knitr::opts_chunk$set(fig.path="Ch09-figures/")
- tryCatch({
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(fig.path="Ch09-figures/")
+```
+
+<!-- comment -->
+
+In this chapter we will explore several data visualizations of the
+Montreal bike data set.
+
+<!-- comment -->
+
+Chapter outline:
+
+<!-- comment -->
+
+* We begin with some static data visualizations.
+* We create an interactive visualization of accident frequency over
+  time.
+* We create a interactive data viz with four plots, showing monthly
+  accident trends, daily details, and a map of counter locations.
+
+<!-- comment -->
+
+## Static figures {#static}
+
+<!-- comment -->
+
+We begin by loading the `montreal.bikes` data set, which is not
+available in the CRAN release of animint2, in order to save space on
+CRAN. Therefore to access this data set, you will need to install
+animint2 from GitHub:
+
+
+```{r ghinstall}
+tryCatch({
   data(montreal.bikes, package="animint2")
 }, warning=function(w){
   devtools::install_github("tdhock/animint2")
 })
- library(animint2)
+```
+
+<!-- comment -->
+
+We begin by examining the accidents data table.
+
+
+```{r accidents}
+library(animint2)
 data(montreal.bikes) #only present if installed from github
 Sys.setlocale(locale="en_US.UTF-8")
 if(! "Brébeuf" %in% montreal.bikes$counter.counts$location){
@@ -68,16 +68,46 @@ if(! "Brébeuf" %in% montreal.bikes$counter.counts$location){
 library(data.table)
 accidents.dt <- data.table(montreal.bikes$accidents)
 str(accidents.dt)
- (accidents.dt[
+```
+
+<!-- comment -->
+
+Each accident has data about its date, time, location, and counts of
+death and slight/severe injury. Some of the values are in French
+(e.g. position Voie de circulation, location En intersection, etc).
+
+<!-- comment -->
+
+We calculate the time period of the accidents below.
+
+
+```{r timeRange}
+(accidents.dt[
 , date.POSIXct := as.POSIXct(strptime(date.str, "%Y-%m-%d"))
 ][
 , month.str := strftime(date.POSIXct, "%Y-%m")
 ][])
 range(accidents.dt$month.str)
- (counts.dt <- data.table(montreal.bikes$counter.counts))
+```
+
+<!-- comment -->
+
+Below we also compute the range of months for the bike counter data table.
+
+
+```{r counterRange}
+(counts.dt <- data.table(montreal.bikes$counter.counts))
 counts.dt[, month.str := strftime(date, "%Y-%m")]
 range(counts.dt$month.str)
- counts.dt[, loc.lines := gsub("[- _]", "\n", location)]
+```
+
+<!-- comment -->
+
+The bike counts are time series data which we visualize below.
+
+
+```{r counterviz}
+counts.dt[, loc.lines := gsub("[- _]", "\n", location)]
 ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
@@ -87,7 +117,22 @@ ggplot()+
     shape=21,
     data=counts.dt)+
   scale_color_manual(values=c("TRUE"="grey", "FALSE"="black"))
- uniq.month.vec <- unique(c(
+```
+
+<!-- comment -->
+
+Plotting with `geom_point` makes it easy to see the difference between
+zeros and missing values.
+
+<!-- comment -->
+
+We will compute a summary of all accidents per month in this time
+period, so we first create a data table for each month below. (and
+make sure to set the locale to C for English month names)
+
+
+```{r months}
+uniq.month.vec <- unique(c(
   accidents.dt$month.str,
   counts.dt$month.str))
 one.day <- 60 * 60 * 24
@@ -105,7 +150,16 @@ months <- data.table(month.str=uniq.month.vec)[
 ]
 month.levs <- months[order(month01.POSIXct), month.str]
 (months[, month := factor(month.str, month.levs)][])
- (accidents.dt[
+```
+
+<!-- comment -->
+
+Note that we created a `month` column which is a factor ordered by
+`month.levs`.
+
+
+```{r}
+(accidents.dt[
 , month.text := strftime(date.POSIXct, "%B %Y")
 ][
 , month := factor(month.text, month.levs)
@@ -127,7 +181,15 @@ stopifnot(!is.na(accidents.dt$month.POSIXct))
 )][
 , next01.POSIXct := as.POSIXct(strptime(next01.str, "%Y-%m-%d"))
 ][])
- accidents.tall <- melt(
+```
+
+<!-- comment -->
+
+We plot the accidents per month below.
+
+
+```{r accidentsPerMonth}
+accidents.tall <- melt(
   accidents.per.month,
   measure.vars=c(
     "deaths", "people.severely.injured", "people.slightly.injured"),
@@ -144,7 +206,18 @@ ggplot()+
     stat="identity",
     data=accidents.tall)+
   scale_fill_manual(values=severity.colors)
- accidents.dt[
+```
+
+<!-- comment -->
+
+In each accident, there are counts of people who died, along with
+people who suffered severe and slight injuries. Below we classify the
+severity of each accident according to the worst outcome among the
+people affected.
+
+
+```{r}
+accidents.dt[
 , severity.str := fcase(
   0 < deaths, "deaths",
   0 < people.severely.injured, "people.severely.injured",
@@ -154,7 +227,18 @@ ggplot()+
 ][
 , table(severity)
 ]
- (counts.per.month <- counts.dt[, let(
+```
+
+<!-- comment -->
+
+The output above shows that accidents with only slight injuries are
+most frequent, and accidents with at least one death are least
+frequent.
+Below we compute counts per month.
+
+
+```{r}
+(counts.per.month <- counts.dt[, let(
   month.POSIXct = as.POSIXct(strptime(paste0(month.str, "-15"), "%Y-%m-%d")),
   month.text = strftime(date, "%B %Y"),
   day.of.the.month = as.integer(strftime(date, "%d"))
@@ -181,7 +265,19 @@ ggplot()+
 counts.per.month[days < days.in.month, {
   list(location, month, days, days.in.month)
 }]
- complete.months <- counts.per.month[days == days.in.month]
+```
+
+<!-- comment -->
+
+As shown above, some months do not have observations for all days.
+
+<!-- comment -->
+
+## Interactive viz of accident frequency {#regression}
+
+
+```{r Ch09-viz-regression}
+complete.months <- counts.per.month[days == days.in.month]
 month.labels <- counts.per.month[, {
   .SD[which.max(count), ]
 }, by=location]
@@ -248,7 +344,27 @@ animint(
       size=5,
       alpha=0.75,
       data=scatter.max))
- (accidents.cumsum <- accidents.dt[
+```
+
+<!-- comment -->
+
+The data viz above shows two data visualizations of city-wide accident
+frequency over time. The plot on the left shows that the number of
+accidents grows with the number of cyclists. The plot on the right
+shows the frequency of accidents over time.
+
+<!-- comment -->
+
+## Interactive viz with map and details {#details}
+
+<!-- comment -->
+
+The plot below is a dotplot of accidents for each month. Each dot
+represents one person who got in an accident.
+
+
+```{r}
+(accidents.cumsum <- accidents.dt[
   order(date.POSIXct, month, severity)
 ][
 , accident.i := seq_along(severity)
@@ -267,7 +383,11 @@ ggplot()+
     day.of.the.month, accident.i, fill=severity),
     shape=21,
     data=accidents.cumsum)
- (counter.locations <- data.table(montreal.bikes$counter.locations)[, let(
+```
+
+
+```{r}
+(counter.locations <- data.table(montreal.bikes$counter.locations)[, let(
   lon = coord_X,
   lat = coord_Y
 )][])
@@ -285,7 +405,16 @@ loc.name.code <- c(
 counter.locations[, location := loc.name.code[nom_comptage] ]
 velo.counts <- table(counts.dt$location)
 (show.locations <- counter.locations[names(velo.counts), on=list(location)])
- map.lim <- show.locations[, list(
+```
+
+<!-- comment -->
+
+The counter locations above will be plotted below. Note that we use
+`showSelected=month` and `clickSelects=location`.
+
+
+```{r}
+map.lim <- show.locations[, list(
   range.lat=range(lat),
   range.lon=range(lon)
 )]
@@ -328,7 +457,17 @@ mtl.map <- ggplot()+
     clickSelects="location",
     data=show.locations)
 mtl.map
- location.ranges <- counts.per.month[0 < count, list(
+```
+
+<!-- comment -->
+
+The plot below shows the time period that each counter was in
+operation. Note that we use `geom_tallrect` with `clickSelects` to
+select the month.
+
+
+```{r}
+location.ranges <- counts.per.month[0 < count, list(
   min=min(month.POSIXct),
   max=max(month.POSIXct)
 ), by=location]
@@ -356,7 +495,15 @@ MonthSummary <- ggplot()+
     data=accidents.range,
     size=10)
 print(MonthSummary)
- (dates <- counts.dt[, list(
+```
+
+<!-- comment -->
+
+The plot below shows the bike counts at each location and day.
+
+
+```{r}
+(dates <- counts.dt[, list(
   min.date = date-one.day/2,
   max.date = date+one.day/2,
   locations=sum(!is.na(count))
@@ -387,7 +534,15 @@ TimeSeries <- ggplot()+
     clickSelects=location),
     data=location.labels)
 print(TimeSeries)
- MonthSeries <- ggplot()+
+```
+
+<!-- comment -->
+
+The plot below shows the same data but for each month.
+
+
+```{r}
+MonthSeries <- ggplot()+
   guides(color="none", fill="none")+
   theme_bw()+
   geom_tallrect(aes(
@@ -421,7 +576,11 @@ print(TimeSeries)
     clickSelects="location",
     data=month.labels)
 print(MonthSeries)
- counter.title <- "mean cyclists per day"
+```
+
+
+```{r}
+counter.title <- "mean cyclists per day"
 accidents.title <- "city-wide accidents"
 MonthFacet <- ggplot()+
   ggtitle("All data, select month")+
@@ -491,7 +650,11 @@ MonthFacet <- ggplot()+
     data=data.table(accidents.per.month,
                     facet=accidents.title))
 MonthFacet
- (days.dt <- data.table(
+```
+
+
+```{r}
+(days.dt <- data.table(
   day.POSIXct=with(months, seq(
     min(month01.POSIXct),
     max(next01.POSIXct),
@@ -580,7 +743,11 @@ DaysFacet <- ggplot()+
     chunk_vars=c("month"),
     data=data.table(accidents.cumsum, facet=accidents.title))
 DaysFacet
- animint(
+```
+
+
+```{r Ch09-viz-mtl}
+animint(
   MonthFacet,
   DaysFacet,
   MonthSummary,
@@ -590,154 +757,7 @@ DaysFacet
     location="Berri",
     month="September 2012"),
   time=list(variable="month", ms=5000))#buggy.
- 
-
-<!-- comment -->
-
-In this chapter we will explore several data visualizations of the
-Montreal bike data set.
-
-<!-- comment -->
-
-Chapter outline:
-
-<!-- comment -->
-
-* We begin with some static data visualizations.
-* We create an interactive visualization of accident frequency over
-  time.
-* We create a interactive data viz with four plots, showing monthly
-  accident trends, daily details, and a map of counter locations.
-
-<!-- comment -->
-
-## Static figures {#static}
-
-<!-- comment -->
-
-We begin by loading the `montreal.bikes` data set, which is not
-available in the CRAN release of animint2, in order to save space on
-CRAN. Therefore to access this data set, you will need to install
-animint2 from GitHub:
- 
-
-<!-- comment -->
-
-We begin by examining the accidents data table.
- 
-
-<!-- comment -->
-
-Each accident has data about its date, time, location, and counts of
-death and slight/severe injury. Some of the values are in French
-(e.g. position Voie de circulation, location En intersection, etc).
-
-<!-- comment -->
-
-We calculate the time period of the accidents below.
- 
-
-<!-- comment -->
-
-Below we also compute the range of months for the bike counter data table.
- 
-
-<!-- comment -->
-
-The bike counts are time series data which we visualize below.
- 
-
-<!-- comment -->
-
-Plotting with `geom_point` makes it easy to see the difference between
-zeros and missing values.
-
-<!-- comment -->
-
-We will compute a summary of all accidents per month in this time
-period, so we first create a data table for each month below. (and
-make sure to set the locale to C for English month names)
- 
-
-<!-- comment -->
-
-Note that we created a `month` column which is a factor ordered by
-`month.levs`.
- 
-
-<!-- comment -->
-
-We plot the accidents per month below.
- 
-
-<!-- comment -->
-
-In each accident, there are counts of people who died, along with
-people who suffered severe and slight injuries. Below we classify the
-severity of each accident according to the worst outcome among the
-people affected.
- 
-
-<!-- comment -->
-
-The output above shows that accidents with only slight injuries are
-most frequent, and accidents with at least one death are least
-frequent.
-Below we compute counts per month.
- 
-
-<!-- comment -->
-
-As shown above, some months do not have observations for all days.
-
-<!-- comment -->
-
-## Interactive viz of accident frequency {#regression}
- 
-
-<!-- comment -->
-
-The data viz above shows two data visualizations of city-wide accident
-frequency over time. The plot on the left shows that the number of
-accidents grows with the number of cyclists. The plot on the right
-shows the frequency of accidents over time.
-
-<!-- comment -->
-
-## Interactive viz with map and details {#details}
-
-<!-- comment -->
-
-The plot below is a dotplot of accidents for each month. Each dot
-represents one person who got in an accident.
- 
- 
-
-<!-- comment -->
-
-The counter locations above will be plotted below. Note that we use
-`showSelected=month` and `clickSelects=location`.
- 
-
-<!-- comment -->
-
-The plot below shows the time period that each counter was in
-operation. Note that we use `geom_tallrect` with `clickSelects` to
-select the month.
- 
-
-<!-- comment -->
-
-The plot below shows the bike counts at each location and day.
- 
-
-<!-- comment -->
-
-The plot below shows the same data but for each month.
- 
- 
- 
- 
+```
 
 <!-- comment -->
 
