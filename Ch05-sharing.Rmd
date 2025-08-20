@@ -178,12 +178,11 @@ links to various animints, organized into a table.
 * There is one row for each animint.
 * The first column `viz.link` shows a screenshot of the animint, which
   links to the animint web page.
-* The second column `repo.link` shows the name of the data viz (taken
-  from the `title` option of the animint), and links to the GitHub
-  repo's `gh-pages` branch.
-* The third column `source.link` shows the last commit time of the
-  animint, and links to the R source code used to create that animint
-  (taken from the `source` option of the animint).
+* The second column `title` shows the name of the data viz (taken from the `title` option of the animint).
+* The third column shows `links` to
+  * the GitHub `repo` which hosts the data viz.
+  * the R `source` code used to create that animint (taken from the `source` option of the animint).
+  * optionally, a `video` that explains typical interactions with the animint.
 
 A gallery is defined as a github repo that should have two source
 files in the `gh-pages` branch: 
