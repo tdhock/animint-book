@@ -251,6 +251,7 @@ aesthetic for this geom.
 ## Animation: the time option {#animation-time}
 
 The `time` option is used to specify a variable to use for animation.
+The code below specifies `year` as the variable to animate over time, with an update every 2000 milliseconds.
 
 ```{r Ch03-viz-duration-time}
 viz.duration.time <- viz.duration
@@ -258,13 +259,15 @@ viz.duration.time$time <- list(variable="year", ms=2000)
 viz.duration.time
 ```
 
+The data visualization above is animated, because the selected year advances every two seconds.
+
 **Exercise:** make an animated data visualization that does NOT use
 smooth transitions. Hint: make a list of ggplots that has the `time`
 option but no `duration` option.
 
 ## Chapter summary and exercises {#exercises}
 
-This chapter explained the showSelected aesthetic, selection menus,
+This chapter explained the `showSelected` keyword, selection menus,
 transition durations, and animation.
 
 Exercises:
