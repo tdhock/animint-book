@@ -129,6 +129,7 @@ can be used to view the files in that directory. No registration/login
 is required, but if you do not register an account, your data viz will
 be deleted after one hour. You can register for a free account if you
 want your data viz to be available longer.
+Another limitation is 54,000 files per directory, as mentioned in [the Deploy Overview docs](https://docs.netlify.com/deploy/deploy-overview/).
 
 ## Publish on GitHub Pages {#pages}
 
