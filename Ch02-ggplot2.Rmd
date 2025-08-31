@@ -290,7 +290,10 @@ individual countries. That type of interaction can be achieved using
 the `showSelected` and `clickSelects` parameters, which we explain in
 Chapters 3-4.
 
-For now, we move on to discuss a major strength of animint: data
+**Exercise:** Re-make this data visualization using `aes(tooltip)`, which is a new feature in `animint2` (not present in `ggplot2`), and is discussed in [Chapter 5](Ch06-other.html#new-aesthetics).
+Set `aes(tooltip=country)` so that the country name will be visible when you hover the cursor over the corresponding geom.
+
+Next, we move on to discuss a major strength of animint: data
 visualization with multiple linked plots.
 
 ## Multi-plot data visualization {#multi-plot}
@@ -552,8 +555,9 @@ Exercises:
 * What are the three main advantages of `ggplot2` relative to previous
   plotting systems such as `grid` and `lattice`?
 * What is the purpose of multi-layer graphics?
+* Create a version of `viz.two.layers` with `aes(tooltip)` computed based on the min/max values of the data shown by the `geom_path`. Hint: for each country in `WorldBankBefore1975`, compute a text string to use for `aes(tooltip)`. One way to do this is via `data.table(WorldBankBefore1975)[, .(tooltip=sprintf(...)), by=country]`.
 * What are the two different reasons for creating multi-panel
-  graphics? Which of these two types is useful with interactivity?
+  graphics? Which of these two types is more useful with interactivity?
 * Let us define "A < B" to mean that "one B can contain several A."
   Which of the following statements is true?
 
