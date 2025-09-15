@@ -1,0 +1,187 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Cross-validation}
+-->
+
+# Cross-validation
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Comparing cross-validation methods
+
+```{r}
+library(data.table)
+n.segments <- 5
+set.seed(1)
+(seg.mean.vec <- rnorm(n.segments))
+data.per.segment <- 10
+data.mean.vec <- rep(seg.mean.vec, each=data.per.segment)
+n.data <- length(data.mean.vec)
+total.validation.sets <- 100
+n.folds.vec <- c(2, 5, 10)
+prop.valid.vec <- 1/n.folds.vec
+seg_dt_list <- list()
+data_dt_list <- list()
+residual_dt_list <- list()
+loss_dt_list <- list()
+selection_dt_list <- list()
+selection_error_list <- list()
+for(data_seed in 1:2){
+  set.seed(data_seed)
+  data.vec <- rnorm(n.data, data.mean.vec, 0.1)
+  split_data <- data.table(
+    data_seed, signal=data.vec,
+    position=as.numeric(seq_along(data.vec))
+  )[, pos := position]
+  setkey(split_data, position, pos)
+  data_dt_list[[data_seed]] <- split_data
+  is.valid.vec.list <- list()
+  for(n.folds in n.folds.vec){
+    uniq.folds <- 1:n.folds
+    n.seeds <- total.validation.sets/n.folds
+    split_type <- sprintf("%d-fold", n.folds)
+    for(cv_split_seed in 1:n.seeds){
+      set.seed(cv_split_seed)
+      fold.vec <- sample(rep(uniq.folds, l=n.data))
+      for(valid.fold in uniq.folds){
+        is.valid.vec.list[[split_type]][[paste(cv_split_seed, valid.fold)]] <-
+          fold.vec==valid.fold
+      }
+    }
+  }
+  for(prop.valid in prop.valid.vec){
+    split_type <- sprintf("%d%% valid", 100*prop.valid)
+    prop.vec <- c(subtrain=1-prop.valid, validation=prop.valid)
+    for(split_seed in 1:total.validation.sets){
+      set.seed(split_seed)
+      is.valid.vec.list[[split_type]][[split_seed]] <- binsegRcpp::random_set_vec(
+        n.data, prop.vec) == "validation"
+    }
+  }
+  for(split_type in names(is.valid.vec.list)){
+    for(n_validation_sets in seq(5, total.validation.sets, by=5)){
+      is.valid <- is.valid.vec.list[[split_type]][[n_validation_sets]]
+      set(split_data, j="set", value=ifelse(is.valid, "validation", "subtrain"))
+      bs.model <- split_data[, binsegRcpp::binseg_normal(signal, is.validation.vec=is.valid)]
+      coef_dt <- coef(bs.model, 1:nrow(bs.model$splits))
+      setkey(coef_dt, start.pos, end.pos)
+      over_dt <- foverlaps(coef_dt, split_data)
+      residual_dt_list[[paste(
+        data_seed, split_type, n_validation_sets
+      )]] <- over_dt[, .(
+        data_seed, split_type, n_validation_sets,
+        position, segments, signal, mean
+      )]
+      seg_dt_list[[paste(
+        data_seed, split_type, n_validation_sets
+      )]] <- data.table(
+        data_seed, split_type, n_validation_sets,
+        coef_dt
+      )
+      loss_dt_list[[paste(
+        data_seed, split_type, n_validation_sets
+      )]] <- data.table(
+        data_seed, split_type, n_validation_sets,
+        bs.model$splits[, rbind(
+          data.table(set="subtrain", segments, loss),
+          data.table(set="validation", segments, loss=validation.loss)
+        )]
+      )[, point := ifelse(loss==min(loss), "min", "other"), by=set][]
+      selection_dt_list[[paste(
+        data_seed, split_type, n_validation_sets
+      )]] <- data.table(
+        data_seed, split_type, n_validation_sets,
+        segments=bs.model$splits[which.min(validation.loss), segments]
+      )
+    }
+  }
+}
+
+sim.result <- do.call(rbind, sim.result.list)
+(sim.err <- sim.result[, .(
+  zero.one.loss=sum(selected != n.segments),
+  L1.loss=sum(abs(selected-n.segments)),
+  L2.loss=sum((selected-n.segments)^2)
+), by=method][order(zero.one.loss)])
+
+
+```
+
+The code above compares several types of cross-validation for
+selecting the number of segments in simulated random normal data. The
+table above shows various error rates which compare the selected
+number of segments to the true number of segments in the
+simulation. The best methods appears to be the ones which use min err,
+max times.
+
+## How many times is sufficient?
+
+```{r}
+n.segments <- 20
+seg.mean.vec <- 1:n.segments
+data.per.segment <- 5
+data.mean.vec <- rep(seg.mean.vec, each=data.per.segment)
+n.data <- length(data.mean.vec)
+n.validation.sets <- 200
+prop.valid <- c(0.01, 0.05, 0.1, 0.25, 0.5)
+if(interactive()){
+  sim.result <- data.table(data.seed=1:100)[, {
+    set.seed(data.seed)
+    data.vec <- rnorm(n.data, data.mean.vec, 0.1)
+    select.each.split <- CJ(split.i=1:n.validation.sets, prop.valid)[, {
+      set.seed(split.i)
+      prop.sets <- c(subtrain=1-prop.valid, validation=prop.valid)
+      is.valid <- binsegRcpp::random_set_vec(
+        n.data, prop.sets)=="validation"
+      bs.model <- binsegRcpp::binseg_normal(
+        data.vec, is.validation.vec=is.valid)
+      bs.model$splits[, .(selected=segments[which.min(validation.loss)])]
+    }, by=.(split.i, prop.valid)]
+    data.table(n.splits=1:n.validation.sets)[, {
+      select.each.split[split.i <= n.splits, .(
+        times=.N
+      ),
+      by=.(prop.valid, selected)
+      ][, .SD[which.max(times), .(selected)], by=prop.valid]
+    }, by=n.splits]
+  }, by=data.seed]
+
+  if(require(ggplot2)){
+    ggplot()+
+      scale_color_gradient(low="red", high="black")+
+      geom_line(aes(
+        n.splits, selected,
+        group=paste(data.seed, prop.valid),
+        color=prop.valid),
+        data=sim.result)+
+      scale_y_continuous(breaks=seq(0, 100, by=10))
+  }
+
+  accuracy.dt <- sim.result[, .(
+    correct=sum(selected==n.segments)
+  ), by=.(prop.valid, n.splits)]
+  if(require(ggplot2)){
+    gg <- ggplot()+
+      geom_line(aes(
+        n.splits, correct,
+        group=prop.valid,
+        color=prop.valid),
+        size=2,
+        data=accuracy.dt)+
+      scale_y_continuous("number of correctly chosen data sets")+
+      scale_color_gradient(low="red", high="black")
+    if(require(directlabels)){
+      direct.label(gg, "right.polygons")
+    }else{
+      gg
+    }
+  }
+}
+```
+
+The plot above suggests that 100 validation sets is sufficient.
