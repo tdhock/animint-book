@@ -1,3 +1,8 @@
+DEPRECATED SINCE SEPTEMBER 2025
+
+Please use [[https://animint-manual-en.netlify.app][the new animint2 manual deployed to Netlify]] instead, or
+its [[https://animint-manual-fr.netlify.app][French translation]].
+
 View this manual online at https://rcdata.nau.edu/genomic-ml/animint2-manual/Ch00-preface.html
 
 Compile this manual by typing =jekyll build= on the command
